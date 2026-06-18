@@ -201,11 +201,17 @@ async function loadEarnPage() {
   list.innerHTML = '<div class="loading-shimmer"></div><div class="loading-shimmer"></div>';
   
   try {
-    const snap = await adsRef.where('isActive','==',true).get();
+    let snap = await adsRef.where('isActive','==',true).get();
     
     if (snap.empty) {
-      list.innerHTML = '<div class="activity-empty"><div class="empty-icon">📺</div><p>No ads available. Check back soon!</p></div>';
-      return;
+      // Try auto-seeding
+      list.innerHTML = '<div class="activity-empty"><div class="empty-icon">📺</div><p>No ads yet. Creating sample ads...</p></div>';
+      await seedAdsIfEmpty();
+      snap = await adsRef.where('isActive','==',true).get();
+      if (snap.empty) {
+        list.innerHTML = '<div class="activity-empty"><div class="empty-icon">📺</div><p>No ads available. Check back soon!</p></div>';
+        return;
+      }
     }
     
     list.innerHTML = '';
@@ -678,3 +684,34 @@ setTimeout(() => {
     showView('authPage');
   }
 }, 5000);
+
+// ===== AUTO-SEED ADS IF EMPTY =====
+async function seedAdsIfEmpty() {
+  try {
+    const snap = await adsRef.limit(1).get();
+    if (!snap.empty) return; // ads exist
+    
+    console.log('No ads found, auto-seeding...');
+    const sampleAds = [
+      { title: 'Premium Video Ad', reward: 0.10, duration: 30 },
+      { title: 'Quick Cash Ad', reward: 0.05, duration: 15 },
+      { title: 'Featured Promotion', reward: 0.15, duration: 45 },
+      { title: 'Standard Banner', reward: 0.03, duration: 10 },
+      { title: 'Bonus Video', reward: 0.20, duration: 60 },
+      { title: 'Flash Deal', reward: 0.08, duration: 20 },
+      { title: 'Partner Spotlight', reward: 0.12, duration: 35 },
+    ];
+    const batch = db.batch();
+    sampleAds.forEach(ad => {
+      const ref = adsRef.doc();
+      batch.set(ref, { ...ad, isActive: true, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    });
+    await batch.commit();
+    console.log('✅ Seeded ' + sampleAds.length + ' sample ads');
+    if (document.getElementById('page-earn').classList.contains('active')) {
+      loadEarnPage();
+    }
+  } catch(e) {
+    console.error('Seed error:', e);
+  }
+}
