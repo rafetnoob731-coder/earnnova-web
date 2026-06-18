@@ -231,30 +231,80 @@ async function loadAds() {
     }
 }
 
-// Watch ad
+// Watch ad with rewarded network ad integration
 let adTimer = null;
 function startWatchingAd(adId, reward) {
     const modal = document.getElementById('adModal');
     modal.classList.add('show');
     document.getElementById('adModalTitle').textContent = 'Watch Ad';
     document.getElementById('adRewardText').textContent = `Watch to earn $${parseFloat(reward).toFixed(2)}`;
-    document.getElementById('adCountdown').textContent = '5';
+    document.getElementById('adCountdown').textContent = '▶️';
     
     const btn = document.getElementById('watchAdBtn');
     btn.disabled = true;
-    btn.textContent = '⏳ Watching...';
+    btn.textContent = '📺 Loading ad...';
     
-    let countdown = 5;
-    adTimer = setInterval(() => {
-        countdown--;
-        document.getElementById('adCountdown').textContent = countdown;
-        if (countdown <= 0) {
-            clearInterval(adTimer);
-            btn.disabled = false;
-            btn.textContent = '✅ Claim Reward';
-            btn.onclick = () => claimAdReward(adId, parseFloat(reward));
-        }
-    }, 1000);
+    // First show the rewarded ad from the network
+    if (window.earnnovaAds && typeof earnnovaAds.showRewarded === 'function') {
+        earnnovaAds.showRewarded().then((watched) => {
+            if (watched) {
+                // User watched the ad completely - show countdown
+                document.getElementById('adCountdown').textContent = '5';
+                btn.textContent = '⏳ Verifying...';
+                
+                let countdown = 5;
+                adTimer = setInterval(() => {
+                    countdown--;
+                    document.getElementById('adCountdown').textContent = countdown;
+                    if (countdown <= 0) {
+                        clearInterval(adTimer);
+                        btn.disabled = false;
+                        btn.textContent = '✅ Claim Reward';
+                        btn.onclick = () => claimAdReward(adId, parseFloat(reward));
+                    }
+                }, 1000);
+            } else {
+                // User closed or ad failed
+                document.getElementById('adCountdown').textContent = '✕';
+                btn.textContent = '❌ Ad not completed';
+                btn.disabled = false;
+                btn.onclick = () => closeAdModal();
+                setTimeout(() => closeAdModal(), 3000);
+            }
+        }).catch(() => {
+            // Fallback: simple countdown without network ad
+            document.getElementById('adCountdown').textContent = '5';
+            btn.textContent = '⏳ Watching...';
+            
+            let countdown = 5;
+            adTimer = setInterval(() => {
+                countdown--;
+                document.getElementById('adCountdown').textContent = countdown;
+                if (countdown <= 0) {
+                    clearInterval(adTimer);
+                    btn.disabled = false;
+                    btn.textContent = '✅ Claim Reward';
+                    btn.onclick = () => claimAdReward(adId, parseFloat(reward));
+                }
+            }, 1000);
+        });
+    } else {
+        // Fallback if ad network not loaded
+        document.getElementById('adCountdown').textContent = '5';
+        btn.textContent = '⏳ Watching...';
+        
+        let countdown = 5;
+        adTimer = setInterval(() => {
+            countdown--;
+            document.getElementById('adCountdown').textContent = countdown;
+            if (countdown <= 0) {
+                clearInterval(adTimer);
+                btn.disabled = false;
+                btn.textContent = '✅ Claim Reward';
+                btn.onclick = () => claimAdReward(adId, parseFloat(reward));
+            }
+        }, 1000);
+    }
 }
 
 async function claimAdReward(adId, reward) {
