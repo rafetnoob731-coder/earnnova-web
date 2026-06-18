@@ -138,10 +138,12 @@ async function loadAds() {
     
     // Set hero ad (first one)
     if (ads.length > 0) {
-      document.getElementById('earnMainTitle').textContent = ads[0].title;
+      const heroTitle = document.getElementById('earnMainTitle');
+      heroTitle.textContent = ads[0].title;
       document.getElementById('earnMainReward').textContent = `Earn $${(ads[0].reward || 0).toFixed(2)}`;
       document.getElementById('earnMainTitle').dataset.adId = ads[0].id;
       document.getElementById('earnMainTitle').dataset.reward = ads[0].reward || 0.01;
+      document.getElementById('watchHeroBtn').onclick = () => startWatchAd(ads[0].id, ads[0].reward, ads[0].title);
     }
     
     grid.innerHTML = '';
@@ -158,16 +160,10 @@ async function loadAds() {
   }
 }
 
-function watchAdNow() {
-  const hero = document.getElementById('earnMainTitle');
-  const id = hero.dataset.adId;
-  const reward = parseFloat(hero.dataset.reward) || 0.01;
-  const title = hero.textContent;
-  startWatchAd(id, reward, title);
-}
-
 // Watch ad flow
 let adTimer = null;
+let adNetworkTimeout = null;
+
 function startWatchAd(adId, reward, title) {
   const modal = document.getElementById('adModal');
   modal.classList.add('show');
@@ -176,37 +172,67 @@ function startWatchAd(adId, reward, title) {
   const btn = document.getElementById('adWatchBtn');
   const countdown = document.getElementById('adCountdown');
   const progress = document.getElementById('adProgressBar');
+  const adDisplay = document.getElementById('adDisplayArea');
   
   btn.disabled = true;
   countdown.textContent = '▶';
   progress.style.width = '0%';
   
-  // Try rewarded ad from network first
+  // Show loading state in display
+  adDisplay.innerHTML = `<div class="ad-placeholder">📺</div><div class="ad-countdown" style="font-size:1rem">Loading ad...</div><div class="ad-progress"><div class="ad-progress-bar" style="width:100%;animation:shimmer 1.5s ease-in-out infinite"></div></div>`;
+  btn.textContent = '⏳ Loading...';
+  
+  // AUTO-FALLBACK: Start countdown after 4s regardless of ad network
+  adNetworkTimeout = setTimeout(() => {
+    startCountdown(adId, reward, btn, countdown, progress, adDisplay);
+  }, 4000);
+  
+  // Try rewarded ad from network with PROMISE RACE against timeout
   if (window.earnnovaAds && typeof earnnovaAds.showRewarded === 'function') {
     btn.textContent = '📺 Loading ad...';
-    earnnovaAds.showRewarded().then(watched => {
+    
+    Promise.race([
+      earnnovaAds.showRewarded(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
+    ]).then(watched => {
+      clearTimeout(adNetworkTimeout);
       if (watched) {
-        startCountdown(adId, reward, btn, countdown, progress);
+        startCountdown(adId, reward, btn, countdown, progress, adDisplay);
       } else {
-        btn.textContent = '⏳ Ad not completed, try again';
+        btn.textContent = '⏳ Try again';
         btn.disabled = false;
         btn.onclick = () => startWatchAd(adId, reward, title);
       }
-    }).catch(() => startCountdown(adId, reward, btn, countdown, progress));
-  } else {
-    startCountdown(adId, reward, btn, countdown, progress);
+    }).catch(() => {
+      // Fallback: countdown already started by timeout
+    });
   }
 }
 
-function startCountdown(adId, reward, btn, countdownEl, progressEl) {
+function startCountdown(adId, reward, btn, countdownEl, progressEl, adDisplay) {
   btn.textContent = '⏳ Watching...';
+  btn.disabled = true;
   let sec = 5;
-  countdownEl.textContent = sec;
+  
+  // Restore countdown display
+  if (adDisplay) {
+    adDisplay.innerHTML = `
+      <div class="ad-countdown" id="adCountdown">${sec}</div>
+      <div class="ad-placeholder">📺 Ad Content</div>
+      <div class="ad-progress"><div class="ad-progress-bar" id="adProgressBar" style="width:0%"></div></div>
+    `;
+    // Re-acquire references after DOM rebuild
+    countdownEl = document.getElementById('adCountdown');
+    progressEl = document.getElementById('adProgressBar');
+  }
+  
+  if (countdownEl) countdownEl.textContent = sec;
+  if (progressEl) progressEl.style.width = '0%';
   
   adTimer = setInterval(() => {
     sec--;
-    countdownEl.textContent = sec;
-    progressEl.style.width = ((5 - sec) / 5 * 100) + '%';
+    if (countdownEl) countdownEl.textContent = sec;
+    if (progressEl) progressEl.style.width = ((5 - sec) / 5 * 100) + '%';
     
     if (sec <= 0) {
       clearInterval(adTimer);
@@ -261,6 +287,7 @@ async function claimAdReward(adId, reward) {
 function closeAdModal() {
   document.getElementById('adModal').classList.remove('show');
   if (adTimer) clearInterval(adTimer);
+  if (adNetworkTimeout) clearTimeout(adNetworkTimeout);
 }
 
 // ===== HISTORY =====
