@@ -124,29 +124,34 @@ document.getElementById('forgotForm').addEventListener('submit', async e => {
   btn.disabled = false;
 });
 
-// ===== AUTH TOGGLE =====
+// ===== AUTH FORM TOGGLE =====
+function showAuthForm(form) {
+  const lf = document.getElementById('loginForm');
+  const rf = document.getElementById('registerForm');
+  const ff = document.getElementById('forgotForm');
+  lf.classList.toggle('hidden', form !== 'login');
+  rf.classList.toggle('hidden', form !== 'register');
+  ff.classList.toggle('hidden', form !== 'forgot');
+  const tagline = document.querySelector('.auth-tagline');
+  if (form === 'login') tagline.textContent = 'Welcome back';
+  else if (form === 'register') tagline.textContent = 'Join us and start earning';
+  else tagline.textContent = 'Reset your password';
+}
+
 document.getElementById('toggleLink').addEventListener('click', e => {
   e.preventDefault();
-  const login = document.getElementById('loginForm').style.display !== 'none';
-  document.getElementById('loginForm').style.display = login ? 'none' : 'block';
-  document.getElementById('registerForm').style.display = login ? 'block' : 'none';
-  document.querySelector('.auth-tagline').textContent = login ? 'Join us and start earning' : 'Welcome back';
+  const login = !document.getElementById('loginForm').classList.contains('hidden');
+  showAuthForm(login ? 'register' : 'login');
   document.getElementById('toggleText').textContent = login ? 'Already have an account?' : "Don't have an account?";
   document.getElementById('toggleLink').textContent = login ? 'Sign In' : 'Sign Up';
 });
 
 document.getElementById('forgotLink').addEventListener('click', e => {
   e.preventDefault();
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('registerForm').style.display = 'none';
-  document.getElementById('forgotForm').style.display = 'block';
-  document.querySelector('.auth-tagline').textContent = 'Reset your password';
+  showAuthForm('forgot');
 });
 
 document.getElementById('backToLogin').addEventListener('click', e => {
   e.preventDefault();
-  document.getElementById('loginForm').style.display = 'block';
-  document.getElementById('registerForm').style.display = 'none';
-  document.getElementById('forgotForm').style.display = 'none';
-  document.querySelector('.auth-tagline').textContent = 'Welcome back';
+  showAuthForm('login');
 });

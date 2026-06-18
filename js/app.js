@@ -105,9 +105,9 @@ function updateUI() {
 
 // ===== VIEW CONTROL =====
 function showView(id) {
-  document.querySelectorAll('.page-view').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
   const el = document.getElementById(id);
-  if (el) el.style.display = 'block';
+  if (el) el.classList.remove('hidden');
 }
 
 function navigate(page) {
@@ -568,7 +568,7 @@ const fieldConfigs = {
 
 function showWithdrawForm(method) {
   const card = document.getElementById('wdFormCard');
-  card.style.display = 'block';
+  card.classList.remove('hidden');
   document.getElementById('wdFormTitle').textContent = method.charAt(0).toUpperCase() + method.slice(1);
   const fields = document.getElementById('wdFields');
   fields.innerHTML = '';
@@ -601,7 +601,7 @@ document.getElementById('wdForm').addEventListener('submit', async e => {
       totalWithdrawn: firebase.firestore.FieldValue.increment(amount)
     });
     showToast('Withdrawal submitted ✅');
-    document.getElementById('wdFormCard').style.display = 'none';
+    document.getElementById('wdFormCard').classList.add('hidden');
     document.getElementById('wdAmount').value = '';
     document.querySelectorAll('.wd-method').forEach(c => c.classList.remove('selected'));
     const doc = await usersRef.doc(currentUser.uid).get();
@@ -666,3 +666,15 @@ console.error = function(...args) {
   }
   originalOnError.apply(console, args);
 };
+
+// Safety: hide splash after 5s no matter what
+setTimeout(() => {
+  const splash = document.getElementById('splash');
+  if (splash && !splash.classList.contains('hide')) {
+    splash.classList.add('hide');
+  }
+  // If not logged in, show auth
+  if (!currentUser) {
+    showView('authPage');
+  }
+}, 5000);

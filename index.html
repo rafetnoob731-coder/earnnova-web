@@ -29,7 +29,7 @@
 <div id="toast"></div>
 
 <!-- ===== AUTH ===== -->
-<div id="authPage" class="page-view" style="display:none">
+<div id="authPage" class="page-view hidden">
   <div class="auth-bg-gradient"></div>
   <div class="auth-backdrop"></div>
   <div class="auth-container">
@@ -58,7 +58,7 @@
     </form>
 
     <!-- Register -->
-    <form id="registerForm" class="auth-form" style="display:none">
+    <form id="registerForm" class="auth-form hidden">
       <div class="input-group">
         <input type="text" id="regName" placeholder="Full Name" required>
         <span class="input-icon">👤</span>
@@ -79,7 +79,7 @@
     </form>
 
     <!-- Forgot -->
-    <form id="forgotForm" class="auth-form" style="display:none">
+    <form id="forgotForm" class="auth-form hidden">
       <div class="input-group">
         <input type="email" id="forgotEmail" placeholder="Email" required>
         <span class="input-icon">✉️</span>
@@ -99,7 +99,7 @@
 </div>
 
 <!-- ===== MAIN APP ===== -->
-<div id="appPage" class="page-view" style="display:none">
+<div id="appPage" class="page-view hidden">
 
   <!-- Status Bar -->
   <div class="status-bar">
@@ -292,7 +292,7 @@
         <div class="wd-method glass" data-method="bank">🏦 Bank</div>
         <div class="wd-method glass" data-method="crypto">₿ Crypto</div>
       </div>
-      <div id="wdFormCard" class="card glass" style="display:none">
+      <div id="wdFormCard" class="card glass hidden">
         <h3 id="wdFormTitle">Details</h3>
         <form id="wdForm">
           <div class="input-group"><input type="number" id="wdAmount" min="5" step="0.01" placeholder="Amount (min $5)"></div>
