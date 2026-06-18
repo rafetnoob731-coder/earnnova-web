@@ -78,7 +78,62 @@ self.addEventListener('fetch', event => {
 // Background sync for offline actions
 self.addEventListener('sync', event => {
     if (event.tag === 'sync-transactions') {
-        // Sync offline transactions
         console.log('Syncing transactions...');
     }
+});
+
+// Handle push notifications from FCM
+self.addEventListener('push', event => {
+    if (!event.data) return;
+    
+    try {
+        const payload = event.data.json();
+        const options = {
+            body: payload.notification?.body || 'New notification from EARNNOVA',
+            icon: '/assets/icon-192.png',
+            badge: '/assets/icon-72.png',
+            vibrate: [200, 100, 200],
+            data: {
+                url: payload.data?.url || '/',
+                click_action: 'open'
+            },
+            actions: [
+                { action: 'open', title: 'Open App' },
+                { action: 'close', title: 'Dismiss' }
+            ]
+        };
+        
+        event.waitUntil(
+            self.registration.showNotification(
+                payload.notification?.title || 'EARNNOVA',
+                options
+            )
+        );
+    } catch (e) {
+        console.error('Push notification error:', e);
+    }
+});
+
+// Handle notification click
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+    
+    if (event.action === 'close') return;
+    
+    const urlToOpen = event.notification.data?.url || '/';
+    
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+            // Focus existing window if available
+            for (const client of windowClients) {
+                if (client.url.includes(self.location.host) && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            // Open new window
+            if (clients.openWindow) {
+                return clients.openWindow(urlToOpen);
+            }
+        })
+    );
 });

@@ -24,6 +24,13 @@ function showApp(userData) {
         loadAdminDashboard();
     }
     
+    // Request FCM notification permission (after short delay)
+    setTimeout(() => {
+        if (typeof requestFcmPermission === 'function') {
+            requestFcmPermission();
+        }
+    }, 3000);
+    
     // Navigate to default page
     navigateTo('dashboard');
 }
