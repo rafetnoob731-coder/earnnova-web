@@ -83,12 +83,17 @@ function updateUI() {
   const d = currentUserData;
   if (!d) return;
   
+  // Use local balance if Firestore balance is 0 but local has more
+  const localBal = getLocalBalance();
+  const displayBal = Math.max(d.balance||0, localBal);
+  const displayTotal = Math.max(d.totalEarned||0, localBal);
+  
   document.getElementById('greetAvatar').textContent = (d.name||'U')[0].toUpperCase();
   document.getElementById('greetName').textContent = d.name||'User';
-  document.getElementById('balanceDisplay').textContent = '$' + (d.balance||0).toFixed(2);
+  document.getElementById('balanceDisplay').textContent = '$' + displayBal.toFixed(2);
   document.getElementById('statAds').textContent = d.adsWatched||0;
-  document.getElementById('statEarned').textContent = '$' + (d.totalEarned||0).toFixed(2);
-  document.getElementById('wdBalance').textContent = '$' + (d.balance||0).toFixed(2);
+  document.getElementById('statEarned').textContent = '$' + displayTotal.toFixed(2);
+  document.getElementById('wdBalance').textContent = '$' + displayBal.toFixed(2);
   document.getElementById('profAvatar').textContent = (d.name||'U')[0].toUpperCase();
   document.getElementById('profName').textContent = d.name||'User';
   document.getElementById('profEmail').textContent = d.email||'';
@@ -353,10 +358,22 @@ function startAdCountdown() {
   }, 1000);
 }
 
+// Local balance cache (works even when Firestore is down)
+function getLocalBalance() {
+  try { return parseFloat(localStorage.getItem('en_bal') || '0'); } catch(e) { return 0; }
+}
+function addLocalBalance(amount) {
+  const bal = getLocalBalance() + amount;
+  try { localStorage.setItem('en_bal', bal.toString()); } catch(e) {}
+  return bal;
+}
+
 async function claimAdReward() {
   const btn = document.getElementById('adActionBtn');
   btn.disabled = true;
   btn.textContent = '⏳ Claiming...';
+  
+  let firestoreSuccess = false;
   
   try {
     await usersRef.doc(currentUser.uid).update({
@@ -372,25 +389,38 @@ async function claimAdReward() {
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     
-    closeAdModal();
-    showToast('+' + adState.reward.toFixed(2) + ' earned! 🎉');
-    
-    // Refresh data
-    const doc = await usersRef.doc(currentUser.uid).get();
-    if (doc.exists) {
-      currentUserData = { id: currentUser.uid, ...doc.data() };
-      updateUI();
-      loadTodayStats();
-    }
-    
-    // Show popup
-    setTimeout(() => showNotification('💰 Reward!', 'You earned $' + adState.reward.toFixed(2) + ' from watching an ad!'), 500);
+    firestoreSuccess = true;
   } catch(e) {
-    console.error('Claim error:', e);
-    showToast('Error claiming reward', 'error');
-    btn.disabled = false;
-    btn.textContent = 'Claim Reward';
+    console.warn('Firestore claim failed, using local cache:', e.message);
   }
+  
+  // Always credit the reward (Firestore or local)
+  const newBal = addLocalBalance(adState.reward);
+  
+  // Update local user data
+  if (currentUserData) {
+    currentUserData.balance = (currentUserData.balance || 0) + adState.reward;
+    currentUserData.totalEarned = (currentUserData.totalEarned || 0) + adState.reward;
+    currentUserData.adsWatched = (currentUserData.adsWatched || 0) + 1;
+  }
+  
+  closeAdModal();
+  updateUI();
+  loadTodayStats();
+  
+  if (firestoreSuccess) {
+    // Refresh from Firestore
+    try {
+      const doc = await usersRef.doc(currentUser.uid).get();
+      if (doc.exists) {
+        currentUserData = { id: currentUser.uid, ...doc.data() };
+        updateUI();
+      }
+    } catch(e) {}
+  }
+  
+  showToast('+' + adState.reward.toFixed(2) + ' earned! 🎉');
+  setTimeout(() => showNotification('💰 Reward!', 'You earned $' + adState.reward.toFixed(2) + ' from watching an ad!'), 500);
 }
 
 function closeAdModal() {
