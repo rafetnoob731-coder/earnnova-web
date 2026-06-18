@@ -139,7 +139,7 @@ body {
 
 /* ===== AUTH ===== */
 .hidden { display: none !important; }
-.page-view { height:100%; }
+.page-view { height:100vh; min-height:100vh; }
 #authPage {
   display: flex; align-items: center; justify-content: center;
   background: var(--bg);
@@ -178,24 +178,32 @@ body {
 
 /* ===== APP LAYOUT ===== */
 #appPage {
-  display: flex; flex-direction: column; height: 100%; overflow: hidden;
+  position: relative;
+  width: 100%; height: 100vh;
+  overflow: hidden;
 }
 .status-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 40;
   height: var(--status-height);
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 16px; font-size: 11px; font-weight: 600;
-  color: var(--text-muted); flex-shrink: 0;
+  color: var(--text-muted);
+  background: var(--bg);
 }
 .app-content {
-  flex: 1; overflow-y: scroll; overflow-x: hidden;
-  padding: 0 16px 16px;
+  position: absolute;
+  top: var(--status-height);
+  left: 0; right: 0;
+  bottom: calc(var(--nav-height) + var(--safe-bottom));
+  overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  padding: 16px 16px 24px;
 }
 
 /* ===== PAGES ===== */
-.page { display: none; animation: pageIn 0.35s ease; }
-.page.active { display: block; }
+.page { display: none; }
+.page.active { display: block; animation: pageIn 0.35s ease; }
 @keyframes pageIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 .page-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -494,6 +502,7 @@ body {
 
 /* ===== BOTTOM NAV ===== */
 .bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
   display: flex; justify-content: space-around; align-items: center;
   height: calc(var(--nav-height) + var(--safe-bottom));
   padding: 0 8px var(--safe-bottom);
@@ -501,8 +510,6 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid rgba(255,255,255,0.06);
-  flex-shrink: 0;
-  position: relative;
 }
 .nav-item {
   display: flex; flex-direction: column; align-items: center; gap: 1px;
