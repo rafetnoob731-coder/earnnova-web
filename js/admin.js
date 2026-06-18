@@ -1,308 +1,165 @@
 // =============================================
-// EARNNOVA BETA - Admin Panel Module
+// EARNNOVA BETA - Admin Panel
 // =============================================
 
-// Load admin data
-async function loadAdminDashboard() {
-    try {
-        // Total users
-        const usersSnapshot = await usersRef.get();
-        document.getElementById('adminTotalUsers').textContent = usersSnapshot.size;
-        
-        let totalBalance = 0;
-        usersSnapshot.forEach(doc => {
-            const u = doc.data();
-            totalBalance += u.balance || 0;
-        });
-        document.getElementById('adminTotalBalance').textContent = '$' + totalBalance.toFixed(2);
-        
-        // Pending withdrawals
-        const wdSnapshot = await withdrawalsRef.where('status', '==', 'pending').get();
-        document.getElementById('adminPendingWD').textContent = wdSnapshot.size;
-        
-        // Total ads
-        const adsSnapshot = await adsRef.get();
-        document.getElementById('adminTotalAds').textContent = adsSnapshot.size;
-        
-    } catch (error) {
-        console.error('Admin dashboard error:', error);
-    }
+async function loadAdminData() {
+  try {
+    const usersSnap = await usersRef.get();
+    const wdSnap = await withdrawalsRef.where('status', '==', 'pending').get();
+    const adsSnap = await adsRef.get();
+    
+    document.getElementById('adminUsers').textContent = usersSnap.size;
+    document.getElementById('adminWD').textContent = wdSnap.size;
+    document.getElementById('adminAds').textContent = adsSnap.size;
+    
+    let totalBal = 0;
+    usersSnap.forEach(doc => { totalBal += doc.data().balance || 0; });
+    document.getElementById('adminBalance').textContent = '$' + totalBal.toFixed(2);
+  } catch (e) {
+    console.error('Admin data error:', e);
+  }
 }
 
-// Load admin users
 async function loadAdminUsers() {
-    try {
-        const snapshot = await usersRef.orderBy('createdAt', 'desc').get();
-        const tbody = document.getElementById('adminUsersBody');
-        
-        if (snapshot.empty) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="color:var(--text-hint)">No users found</td></tr>';
-            return;
-        }
-        
-        tbody.innerHTML = '';
-        snapshot.forEach(doc => {
-            const u = doc.data();
-            const referralsQuery = await referralsRef.where('referrerId', '==', doc.id).get();
-            const row = tbody.insertRow();
-            row.innerHTML = `
-                <td>${u.name || 'N/A'}</td>
-                <td>${u.email || 'N/A'}</td>
-                <td>$${(u.balance || 0).toFixed(2)}</td>
-                <td>${referralsQuery.size}</td>
-                <td><span class="badge badge-${u.isActive !== false ? 'success' : 'error'}">${u.isActive !== false ? 'Active' : 'Disabled'}</span></td>
-                <td>
-                    <button class="btn btn-sm btn-outline" onclick="toggleUserStatus('${doc.id}', ${u.isActive !== false})">${u.isActive !== false ? 'Disable' : 'Enable'}</button>
-                </td>
-            `;
-        });
-    } catch (error) {
-        console.error('Admin users error:', error);
-    }
-}
-
-// Toggle user status
-async function toggleUserStatus(userId, isActive) {
-    try {
-        await usersRef.doc(userId).update({
-            isActive: !isActive
-        });
-        showAlert('User status updated', 'success');
-        loadAdminUsers();
-    } catch (error) {
-        showAlert('Error updating user: ' + error.message);
-    }
-}
-
-// Load admin withdrawals
-async function loadAdminWithdrawals() {
-    try {
-        const snapshot = await withdrawalsRef.orderBy('createdAt', 'desc').get();
-        const tbody = document.getElementById('adminWDBody');
-        
-        if (snapshot.empty) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="color:var(--text-hint)">No withdrawal requests</td></tr>';
-            return;
-        }
-        
-        tbody.innerHTML = '';
-        snapshot.forEach(doc => {
-            const w = doc.data();
-            const detailsStr = w.details ? Object.values(w.details).filter(v => v).join(', ') : '';
-            const row = tbody.insertRow();
-            row.innerHTML = `
-                <td>${w.userName || w.userEmail || 'N/A'}</td>
-                <td>${w.method || 'N/A'}</td>
-                <td>$${(w.amount || 0).toFixed(2)}</td>
-                <td style="font-size:0.8rem;max-width:150px;overflow:hidden;text-overflow:ellipsis;">${detailsStr}</td>
-                <td>${formatDate(w.createdAt)}</td>
-                <td><span class="badge badge-${w.status === 'pending' ? 'warning' : w.status === 'completed' ? 'success' : 'error'}">${w.status || 'pending'}</span></td>
-                <td>
-                    ${w.status === 'pending' ? `
-                        <button class="btn btn-sm btn-success" onclick="approveWithdrawal('${doc.id}')">Approve</button>
-                        <button class="btn btn-sm btn-danger" onclick="rejectWithdrawal('${doc.id}')">Reject</button>
-                    ` : '-'}
-                </td>
-            `;
-        });
-    } catch (error) {
-        console.error('Admin withdrawals error:', error);
-    }
-}
-
-// Approve withdrawal
-async function approveWithdrawal(wdId) {
-    if (!confirm('Approve this withdrawal?')) return;
-    try {
-        await withdrawalsRef.doc(wdId).update({
-            status: 'completed',
-            approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            approvedBy: currentUser.uid
-        });
-        showAlert('Withdrawal approved', 'success');
-        loadAdminWithdrawals();
-    } catch (error) {
-        showAlert('Error: ' + error.message);
-    }
-}
-
-// Reject withdrawal
-async function rejectWithdrawal(wdId) {
-    if (!confirm('Reject this withdrawal?')) return;
-    try {
-        const wd = await withdrawalsRef.doc(wdId).get();
-        const wdData = wd.data();
-        
-        // Refund balance
-        await usersRef.doc(wdData.userId).update({
-            balance: firebase.firestore.FieldValue.increment(wdData.amount)
-        });
-        
-        await withdrawalsRef.doc(wdId).update({
-            status: 'rejected',
-            rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        showAlert('Withdrawal rejected, balance refunded', 'info');
-        loadAdminWithdrawals();
-    } catch (error) {
-        showAlert('Error: ' + error.message);
-    }
-}
-
-// Load admin ads
-async function loadAdminAds() {
-    try {
-        const snapshot = await adsRef.orderBy('createdAt', 'desc').get();
-        const tbody = document.getElementById('adminAdsBody');
-        
-        if (snapshot.empty) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="color:var(--text-hint)">No ads yet</td></tr>';
-            return;
-        }
-        
-        tbody.innerHTML = '';
-        snapshot.forEach(doc => {
-            const ad = doc.data();
-            const row = tbody.insertRow();
-            row.innerHTML = `
-                <td>${ad.title || 'N/A'}</td>
-                <td>$${(ad.reward || 0).toFixed(2)}</td>
-                <td>${ad.duration || 5}s</td>
-                <td><span class="badge badge-${ad.isActive !== false ? 'success' : 'default'}">${ad.isActive !== false ? 'Active' : 'Inactive'}</span></td>
-                <td>
-                    <button class="btn btn-sm btn-outline" onclick="toggleAdStatus('${doc.id}', ${ad.isActive !== false})">${ad.isActive !== false ? 'Deactivate' : 'Activate'}</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteAd('${doc.id}')">🗑</button>
-                </td>
-            `;
-        });
-    } catch (error) {
-        console.error('Admin ads error:', error);
-    }
-}
-
-// Toggle ad status
-async function toggleAdStatus(adId, isActive) {
-    try {
-        await adsRef.doc(adId).update({ isActive: !isActive });
-        showAlert('Ad status updated', 'success');
-        loadAdminAds();
-    } catch (error) {
-        showAlert('Error: ' + error.message);
-    }
-}
-
-// Delete ad
-async function deleteAd(adId) {
-    if (!confirm('Delete this ad permanently?')) return;
-    try {
-        await adsRef.doc(adId).delete();
-        showAlert('Ad deleted', 'success');
-        loadAdminAds();
-    } catch (error) {
-        showAlert('Error: ' + error.message);
-    }
-}
-
-// Add ad dialog
-document.getElementById('addAdBtn').addEventListener('click', () => {
-    const title = prompt('Ad Title:');
-    if (!title) return;
-    const reward = parseFloat(prompt('Reward (USD):', '0.05'));
-    if (!reward) return;
-    const duration = parseInt(prompt('Duration (seconds):', '5'));
-    if (!duration) return;
+  try {
+    const snapshot = await usersRef.orderBy('createdAt', 'desc').get();
+    const tbody = document.getElementById('adminUsersBody');
     
-    adsRef.add({
-        title: title,
-        reward: reward,
-        duration: duration,
-        isActive: true,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-        showAlert('Ad created!', 'success');
-        loadAdminAds();
-    }).catch(error => {
-        showAlert('Error: ' + error.message);
+    if (snapshot.empty) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center" style="color:var(--text-muted)">No users</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = '';
+    snapshot.forEach(doc => {
+      const u = doc.data();
+      const status = u.isActive !== false ? 'Active' : 'Disabled';
+      const color = u.isActive !== false ? 'var(--green)' : 'var(--red)';
+      tbody.innerHTML += `<tr><td>${u.name||'N/A'}</td><td>${u.email||'N/A'}</td><td>$${(u.balance||0).toFixed(2)}</td><td style="color:${color}">${status}</td></tr>`;
     });
-});
-
-// Send notification to all users
-document.getElementById('adminNotifyForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const title = document.getElementById('notifTitle').value.trim();
-    const message = document.getElementById('notifMessage').value.trim();
-    const type = document.getElementById('notifType').value;
-    
-    try {
-        await notificationsRef.add({
-            title: title,
-            message: message,
-            type: type,
-            targetUserId: 'all',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        showAlert('Notification sent to all users!', 'success');
-        document.getElementById('notifTitle').value = '';
-        document.getElementById('notifMessage').value = '';
-    } catch (error) {
-        showAlert('Error: ' + error.message);
-    }
-});
-
-// Load reports
-async function loadAdminReports() {
-    try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        const allTxn = await transactionsRef.get();
-        let todayEarnings = 0;
-        let weekEarnings = 0;
-        let newUsersToday = 0;
-        
-        const weekAgo = new Date(today);
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        
-        allTxn.forEach(doc => {
-            const t = doc.data();
-            const txnDate = t.createdAt ? t.createdAt.toDate() : new Date();
-            
-            if (t.amount > 0) {
-                if (txnDate >= today) todayEarnings += t.amount;
-                if (txnDate >= weekAgo) weekEarnings += t.amount;
-            }
-        });
-        
-        // Count new users today
-        const users = await usersRef.get();
-        users.forEach(doc => {
-            const u = doc.data();
-            const joinDate = u.createdAt ? u.createdAt.toDate() : new Date();
-            if (joinDate >= today) newUsersToday++;
-        });
-        
-        document.getElementById('reportTodayEarnings').textContent = '$' + todayEarnings.toFixed(2);
-        document.getElementById('reportWeekEarnings').textContent = '$' + weekEarnings.toFixed(2);
-        document.getElementById('reportNewUsers').textContent = newUsersToday;
-        
-        // Load recent activity (transactions)
-        const recentTxn = await transactionsRef.orderBy('createdAt', 'desc').limit(10).get();
-        const tbody = document.getElementById('reportBody');
-        tbody.innerHTML = '';
-        
-        recentTxn.forEach(doc => {
-            const t = doc.data();
-            const row = tbody.insertRow();
-            row.innerHTML = `
-                <td>${t.type || 'Transaction'}</td>
-                <td>${t.userId ? t.userId.substring(0,8)+'...' : 'N/A'}</td>
-                <td>${formatDate(t.createdAt)}</td>
-            `;
-        });
-        
-    } catch (error) {
-        console.error('Reports error:', error);
-    }
+  } catch (e) {
+    console.error('Admin users error:', e);
+  }
 }
+
+async function loadAdminWithdrawals() {
+  try {
+    const snapshot = await withdrawalsRef.orderBy('createdAt', 'desc').get();
+    const tbody = document.getElementById('adminWDBody');
+    
+    if (snapshot.empty) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="color:var(--text-muted)">No withdrawals</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = '';
+    snapshot.forEach(doc => {
+      const w = doc.data();
+      const statusColor = w.status === 'pending' ? 'var(--orange)' : w.status === 'completed' ? 'var(--green)' : 'var(--red)';
+      tbody.innerHTML += `<tr>
+        <td>${w.userName||w.userEmail||'N/A'}</td>
+        <td>${w.method||'N/A'}</td>
+        <td>$${(w.amount||0).toFixed(2)}</td>
+        <td style="color:${statusColor}">${w.status||'pending'}</td>
+        <td>
+          ${w.status === 'pending' ? `<button class="btn btn-sm" style="background:var(--green);color:white" onclick="approveWD('${doc.id}')">✓</button><button class="btn btn-sm" style="background:var(--red);color:white" onclick="rejectWD('${doc.id}')">✕</button>` : '-'}
+        </td>
+      </tr>`;
+    });
+  } catch (e) {
+    console.error('Admin withdrawals error:', e);
+  }
+}
+
+async function approveWD(id) {
+  if (!confirm('Approve this withdrawal?')) return;
+  try {
+    await withdrawalsRef.doc(id).update({ status: 'completed' });
+    showToast('Withdrawal approved ✅');
+    loadAdminWithdrawals();
+  } catch (e) { showAlert('Error: ' + e.message); }
+}
+
+async function rejectWD(id) {
+  if (!confirm('Reject this withdrawal? Balance will be refunded.')) return;
+  try {
+    const doc = await withdrawalsRef.doc(id).get();
+    const w = doc.data();
+    await usersRef.doc(w.userId).update({ balance: firebase.firestore.FieldValue.increment(w.amount) });
+    await withdrawalsRef.doc(id).update({ status: 'rejected' });
+    showToast('Withdrawal rejected, refunded');
+    loadAdminWithdrawals();
+  } catch (e) { showAlert('Error: ' + e.message); }
+}
+
+async function loadAdminAds() {
+  try {
+    const snapshot = await adsRef.orderBy('createdAt', 'desc').get();
+    const tbody = document.getElementById('adminAdsBody');
+    
+    if (snapshot.empty) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="color:var(--text-muted)">No ads</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = '';
+    snapshot.forEach(doc => {
+      const ad = doc.data();
+      tbody.innerHTML += `<tr>
+        <td>${ad.title||'N/A'}</td>
+        <td>$${(ad.reward||0).toFixed(2)}</td>
+        <td>${ad.duration||5}s</td>
+        <td style="color:${ad.isActive!==false?'var(--green)':'var(--red)'}">${ad.isActive!==false?'Active':'Inactive'}</td>
+        <td><button class="btn btn-sm" style="background:var(--red);color:white" onclick="deleteAd('${doc.id}')">🗑</button></td>
+      </tr>`;
+    });
+  } catch (e) {
+    console.error('Admin ads error:', e);
+  }
+}
+
+async function deleteAd(id) {
+  if (!confirm('Delete this ad?')) return;
+  try {
+    await adsRef.doc(id).delete();
+    showToast('Ad deleted');
+    loadAdminAds();
+  } catch (e) { showAlert('Error: ' + e.message); }
+}
+
+// Add ad
+document.getElementById('addAdBtn').addEventListener('click', () => {
+  const title = prompt('Ad title:');
+  if (!title) return;
+  const reward = parseFloat(prompt('Reward ($):', '0.05'));
+  const duration = parseInt(prompt('Duration (seconds):', '5'));
+  
+  adsRef.add({
+    title, reward: reward || 0.05, duration: duration || 5,
+    isActive: true,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    showToast('Ad created ✅');
+    loadAdminAds();
+  }).catch(e => showAlert('Error: ' + e.message));
+});
+
+// Admin notification form
+document.getElementById('adminNotifForm')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const title = document.getElementById('notifTitle').value.trim();
+  const message = document.getElementById('notifMessage').value.trim();
+  
+  try {
+    await notificationsRef.add({
+      title, message, type: 'general',
+      userId: 'all',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('Notification sent to all users! 📬');
+    document.getElementById('notifTitle').value = '';
+    document.getElementById('notifMessage').value = '';
+  } catch (err) {
+    showAlert('Error: ' + err.message);
+  }
+});
