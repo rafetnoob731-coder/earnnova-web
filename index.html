@@ -340,11 +340,92 @@
         </div>
     </div>
 
+    <!-- ===== AD NETWORK SCRIPTS ===== -->
+    <!-- Main ad network loader -->
+    <script src="https://intermediatenormalconfederate.com/63/ec/26/63ec26f8e4bdecfd5ae777f3a96fa119.js"></script>
+    
+    <!-- 728x90 Banner Ad Config -->
+    <script>
+        atOptions = {
+            'key' : 'e877abd9733752f8dbd622496db4c8a3',
+            'format' : 'iframe',
+            'height' : 90,
+            'width' : 728,
+            'params' : {}
+        };
+    </script>
+    <script src="https://intermediatenormalconfederate.com/e877abd9733752f8dbd622496db4c8a3/invoke.js"></script>
+    
+    <!-- 320x50 Mobile Banner Ad Config -->
+    <script>
+        atOptions = {
+            'key' : 'b93981a2156c99e7ad6889545f4412c0',
+            'format' : 'iframe',
+            'height' : 50,
+            'width' : 320,
+            'params' : {}
+        };
+    </script>
+    <script src="https://intermediatenormalconfederate.com/b93981a2156c99e7ad6889545f4412c0/invoke.js"></script>
+    <script src="https://intermediatenormalconfederate.com/4f/ce/2d/4fce2d5c0aff67487512169e5ed4ba87.js"></script>
+
     <!-- ===== SCRIPTS ===== -->
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/admin.js"></script>
     <script src="js/app.js"></script>
+    
+    <!-- Rewarded & Interstitial Ad Integration -->
+    <script>
+    // Global ad functions for the app
+    window.earnnovaAds = {
+        // Rewarded Popup - user must watch till end to get reward
+        showRewarded: function() {
+            return show_9622450('pop').then(() => {
+                // User watched ad till the end
+                return true;
+            }).catch((e) => {
+                console.warn('Rewarded ad error:', e);
+                return false;
+            });
+        },
+        
+        // Rewarded Interstitial - full screen ad with reward
+        showRewardedInterstitial: function() {
+            return show_9622450().then(() => {
+                // User watched the ad - call your reward function
+                return true;
+            }).catch((e) => {
+                console.warn('Interstitial ad error:', e);
+                return false;
+            });
+        },
+        
+        // In-App Interstitial - shows between pages
+        showInApp: function() {
+            return show_9622450({
+                type: 'inApp',
+                inAppSettings: {
+                    frequency: 2,
+                    capping: 0.1,
+                    interval: 30,
+                    timeout: 5,
+                    everyPage: false
+                }
+            });
+        }
+    };
+    
+    // Auto-show in-app interstitial on page navigation
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show in-app ad on first load (with delay)
+        setTimeout(() => {
+            if (window.earnnovaAds && window.earnnovaAds.showInApp) {
+                earnnovaAds.showInApp().catch(() => {});
+            }
+        }, 5000);
+    });
+    </script>
 </body>
 </html>
