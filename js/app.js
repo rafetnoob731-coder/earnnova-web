@@ -2,10 +2,200 @@
 // EARNNOVA - Premium Dashboard
 // =============================================
 let currentUser = null, currentUserData = null;
-let adTimer = null;
-let carouselIdx = 0, carouselTimer = null;
 
-// ===== FIRESTORE TIMEOUT (prevents hanging) =====
+// ===== MONETAG AD MANAGER =====
+class EarnnovaAdManager {
+  constructor() {
+    this.zoneId = ''; // Set your Monetag zone ID
+    this.state = 'idle'; // idle|loading|playing|completed|failed
+    this.timer = null;
+    this.watchStart = 0;
+    this.minWatchMs = 5000;
+    this.currentReward = 0.02;
+    this.currentAdId = null;
+    this.onReward = null;
+    this.isVisible = false;
+    this.visibleTime = 0;
+    this.observer = null;
+  }
+
+  // ─── PLAY AD (main entry point) ───
+  async play(adId, reward, title, duration) {
+    this.currentAdId = adId || 'ad_'+Date.now();
+    this.currentReward = reward || 0.02;
+    this.currentTitle = title || 'Ad';
+    this.duration = duration || 30;
+    this.state = 'loading';
+    
+    const modal = document.getElementById('adModal');
+    modal.classList.add('show');
+    
+    // Phase 1: Loading UI with steps
+    this.renderLoadingUI();
+    
+    // Phase 2: Simulate SDK init + ad load (800ms each)
+    await this.sleep(800); this.advanceStep(0);
+    await this.sleep(800); this.advanceStep(1);
+    
+    // Phase 3: Ad "playing" - start countdown
+    this.state = 'playing';
+    this.renderPlayingUI();
+    this.startCountdown();
+    this.trackVisibility();
+    
+    return new Promise((resolve) => {
+      this.onReward = resolve;
+    });
+  }
+
+  renderLoadingUI() {
+    document.getElementById('modalAdContent').innerHTML = `
+      <div class="ad-player-box">
+        <div class="ad-player-screen">
+          <div class="ad-player-icon">📺</div>
+          <div class="ad-player-label">Initializing...</div>
+        </div>
+        <div class="ad-progress-steps" id="adSteps">
+          <div class="ad-step active"></div>
+          <div class="ad-step"></div>
+          <div class="ad-step"></div>
+        </div>
+        <div class="ad-ring-wrap">
+          <svg viewBox="0 0 100 100" width="80" height="80">
+            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6"/>
+            <circle cx="50" cy="50" r="42" fill="none" stroke="url(#ag)" stroke-width="6" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round" transform="rotate(-90,50,50)" id="adRing"/>
+            <defs><linearGradient id="ag" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#10B981"/><stop offset="1" stop-color="#059669"/></linearGradient></defs>
+          </svg>
+          <div class="ad-ring-text" id="adTimerDisplay">${this.duration}</div>
+        </div>
+        <div class="ad-reward-big">💰 +$${this.currentReward.toFixed(2)}</div>
+      </div>`;
+    
+    document.getElementById('modalAdFooter').innerHTML = `
+      <div class="ad-reward-info"><span>💰 Reward: <strong>+$${this.currentReward.toFixed(2)}</strong></span><span>⏱️ <span id="timeLeft">0s</span></span></div>
+      <button id="adActionBtn" class="btn btn-primary btn-block" disabled>⏳ Loading ad...</button>`;
+  }
+
+  advanceStep(idx) {
+    const steps = document.querySelectorAll('.ad-step');
+    const labels = ['Loading SDK...', 'Fetching ad...', 'Starting...'];
+    if (steps[idx]) { steps[idx].classList.add('done'); steps[idx].classList.remove('active'); }
+    if (steps[idx+1]) steps[idx+1].classList.add('active');
+    const label = document.querySelector('.ad-player-label');
+    if (label && labels[idx+1]) label.textContent = labels[idx+1];
+  }
+
+  renderPlayingUI() {
+    const screen = document.querySelector('.ad-player-screen');
+    if (screen) {
+      screen.innerHTML = `<div class="ad-player-icon">▶️</div><div class="ad-player-label">Ad Playing</div>`;
+    }
+    const btn = document.getElementById('adActionBtn');
+    if (btn) { btn.disabled = false; btn.textContent = '⏳ Watching...'; }
+  }
+
+  startCountdown() {
+    let sec = this.duration;
+    const ring = document.getElementById('adRing');
+    const timer = document.getElementById('adTimerDisplay');
+    const timeLeft = document.getElementById('timeLeft');
+    const btn = document.getElementById('adActionBtn');
+    const circ = 264;
+    this.watchStart = Date.now();
+    
+    if (this.timer) clearInterval(this.timer);
+    this.timer = setInterval(() => {
+      sec--;
+      const p = sec / this.duration;
+      if (ring) ring.style.strokeDashoffset = circ * (1 - p);
+      if (timer) timer.textContent = Math.max(sec, 0);
+      if (timeLeft) timeLeft.textContent = Math.max(sec, 0) + 's';
+      
+      if (sec <= 0) {
+        clearInterval(this.timer);
+        this.state = 'completed';
+        if (timer) timer.textContent = '✅';
+        if (btn) { btn.disabled = false; btn.textContent = '✅ Claim $' + this.currentReward.toFixed(2); btn.onclick = () => this.claim(); }
+        if (timeLeft) timeLeft.textContent = 'Done!';
+      }
+    }, 1000);
+  }
+
+  trackVisibility() {
+    this.observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting && e.intersectionRatio >= 0.5) {
+          this.isVisible = true;
+        } else {
+          this.isVisible = false;
+        }
+      });
+    }, { threshold: [0.5] });
+    const el = document.querySelector('.ad-player-screen');
+    if (el) this.observer.observe(el);
+  }
+
+  async claim() {
+    const btn = document.getElementById('adActionBtn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Claiming...'; }
+    
+    const elapsed = Date.now() - this.watchStart;
+    const visPct = this.isVisible ? 1.0 : 0.8; // if not tracked, assume good
+    
+    if (elapsed < this.minWatchMs || visPct < 0.5) {
+      showToast('Ad too short, try again', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = 'Try Again'; }
+      return;
+    }
+    
+    // Grant reward (Firestore + local)
+    let ok = false;
+    try {
+      await fbTimeout(usersRef.doc(currentUser.uid).update({
+        balance: firebase.firestore.FieldValue.increment(this.currentReward),
+        totalEarned: firebase.firestore.FieldValue.increment(this.currentReward),
+        adsWatched: firebase.firestore.FieldValue.increment(1)
+      }));
+      await fbTimeout(transactionsRef.add({
+        userId: currentUser.uid, type: 'Ad Reward',
+        amount: this.currentReward, status: 'completed',
+        description: this.currentTitle,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }));
+      ok = true;
+    } catch(e) {}
+    
+    locAdd('bal', this.currentReward);
+    locAdd('earned', this.currentReward);
+    locAdd('watched', 1);
+    if (currentUserData) {
+      currentUserData.balance = (currentUserData.balance||0) + this.currentReward;
+      currentUserData.totalEarned = (currentUserData.totalEarned||0) + this.currentReward;
+      currentUserData.adsWatched = (currentUserData.adsWatched||0) + 1;
+    }
+    
+    this.close();
+    updateUI();
+    todayStats();
+    showToast('+$' + this.currentReward.toFixed(2) + ' earned! 🎉');
+    
+    if (this.onReward) this.onReward({ amount: this.currentReward });
+    setTimeout(() => showNotif('💰 Reward!', 'You earned $' + this.currentReward.toFixed(2)), 500);
+  }
+
+  close() {
+    document.getElementById('adModal').classList.remove('show');
+    if (this.timer) clearInterval(this.timer);
+    if (this.observer) this.observer.disconnect();
+    this.state = 'idle';
+  }
+
+  sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+}
+
+const adManager = new EarnnovaAdManager();
+
+// ===== FIRESTORE TIMEOUT =====
 function fbTimeout(promise, ms = 5000) {
   return Promise.race([promise, new Promise((_,r)=>setTimeout(()=>r(new Error('TIMEOUT')),ms))]);
 }
@@ -69,7 +259,7 @@ function navigate(page) {
     case'earn': loadEarnPage(); break;
     case'plans': loadPlans(); break;
     case'referrals': loadReferrals(); break;
-    case'history': loadHistory(); break;
+    case'history': loadHistory(page); break;
     case'admin':
       if(currentUserData?.isAdmin||currentUser?.email===ADMIN_EMAIL) { adminLoadStats(); adminLoadUsers(); }
       else { showToast('Admin only','error'); navigate('home'); }
@@ -108,7 +298,6 @@ function updateUI() {
   const ab=document.getElementById('adminEntryBtn');
   if(ab) ab.style.display=(d.isAdmin||currentUser?.email===ADMIN_EMAIL)?'flex':'none';
 }
-function updateStreak(){} // Removed from new design
 
 // ===== DASHBOARD =====
 async function loadDashboard() {
@@ -148,7 +337,7 @@ function renderAds(ads) {
   list.innerHTML='';
   ads.forEach(a=>{
     const t=(a.title||'Ad').replace(/'/g,"\\'");
-    list.innerHTML+=`<div class="ad-tile" onclick="openAdPlayer('${a.id}',${a.reward||0.02},'${t}',${a.duration||30})"><span class="ad-tile-icon">🎬</span><div class="ad-tile-info"><h4>${a.title||'Ad'}</h4><p>${a.duration||30}s watch</p></div><span class="ad-tile-reward">+$${(a.reward||0.02).toFixed(2)}</span></div>`;
+    list.innerHTML+=`<div class="ad-tile" onclick="openAd('${a.id}',${a.reward||0.02},'${t}',${a.duration||30})"><span class="ad-tile-icon">🎬</span><div class="ad-tile-info"><h4>${a.title||'Ad'}</h4><p>${a.duration||30}s watch</p></div><span class="ad-tile-reward">+$${(a.reward||0.02).toFixed(2)}</span></div>`;
   });
 }
 async function loadFirestoreAds() {
@@ -159,104 +348,12 @@ async function loadFirestoreAds() {
   } catch(e){}
 }
 
-// ===== AD PLAYER (FIXED FLOW) =====
-let adState={id:null,reward:0.02,title:'Ad',duration:30};
-function openAdPlayer(id,reward,title,duration) {
-  adState={id: id||'ad_'+Date.now(), reward:reward||0.02, title:title||'Ad', duration:duration||30};
-  const modal=document.getElementById('adModal'); modal.classList.add('show');
-  
-  // Phase 1: Show loading state with steps
-  modal.querySelector('#modalAdContent').innerHTML=`
-    <div class="ad-player-box">
-      <div class="ad-player-screen">
-        <div class="ad-player-icon">📺</div>
-        <div class="ad-player-label">Loading ad...</div>
-      </div>
-      <div class="ad-progress-steps" id="adSteps">
-        <div class="ad-step active"></div>
-        <div class="ad-step"></div>
-        <div class="ad-step"></div>
-      </div>
-      <div class="ad-ring-wrap">
-        <svg viewBox="0 0 100 100" width="80" height="80">
-          <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6"/>
-          <circle cx="50" cy="50" r="42" fill="none" stroke="url(#ag)" stroke-width="6" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round" transform="rotate(-90,50,50)" id="adRing"/>
-          <defs><linearGradient id="ag" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#10B981"/><stop offset="1" stop-color="#059669"/></linearGradient></defs>
-        </svg>
-        <div class="ad-ring-text" id="adTimerDisplay">${duration||30}</div>
-      </div>
-      <div class="ad-reward-big">💰 +$${(reward||0.02).toFixed(2)}</div>
-    </div>`;
-  
-  const footer=modal.querySelector('#modalAdFooter');
-  footer.innerHTML=`
-    <div class="ad-reward-info"><span>💰 Reward: <strong id="adRewardLabel">+$${(reward||0.02).toFixed(2)}</strong></span><span>⏱️ <span id="timeLeft">0s</span></span></div>
-    <button id="adActionBtn" class="btn btn-primary btn-block" disabled>⏳ Loading ad...</button>`;
-  
-  // Phase 2: Simulate ad loading (SDK init + load)
-  const steps=document.querySelectorAll('.ad-step');
-  setTimeout(()=>{if(steps[0])steps[0].classList.add('done');if(steps[1])steps[1].classList.add('active');},800);
-  setTimeout(()=>{if(steps[1]){steps[1].classList.add('done');steps[1].classList.remove('active');}if(steps[2])steps[2].classList.add('active');},1600);
-  
-  // Phase 3: Ad "rendered" - start countdown
-  setTimeout(()=>{
-    if(steps[2]){steps[2].classList.add('done');steps[2].classList.remove('active');}
-    document.querySelector('.ad-player-screen').innerHTML=`
-      <div class="ad-player-icon">▶️</div>
-      <div class="ad-player-label">Ad Playing</div>`;
-    document.querySelector('.ad-player-label').textContent='Ad Playing...';
-    const btn=document.getElementById('adActionBtn');
-    if(btn){btn.disabled=false;btn.textContent='⏳ Watching...';}
-    startAdTimer(duration||30);
-  }, 2500);
+// ===== OPEN AD (uses AdManager) =====
+function openAd(id, reward, title, duration) {
+  window.openAdId = id;
+  adManager.play(id, reward, title, duration).catch(() => {});
 }
-
-function startAdTimer(sec) {
-  const ring=document.getElementById('adRing');
-  const timer=document.getElementById('adTimerDisplay');
-  const timeLeft=document.getElementById('timeLeft');
-  const btn=document.getElementById('adActionBtn');
-  const total=sec;
-  const circ=264;
-  
-  if(adTimer) clearInterval(adTimer);
-  adTimer=setInterval(()=>{
-    sec--;
-    const p=sec/total;
-    if(ring) ring.style.strokeDashoffset=circ*(1-p);
-    if(timer) timer.textContent=Math.max(sec,0);
-    if(timeLeft) timeLeft.textContent=Math.max(sec,0)+'s';
-    
-    if(sec<=0) {
-      clearInterval(adTimer);
-      if(timer) timer.textContent='✅';
-      if(btn){btn.disabled=false;btn.textContent='✅ Claim $'+adState.reward.toFixed(2);btn.onclick=claimReward;}
-      if(timeLeft) timeLeft.textContent='Done!';
-    }
-  },1000);
-}
-
-function closeAdModal() {
-  document.getElementById('adModal').classList.remove('show');
-  if(adTimer) clearInterval(adTimer);
-}
-
-async function claimReward() {
-  const btn=document.getElementById('adActionBtn');
-  if(btn){btn.disabled=true;btn.textContent='⏳ Claiming...';}
-  let ok=false;
-  try {
-    await fbTimeout(usersRef.doc(currentUser.uid).update({balance:firebase.firestore.FieldValue.increment(adState.reward),totalEarned:firebase.firestore.FieldValue.increment(adState.reward),adsWatched:firebase.firestore.FieldValue.increment(1)}));
-    await fbTimeout(transactionsRef.add({userId:currentUser.uid,type:'Ad Reward',amount:adState.reward,status:'completed',description:adState.title,createdAt:firebase.firestore.FieldValue.serverTimestamp()}));
-    ok=true;
-  } catch(e){}
-  
-  locAdd('bal',adState.reward); locAdd('earned',adState.reward); locAdd('watched',1);
-  if(currentUserData){currentUserData.balance=(currentUserData.balance||0)+adState.reward;currentUserData.totalEarned=(currentUserData.totalEarned||0)+adState.reward;currentUserData.adsWatched=(currentUserData.adsWatched||0)+1;}
-  closeAdModal(); updateUI(); todayStats();
-  showToast('+'+adState.reward.toFixed(2)+' earned! 🎉');
-  setTimeout(()=>showNotif('💰 Reward!','You earned $'+adState.reward.toFixed(2)),500);
-}
+function closeAdModal() { adManager.close(); }
 
 // ===== PLANS =====
 async function loadPlans() {
@@ -335,6 +432,8 @@ function startCarousel() {
   track.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;},{passive:true});
   track.addEventListener('touchend',e=>{const d=sx-e.changedTouches[0].clientX;if(Math.abs(d)>50){if(d>0&&carouselIdx<dots.length-1)carouselIdx++;else if(d<0&&carouselIdx>0)carouselIdx--;track.style.transform=`translateX(-${carouselIdx*100}%)`;dots.forEach((x,i)=>x.classList.toggle('active',i===carouselIdx));}},{passive:true});
 }
+
+let carouselIdx = 0, carouselTimer = null;
 
 // ===== COMMON =====
 function fmtDate(ts) { if(!ts)return'';const d=ts.toDate?ts.toDate():new Date(ts);const diff=Date.now()-d;if(diff<60000)return'Just now';if(diff<3600000)return Math.floor(diff/60000)+'m ago';if(diff<86400000)return Math.floor(diff/3600000)+'h ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}

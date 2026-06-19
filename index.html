@@ -418,18 +418,21 @@
   </nav>
 </div>
 
-<!-- ===== AD WATCH MODAL ===== -->
+<!-- ===== AD WATCH MODAL (Monetag) ===== -->
 <div id="adModal" class="modal-overlay">
   <div class="modal-full">
     <div class="modal-top-bar">
       <button class="icon-btn-sm" onclick="closeAdModal()">✕</button>
       <span>Watch & Earn</span>
     </div>
-    <div class="modal-ad-content" id="modalAdContent"></div>
+    <div class="modal-ad-content" id="modalAdContent">
+      <!-- Monetag interstitial container -->
+      <div id="monetag-interstitial" style="display:none"></div>
+    </div>
     <div class="modal-ad-footer" id="modalAdFooter">
       <div class="ad-reward-info">
         <span>💰 Reward: <strong id="adRewardLabel">+$0.00</strong></span>
-        <span>⏱️ <span id="adTimeLabel">0s</span></span>
+        <span>⏱️ <span id="timeLeft">0s</span></span>
       </div>
       <button id="adActionBtn" class="btn btn-primary btn-block" disabled>⏳ Loading...</button>
     </div>
@@ -452,22 +455,18 @@
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>
 <script src="js/admin.js"></script>
-<script src="https://intermediatenormalconfederate.com/63/ec/26/63ec26f8e4bdecfd5ae777f3a96fa119.js"></script>
+<!-- Monetag Ad Network -->
+<script src="https://monetag.com/tag.js" data-zone="" async></script>
 <script>
-atOptions = {'key':'e877abd9733752f8dbd622496db4c8a3','format':'iframe','height':90,'width':728,'params':{}};
-</script>
-<script src="https://intermediatenormalconfederate.com/e877abd9733752f8dbd622496db4c8a3/invoke.js"></script>
-<script>
-atOptions = {'key':'b93981a2156c99e7ad6889545f4412c0','format':'iframe','height':50,'width':320,'params':{}};
-</script>
-<script src="https://intermediatenormalconfederate.com/b93981a2156c99e7ad6889545f4412c0/invoke.js"></script>
-<script>
-window.earnnovaAds = {
-  showRewarded: function() {
-    try { return show_9622450('pop').then(() => true).catch(() => false); }
-    catch(e) { return Promise.resolve(false); }
-  }
-};
+// Monetag Ad Manager Integration
+window.monetagReady = false;
+
+// Try loading ad network on demand
+async function tryMonetagAd() {
+  // For now, always return false (use fallback)
+  // Set zone ID in adManager.zoneId to enable real ads
+  return false;
+}
 </script>
 </body>
 </html>
