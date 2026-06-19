@@ -276,6 +276,15 @@
       </div>
     </div>
 
+    <!-- PAGE: PLANS -->
+    <div id="page-plans" class="page">
+      <div class="page-header"><h1>Plans</h1><span class="badge-cyan">Earn daily</span></div>
+      <div class="plans-subtitle">Choose a plan to maximize your earnings</div>
+      <div id="plansContainer" class="plans-grid">
+        <div class="loading-shimmer" style="height:200px"></div>
+      </div>
+    </div>
+
     <!-- PAGE: WITHDRAW -->
     <div id="page-withdraw" class="page">
       <div class="page-header"><h1>Withdraw</h1></div>
@@ -365,6 +374,7 @@
           <button type="submit" class="btn btn-primary btn-block btn-sm">Save Changes</button>
         </form>
       </div>
+      <div class="card glass"><button id="adminEntryBtn" class="btn btn-outline btn-block" style="color:var(--purple);display:none" onclick="navigate('admin')">🔐 Admin Panel</button></div>
       <div class="card glass"><button id="logoutBtn" class="btn btn-outline btn-block" style="color:var(--error)">Sign Out</button></div>
     </div>
 
@@ -375,6 +385,7 @@
     </div>
 
     <!-- ADMIN PAGES -->
+    <!-- PAGE: ADMIN -->
     <div id="page-admin" class="page">
       <div class="page-header"><h1>Admin Panel</h1><span class="badge-purple">ADMIN</span></div>
       <div class="stats-row" id="adminStats">
@@ -382,11 +393,29 @@
         <div class="stat-mini glass"><span class="stat-mini-icon">💰</span><div><strong id="adminBalance">$0</strong><small>Total</small></div></div>
         <div class="stat-mini glass"><span class="stat-mini-icon">💳</span><div><strong id="adminWD">0</strong><small>Pending</small></div></div>
       </div>
-      <div class="admin-grid">
-        <button class="btn btn-outline btn-sm" onclick="alert('Users page')">👥 Users</button>
-        <button class="btn btn-outline btn-sm" onclick="alert('Withdrawals page')">💳 Withdrawals</button>
-        <button class="btn btn-outline btn-sm" onclick="alert('Ads page')">📺 Ads</button>
-        <button class="btn btn-outline btn-sm" onclick="alert('Send notification')">📬 Notify</button>
+      
+      <div class="admin-tabs glass">
+        <button class="admin-tab active" data-atab="users">👥 Users</button>
+        <button class="admin-tab" data-atab="plans">📋 Plans</button>
+        <button class="admin-tab" data-atab="withdrawals">💳 Withdraw</button>
+        <button class="admin-tab" data-atab="notify">📬 Notify</button>
+      </div>
+      
+      <div id="adminSectionUsers" class="admin-section active">
+        <div class="card glass"><div id="adminUsersList"><div class="activity-empty"><p>Loading users...</p></div></div></div>
+      </div>
+      <div id="adminSectionPlans" class="admin-section">
+        <div class="card glass"><button class="btn btn-primary btn-sm" onclick="adminAddPlan()">+ Add Plan</button><div id="adminPlansList" class="mt-2"><div class="activity-empty"><p>Loading plans...</p></div></div></div>
+      </div>
+      <div id="adminSectionWithdrawals" class="admin-section">
+        <div class="card glass"><div id="adminWDList"><div class="activity-empty"><p>Loading withdrawals...</p></div></div></div>
+      </div>
+      <div id="adminSectionNotify" class="admin-section">
+        <div class="card glass">
+          <div class="input-group"><input type="text" id="adminNotifTitle" placeholder="Notification title"></div>
+          <div class="input-group"><textarea id="adminNotifMsg" rows="2" placeholder="Message" style="width:100%;padding:10px;background:var(--bg-el);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-sm);color:var(--text);font-family:inherit"></textarea></div>
+          <button class="btn btn-primary btn-sm btn-block" onclick="adminSendNotif()">Send to All</button>
+        </div>
       </div>
     </div>
 
@@ -409,8 +438,12 @@
       <span class="nav-icon">💰</span>
       <span class="nav-label">Earn</span>
     </div>
-    <div class="nav-item nav-watch" data-page="watch" onclick="navigate('earn')">
+    <div class="nav-item nav-watch" onclick="navigate('earn')">
       <div class="nav-watch-btn">🎬</div>
+    </div>
+    <div class="nav-item" data-page="plans">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">Plans</span>
     </div>
     <div class="nav-item" data-page="referrals">
       <span class="nav-icon">👥</span>
@@ -428,31 +461,15 @@
   <div class="modal-full">
     <div class="modal-top-bar">
       <button class="icon-btn-sm" onclick="closeAdModal()">✕</button>
-      <span id="adCounter">Ad 1 of 1</span>
+      <span>Watch & Earn</span>
     </div>
-    <div class="modal-ad-content" id="modalAdContent">
-      <div class="ad-player">
-        <div class="ad-player-icon">▶️</div>
-        <div class="ad-player-label">📺 Ad Content</div>
-        <div class="ad-player-progress">
-          <div class="ad-progress-ring" id="adProgressRing">
-            <svg viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="45" class="ring-bg"/>
-              <circle cx="50" cy="50" r="45" class="ring-fg" id="ringFg" style="stroke-dasharray:283;stroke-dashoffset:283"/>
-            </svg>
-            <div class="ring-text" id="adTimerDisplay">5</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-ad-footer">
+    <div class="modal-ad-content" id="modalAdContent"></div>
+    <div class="modal-ad-footer" id="modalAdFooter">
       <div class="ad-reward-info">
-        <span>💰 Reward: <strong id="adRewardLabel">+$0.02</strong></span>
-        <span>⏱️ <span id="adTimeLabel">5s</span> remaining</span>
+        <span>💰 Reward: <strong id="adRewardLabel">+$0.00</strong></span>
+        <span>⏱️ <span id="adTimeLabel">0s</span></span>
       </div>
-      <button id="adActionBtn" class="btn btn-primary btn-block" disabled onclick="adActionClick()">
-        ⏳ Watch ad...
-      </button>
+      <button id="adActionBtn" class="btn btn-primary btn-block" disabled>⏳ Loading...</button>
     </div>
   </div>
 </div>

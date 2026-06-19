@@ -618,6 +618,46 @@ body {
 }
 @keyframes shimmer { 0% { background-position:200% 0; } 100% { background-position:-200% 0; } }
 
+/* ===== PLANS ===== */
+.plans-subtitle { font-size:13px; color:var(--text-muted); margin-bottom:16px; }
+.plans-grid { display:flex; flex-direction:column; gap:12px; padding-bottom:16px; }
+.plan-card { padding:20px; text-align:center; border:1px solid rgba(255,255,255,0.06); transition:var(--transition); }
+.plan-card.plan-active { border-color:var(--cyan); background:rgba(0,212,255,0.05); }
+.plan-badge { 
+  display:inline-block; padding:4px 16px; border-radius:20px;
+  background:linear-gradient(135deg,var(--cyan),var(--purple));
+  color:#000; font-size:13px; font-weight:700; margin-bottom:8px;
+}
+.plan-price { font-size:32px; font-weight:800; margin-bottom:4px; }
+.plan-earnings { font-size:14px; color:var(--green); font-weight:600; margin-bottom:4px; }
+.plan-duration { font-size:12px; color:var(--text-muted); margin-bottom:8px; }
+.plan-features { font-size:12px; color:var(--text-muted); margin-bottom:12px; line-height:1.5; }
+.plan-owned { display:inline-block; padding:4px 12px; border-radius:20px; background:rgba(16,185,129,0.15); color:var(--green); font-size:12px; font-weight:600; }
+
+/* ===== ADMIN ===== */
+.admin-tabs { display:flex; padding:4px; gap:4px; margin-bottom:12px; }
+.admin-tab { flex:1; padding:8px 4px; border:none; background:transparent; color:var(--text-muted); font-size:11px; font-weight:500; border-radius:var(--radius-xs); cursor:pointer; transition:var(--transition); font-family:inherit; }
+.admin-tab.active { background:rgba(124,58,237,0.15); color:var(--purple); }
+.admin-section { display:none; }
+.admin-section.active { display:block; animation:pageIn 0.3s ease; }
+
+/* ===== AD VIDEO BOX ===== */
+.ad-video-box { text-align:center; }
+.ad-video-display { 
+  width:200px; height:120px; margin:0 auto 16px;
+  background:var(--bg-el); border-radius:var(--radius);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  border:1px solid rgba(255,255,255,0.06);
+}
+.ad-video-icon { font-size:48px; margin-bottom:4px; }
+.ad-video-label { font-size:14px; color:var(--text-muted); }
+.ad-video-timer-ring { position:relative; display:inline-block; margin-bottom:16px; }
+.ad-video-timer-text {
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size:36px; font-weight:800; color:var(--cyan);
+}
+.ad-video-reward { font-size:18px; font-weight:700; color:var(--green); }
+
 /* ===== RESPONSIVE ===== */
 @media (min-width: 480px) {
   .app-content { max-width: 480px; margin: 0 auto; padding: 0 20px 20px; }
