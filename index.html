@@ -456,16 +456,22 @@
 <script src="js/app.js"></script>
 <script src="js/admin.js"></script>
 <!-- Monetag Ad Network -->
-<script src="https://monetag.com/tag.js" data-zone="" async></script>
 <script>
-// Monetag Ad Manager Integration
+// Register ad service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+}
+</script>
+<script src="https://monetag.com/tag.js" data-zone="11170708" async></script>
+<script>
 window.monetagReady = false;
-
-// Try loading ad network on demand
 async function tryMonetagAd() {
-  // For now, always return false (use fallback)
-  // Set zone ID in adManager.zoneId to enable real ads
-  return false;
+  try {
+    if (window.monetag && window.monetag.showInterstitial) {
+      return await window.monetag.showInterstitial();
+    }
+    return false;
+  } catch(e) { return false; }
 }
 </script>
 </body>

@@ -6,7 +6,7 @@ let currentUser = null, currentUserData = null;
 // ===== MONETAG AD MANAGER =====
 class EarnnovaAdManager {
   constructor() {
-    this.zoneId = ''; // Set your Monetag zone ID
+    this.zoneId = '11170708'; // Monetag zone ID
     this.state = 'idle'; // idle|loading|playing|completed|failed
     this.timer = null;
     this.watchStart = 0;
@@ -33,11 +33,23 @@ class EarnnovaAdManager {
     // Phase 1: Loading UI with steps
     this.renderLoadingUI();
     
-    // Phase 2: Simulate SDK init + ad load (800ms each)
-    await this.sleep(800); this.advanceStep(0);
-    await this.sleep(800); this.advanceStep(1);
+    // Phase 2: Try Monetag interstitial first (with timeout)
+    await this.sleep(500); this.advanceStep(0);
     
-    // Phase 3: Ad "playing" - start countdown
+    const monetagShown = await Promise.race([
+      tryMonetagAd(),
+      this.sleep(3000).then(() => false)
+    ]);
+    
+    if (monetagShown) {
+      this.advanceStep(1);
+      await this.sleep(2000); // Simulate Monetag ad playing
+      this.advanceStep(2);
+    }
+    
+    await this.sleep(300); this.advanceStep(1);
+    
+    // Phase 3: Start countdown (fallback ad)
     this.state = 'playing';
     this.renderPlayingUI();
     this.startCountdown();
