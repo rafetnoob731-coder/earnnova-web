@@ -89,7 +89,7 @@ class EarnnovaAdManager {
     todayStats();
     showToast('+$' + this.currentReward.toFixed(2) + ' earned! 🎉');
     if (this.onReward) this.onReward({ amount: this.currentReward });
-    setTimeout(() => showNotif('💰 Reward!', 'You earned $' + this.currentReward.toFixed(2)), 500);
+    setTimeout(() => showNotif('💰 Reward!', 'You earned $' + this.currentReward.toFixed(2), '💰'), 500);
   }
 
   renderLoadingUI() {
@@ -224,7 +224,7 @@ class EarnnovaAdManager {
     showToast('+$' + this.currentReward.toFixed(2) + ' earned! 🎉');
     
     if (this.onReward) this.onReward({ amount: this.currentReward });
-    setTimeout(() => showNotif('💰 Reward!', 'You earned $' + this.currentReward.toFixed(2)), 500);
+    setTimeout(() => showNotif('💰 Reward!', 'You earned $' + this.currentReward.toFixed(2), '💰'), 500);
   }
 
   close() {
@@ -318,7 +318,7 @@ function initApp() {
   showView('appPage');
   updateUI(); navigate('home');
   startCarousel();
-  if(!localStorage.getItem('en_welcomed')) { localStorage.setItem('en_welcomed','1'); setTimeout(()=>showNotif('🎉 Welcome!','Tap Earn to start earning!'),2000); }
+  if(!localStorage.getItem('en_welcomed')) { localStorage.setItem('en_welcomed','1'); setTimeout(()=>showNotif('🎉 Welcome!','Tap Earn to start earning!','🎉'),2000); }
   function t() { const d=new Date(); document.getElementById('statusTime').textContent=d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); document.getElementById('greetTime').textContent=d.getHours()<12?'Morning':d.getHours()<18?'Afternoon':'Evening'; }
   t(); setInterval(t,10000);
 }
@@ -473,7 +473,7 @@ function showWdForm(m){const c=document.getElementById('wdFormCard');c.classList
 document.getElementById('wdForm')?.addEventListener('submit',async e=>{e.preventDefault();const m=document.querySelector('.wd-method.selected');if(!m){showToast('Select method','error');return;}const a=parseFloat(document.getElementById('wdAmount')?.value);if(a<5){showToast('Min $5','error');return;}if(a>Math.max(currentUserData?.balance||0,loc('bal'))){showToast('Insufficient','error');return;}const fd=new FormData(document.getElementById('wdForm'));const d={};fd.forEach((v,k)=>d[k]=v);try{await fbTimeout(withdrawalsRef.add({userId:currentUser.uid,userEmail:currentUser.email,userName:currentUserData?.name,method:m.dataset.method,amount:a,details:d,status:'pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()}));await fbTimeout(usersRef.doc(currentUser.uid).update({balance:firebase.firestore.FieldValue.increment(-a),totalWithdrawn:firebase.firestore.FieldValue.increment(a)}));showToast('Submitted ✅');}catch(e){locAdd('bal',-a);showToast('Submitted (offline) ✅');}document.getElementById('wdFormCard').classList.add('hidden');if(currentUserData)currentUserData.balance=(currentUserData.balance||0)-a;updateUI();});
 
 // ===== NOTIFICATIONS =====
-function showNotif(t,m){document.getElementById('notifIcon').textContent='🎉';document.getElementById('notifTitle').textContent=t;document.getElementById('notifMsg').textContent=m;document.getElementById('notifModal').classList.add('show');}
+function showNotif(t,m,icon){document.getElementById('notifIcon').textContent=icon||'🎉';document.getElementById('notifTitle').textContent=t;document.getElementById('notifMsg').textContent=m;document.getElementById('notifModal').classList.add('show');}
 function closeNotif(){document.getElementById('notifModal').classList.remove('show');}
 
 // ===== CAROUSEL =====
