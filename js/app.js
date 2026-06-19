@@ -223,17 +223,10 @@ async function loadTodayStats() {
 }
 
 // ===== EARN with 30s Box =====
-async function loadEarnPage() {
-  loadTodayStats();
+// Renders FALLBACK ads IMMEDIATELY (sync), then updates from Firestore in background
+function renderAdList(ads) {
   const list = document.getElementById('adsList');
-  list.innerHTML = '<div class="loading-shimmer"></div><div class="loading-shimmer"></div>';
-  let ads = [];
-  try {
-    const snap = await fbTimeout(adsRef.where('isActive','==',true).get());
-    snap.forEach(doc => ads.push({ id: doc.id, ...doc.data() }));
-  } catch(e) { console.warn('Ads fallback'); }
-  if (ads.length === 0) ads = FALLBACK_ADS.map((a,i)=>({id:'fb_'+i,...a}));
-  
+  if (!list) return;
   list.innerHTML = '';
   ads.forEach(ad => {
     const t = (ad.title||'Ad').replace(/'/g,"\\'");
@@ -245,6 +238,23 @@ async function loadEarnPage() {
         <button class="btn btn-primary btn-xs">▶ Watch</button>
       </div>`;
   });
+}
+
+function loadEarnPage() {
+  loadTodayStats();
+  // INSTANTLY show fallback ads (synchronous - no await)
+  renderAdList(FALLBACK_ADS.map((a,i)=>({id:'fb_'+i,...a})));
+  // Then try Firestore in background to replace with DB ads
+  loadAdsFromFirestore();
+}
+
+async function loadAdsFromFirestore() {
+  try {
+    const snap = await fbTimeout(adsRef.where('isActive','==',true).get());
+    const ads = [];
+    snap.forEach(doc => ads.push({ id: doc.id, ...doc.data() }));
+    if (ads.length > 0) renderAdList(ads);
+  } catch(e) { /* keep fallback */ }
 }
 
 // ===== AD BOX - 30s Timer in Video Box =====
