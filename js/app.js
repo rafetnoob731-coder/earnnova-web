@@ -46,13 +46,6 @@ class EarnnovaAdManager {
     this.renderLoadingUI();
     await this.sleep(500); this.advanceStep(0);
     
-    // Try interstitial as secondary
-    const interstitialShown = await showInterstitialAd();
-    if (interstitialShown) {
-      this.advanceStep(1);
-      await this.sleep(1000);
-    }
-    
     await this.sleep(300); this.advanceStep(1);
     
     // Phase 2: Fallback countdown ad

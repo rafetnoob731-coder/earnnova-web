@@ -466,20 +466,14 @@ if ('serviceWorker' in navigator) {
 <script src="https://intermediatenormalconfederate.com/63/ec/26/63ec26f8e4bdecfd5ae777f3a96fa119.js"></script>
 <script>
 // Rewarded ad API
+// Rewarded interstitial ad (handles both rewarded & interstitial)
 async function showRewardedAd(timeoutMs = 8000) {
   if (typeof show_9622450 !== 'function') return false;
   try {
     return await Promise.race([
-      show_9622450('pop').then(() => true),
+      show_9622450().then(() => true),
       new Promise(r => setTimeout(() => r(false), timeoutMs))
     ]);
-  } catch(e) { return false; }
-}
-
-async function showInterstitialAd() {
-  if (typeof show_9622450 !== 'function') return false;
-  try {
-    return await show_9622450().then(() => true).catch(() => false);
   } catch(e) { return false; }
 }
 </script>
