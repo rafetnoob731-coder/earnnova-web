@@ -28,13 +28,13 @@ class EarnnovaAdManager {
     this.state = 'loading';
     this.isAuto = isAuto;
     
-    // Show rewarded ad from network FIRST (this is the main ad)
-    const rewardedWatched = await showRewardedAd(8000);
+    // Show rewarded ad — reward callback fires inside show_9622450().then()
+    const rewardedWatched = await showRewardedAd(() => {
+      this.currentReward = reward || 0.02;
+      this.grantRewardDirect();
+    }, 10000);
     
     if (rewardedWatched) {
-      // User watched the rewarded ad → grant reward immediately
-      this.currentReward = reward || 0.02;
-      await this.grantRewardDirect();
       return Promise.resolve({ amount: this.currentReward });
     }
     
@@ -379,12 +379,10 @@ function loadEarnPage() {
   if (!sessionStorage.getItem('en_ad_shown')) {
     sessionStorage.setItem('en_ad_shown', '1');
     setTimeout(() => {
-      showRewardedAd(5000).then(watched => {
-        if (watched) {
-          adManager.currentReward = 0.02;
-          adManager.grantRewardDirect();
-        }
-      }).catch(() => {});
+      showRewardedAd(() => {
+        adManager.currentReward = 0.02;
+        adManager.grantRewardDirect();
+      }, 5000);
     }, 5000);
   }
 }
