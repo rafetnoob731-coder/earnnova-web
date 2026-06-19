@@ -472,6 +472,7 @@ async function showRewardedAd(onReward, timeoutMs = 10000) {
   try {
     return await Promise.race([
       show_9622450().then(() => {
+        alert('You have seen an ad!');
         // 👇 User watched ad → grant reward here
         if (typeof onReward === 'function') onReward();
         return true;
