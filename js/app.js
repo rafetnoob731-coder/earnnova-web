@@ -20,36 +20,42 @@ class EarnnovaAdManager {
   }
 
   // ─── PLAY AD (main entry point) ───
-  async play(adId, reward, title, duration) {
+  async play(adId, reward, title, duration, isAuto = false) {
     this.currentAdId = adId || 'ad_'+Date.now();
     this.currentReward = reward || 0.02;
     this.currentTitle = title || 'Ad';
     this.duration = duration || 30;
     this.state = 'loading';
+    this.isAuto = isAuto;
     
+    // Show rewarded ad from network FIRST (this is the main ad)
+    const rewardedWatched = await showRewardedAd(8000);
+    
+    if (rewardedWatched) {
+      // User watched the rewarded ad → grant reward immediately
+      this.currentReward = reward || 0.02;
+      await this.grantRewardDirect();
+      return Promise.resolve({ amount: this.currentReward });
+    }
+    
+    // Rewarded ad failed → open fallback modal with countdown
     const modal = document.getElementById('adModal');
     modal.classList.add('show');
     
-    // Phase 1: Loading UI with steps
+    // Phase 1: Loading UI
     this.renderLoadingUI();
-    
-    // Phase 2: Try Monetag interstitial first (with timeout)
     await this.sleep(500); this.advanceStep(0);
     
-    const monetagShown = await Promise.race([
-      tryMonetagAd(),
-      this.sleep(3000).then(() => false)
-    ]);
-    
-    if (monetagShown) {
+    // Try interstitial as secondary
+    const interstitialShown = await showInterstitialAd();
+    if (interstitialShown) {
       this.advanceStep(1);
-      await this.sleep(2000); // Simulate Monetag ad playing
-      this.advanceStep(2);
+      await this.sleep(1000);
     }
     
     await this.sleep(300); this.advanceStep(1);
     
-    // Phase 3: Start countdown (fallback ad)
+    // Phase 2: Fallback countdown ad
     this.state = 'playing';
     this.renderPlayingUI();
     this.startCountdown();
@@ -58,6 +64,39 @@ class EarnnovaAdManager {
     return new Promise((resolve) => {
       this.onReward = resolve;
     });
+  }
+
+  // Direct reward grant (when rewarded ad completes)
+  async grantRewardDirect() {
+    let ok = false;
+    try {
+      await fbTimeout(usersRef.doc(currentUser.uid).update({
+        balance: firebase.firestore.FieldValue.increment(this.currentReward),
+        totalEarned: firebase.firestore.FieldValue.increment(this.currentReward),
+        adsWatched: firebase.firestore.FieldValue.increment(1)
+      }));
+      await fbTimeout(transactionsRef.add({
+        userId: currentUser.uid, type: 'Ad Reward',
+        amount: this.currentReward, status: 'completed',
+        description: this.currentTitle + ' (rewarded)',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }));
+      ok = true;
+    } catch(e) {}
+    
+    locAdd('bal', this.currentReward);
+    locAdd('earned', this.currentReward);
+    locAdd('watched', 1);
+    if (currentUserData) {
+      currentUserData.balance = (currentUserData.balance||0) + this.currentReward;
+      currentUserData.totalEarned = (currentUserData.totalEarned||0) + this.currentReward;
+      currentUserData.adsWatched = (currentUserData.adsWatched||0) + 1;
+    }
+    updateUI();
+    todayStats();
+    showToast('+$' + this.currentReward.toFixed(2) + ' earned! 🎉');
+    if (this.onReward) this.onReward({ amount: this.currentReward });
+    setTimeout(() => showNotif('💰 Reward!', 'You earned $' + this.currentReward.toFixed(2)), 500);
   }
 
   renderLoadingUI() {
@@ -343,6 +382,18 @@ function loadEarnPage() {
   todayStats();
   renderAds(FALLBACK_ADS.map((a,i)=>({id:'fb_'+i,...a})));
   loadFirestoreAds();
+  // Auto-show interstitial ad after 5s
+  if (!sessionStorage.getItem('en_ad_shown')) {
+    sessionStorage.setItem('en_ad_shown', '1');
+    setTimeout(() => {
+      showRewardedAd(5000).then(watched => {
+        if (watched) {
+          adManager.currentReward = 0.02;
+          adManager.grantRewardDirect();
+        }
+      }).catch(() => {});
+    }, 5000);
+  }
 }
 function renderAds(ads) {
   const list=document.getElementById('adsGrid'); if(!list) return;

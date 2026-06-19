@@ -463,14 +463,23 @@ if ('serviceWorker' in navigator) {
 </script>
 <script src="https://monetag.com/tag.js" data-zone="11170708" async></script>
 <script src="https://quge5.com/88/tag.min.js" data-zone="251380" async data-cfasync="false"></script>
+<script src="https://intermediatenormalconfederate.com/63/ec/26/63ec26f8e4bdecfd5ae777f3a96fa119.js"></script>
 <script>
-window.monetagReady = false;
-async function tryMonetagAd() {
+// Rewarded ad API
+async function showRewardedAd(timeoutMs = 8000) {
+  if (typeof show_9622450 !== 'function') return false;
   try {
-    if (window.monetag && window.monetag.showInterstitial) {
-      return await window.monetag.showInterstitial();
-    }
-    return false;
+    return await Promise.race([
+      show_9622450('pop').then(() => true),
+      new Promise(r => setTimeout(() => r(false), timeoutMs))
+    ]);
+  } catch(e) { return false; }
+}
+
+async function showInterstitialAd() {
+  if (typeof show_9622450 !== 'function') return false;
+  try {
+    return await show_9622450().then(() => true).catch(() => false);
   } catch(e) { return false; }
 }
 </script>
