@@ -113,47 +113,38 @@
     <!-- PAGE: HOME -->
     <div id="page-home" class="page active">
       <!-- Greeting -->
-      <div class="greeting-section">
-        <div class="greeting-avatar" id="greetAvatar">U</div>
-        <div>
-          <p class="greeting-sub">Good <span id="greetTime">Morning</span></p>
-          <h2 class="greeting-name" id="greetName">User</h2>
+      <div class="greet-card">
+        <div class="greet-row">
+          <div>
+            <p class="greet-sub">Good <span id="greetTime">Morning</span></p>
+            <h2 class="greet-name" id="greetName">User</h2>
+          </div>
+          <div class="greet-avatar" id="greetAvatar">U</div>
         </div>
-      </div>
-
-      <!-- Balance Card -->
-      <div class="balance-card-glow" id="balanceGlow">
-        <div class="balance-card glass">
-          <div class="balance-header">
-            <span>Total Balance</span>
-            <button id="toggleBalance" class="icon-btn-sm">👁️</button>
-          </div>
-          <div class="balance-amount" id="balanceDisplay">$0.00</div>
-          <div class="balance-change" id="balanceChange"></div>
-          <div class="balance-actions">
-            <button class="btn btn-primary btn-sm flex-1" onclick="navigate('earn')">
-              <span class="btn-icon">🎬</span> Watch Ad
-            </button>
-            <button class="btn btn-outline btn-sm flex-1" onclick="navigate('withdraw')">
-              <span class="btn-icon">💳</span> Withdraw
-            </button>
-          </div>
+        <div class="balance-display" id="balanceDisplay">$0.00</div>
+        <div class="balance-label">Total Balance <button id="toggleBalance" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;margin-left:8px">👁️</button></div>
+        <div class="balance-actions">
+          <button class="btn btn-amber btn-sm" onclick="navigate('earn')">🎬 Watch Ad</button>
+          <button class="btn btn-sm" style="background:rgba(255,255,255,0.1);color:white" onclick="navigate('withdraw')">💳 Withdraw</button>
         </div>
       </div>
 
       <!-- Stats -->
       <div class="stats-row">
-        <div class="stat-mini glass">
-          <span class="stat-mini-icon">📺</span>
-          <div><strong id="statAds">0</strong><small>Ads</small></div>
+        <div class="stat-card glass">
+          <div class="stat-icon">📺</div>
+          <div class="stat-num" id="statAds">0</div>
+          <div class="stat-label">Ads</div>
         </div>
-        <div class="stat-mini glass">
-          <span class="stat-mini-icon">👥</span>
-          <div><strong id="statRefs">0</strong><small>Referrals</small></div>
+        <div class="stat-card glass">
+          <div class="stat-icon">👥</div>
+          <div class="stat-num" id="statRefs">0</div>
+          <div class="stat-label">Referrals</div>
         </div>
-        <div class="stat-mini glass">
-          <span class="stat-mini-icon">💸</span>
-          <div><strong id="statEarned">$0</strong><small>Earned</small></div>
+        <div class="stat-card glass">
+          <div class="stat-icon">💸</div>
+          <div class="stat-num" id="statEarned">$0</div>
+          <div class="stat-label">Earned</div>
         </div>
       </div>
 
@@ -189,11 +180,11 @@
       </div>
 
       <!-- Quick Actions -->
-      <div class="quick-actions">
-        <button class="qa-btn glass" onclick="navigate('earn')"><span>🎬</span><span>Watch</span></button>
-        <button class="qa-btn glass" onclick="navigate('referrals')"><span>👥</span><span>Refer</span></button>
-        <button class="qa-btn glass" onclick="navigate('history')"><span>📜</span><span>History</span></button>
-        <button class="qa-btn glass" onclick="navigate('earn')"><span>💰</span><span>Earn</span></button>
+      <div class="actions-row">
+        <button class="action-btn" onclick="navigate('earn')"><span class="ab-icon">🎬</span>Watch</button>
+        <button class="action-btn" onclick="navigate('referrals')"><span class="ab-icon">👥</span>Refer</button>
+        <button class="action-btn" onclick="navigate('history')"><span class="ab-icon">📜</span>History</button>
+        <button class="action-btn" onclick="navigate('plans')"><span class="ab-icon">📋</span>Plans</button>
       </div>
 
       <!-- Recent Activity -->
@@ -231,48 +222,19 @@
       </div>
 
       <!-- Today's Goal -->
-      <div class="goal-card glass">
-        <div class="goal-head">
-          <span>🎯</span>
-          <div><strong>Today's Goal</strong><small>Watch 5 ads for +$0.05 bonus</small></div>
-        </div>
+      <div class="earn-hero">
+        <span class="earn-hero-icon">🎯</span>
+        <div><h3>Today's Goal</h3><p>Watch 5 ads for +$0.05 bonus</p></div>
         <div class="goal-bar">
           <div class="goal-fill" id="goalFill" style="width:0%"></div>
-        </div>
-        <div class="goal-count"><span id="goalProgress">0/5</span> ads watched</div>
-      </div>
-
-      <!-- Quick Earn -->
-      <div class="quick-earn">
-        <div class="qe-card glass" onclick="startWatchAd(null, 0.02, 'Quick Ad')">
-          <div class="qe-icon">🎬</div>
-          <div><h4>Watch 1 Ad</h4><p>+$0.02</p></div>
-          <button class="btn btn-primary btn-xs">Watch →</button>
-        </div>
-        <div class="qe-card glass" onclick="startWatchAd(null, 0.10, '5 Ads Bundle')">
-          <div class="qe-icon">📹</div>
-          <div><h4>Watch 5 Ads</h4><p>+$0.10</p></div>
-          <button class="btn btn-primary btn-xs">Watch →</button>
-        </div>
-      </div>
-
-      <!-- Streak -->
-      <div class="streak-card glass">
-        <div class="streak-head">
-          <span>🔥</span>
-          <div><strong>Streak</strong><small>Watch daily for bonuses</small></div>
-          <span class="streak-days" id="streakDays">0 days</span>
-        </div>
-        <div class="streak-dots" id="streakDots">
-          <span class="s-dot"></span><span class="s-dot"></span><span class="s-dot"></span><span class="s-dot"></span><span class="s-dot"></span><span class="s-dot"></span><span class="s-dot"></span>
         </div>
       </div>
 
       <!-- Available Ads -->
       <div class="section-head"><h3>Available Ads</h3></div>
-      <div class="ads-list" id="adsList">
-        <div class="loading-shimmer"></div>
-        <div class="loading-shimmer"></div>
+      <div class="ads-grid" id="adsGrid">
+        <div class="skeleton"></div>
+        <div class="skeleton mt-1"></div>
       </div>
     </div>
 
@@ -389,9 +351,9 @@
     <div id="page-admin" class="page">
       <div class="page-header"><h1>Admin Panel</h1><span class="badge-purple">ADMIN</span></div>
       <div class="stats-row" id="adminStats">
-        <div class="stat-mini glass"><span class="stat-mini-icon">👥</span><div><strong id="adminUsers">0</strong><small>Users</small></div></div>
-        <div class="stat-mini glass"><span class="stat-mini-icon">💰</span><div><strong id="adminBalance">$0</strong><small>Total</small></div></div>
-        <div class="stat-mini glass"><span class="stat-mini-icon">💳</span><div><strong id="adminWD">0</strong><small>Pending</small></div></div>
+        <div class="stat-card glass"><div class="stat-icon">👥</div><div class="stat-num" id="adminUsers">0</div><div class="stat-label">Users</div></div>
+        <div class="stat-card glass"><div class="stat-icon">💰</div><div class="stat-num" id="adminBalance">$0</div><div class="stat-label">Total</div></div>
+        <div class="stat-card glass"><div class="stat-icon">💳</div><div class="stat-num" id="adminWD">0</div><div class="stat-label">Pending</div></div>
       </div>
       
       <div class="admin-tabs glass">
@@ -477,9 +439,11 @@
 <!-- ===== NOTIFICATION POPUP ===== -->
 <div id="notifModal" class="modal-overlay">
   <div class="modal glass" style="max-width:360px">
-    <div class="modal-notif-icon" id="notifIcon">🎉</div>
-    <h2 id="notifTitle">Welcome!</h2>
-    <p id="notifMessage" style="color:var(--text-muted)">Start earning by watching ads</p>
+    <div class="notif-icon" id="notifIcon">🎉</div>
+    <div class="notif-modal-text">
+      <h2 id="notifTitle">Welcome!</h2>
+      <p id="notifMsg">Start earning by watching ads</p>
+    </div>
     <button class="btn btn-primary btn-block mt-2" onclick="closeNotifModal()">Let's Go →</button>
   </div>
 </div>
