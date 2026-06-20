@@ -28,17 +28,7 @@ class EarnnovaAdManager {
     this.state = 'loading';
     this.isAuto = isAuto;
     
-    // Show rewarded ad — reward callback fires inside show_9622450().then()
-    const rewardedWatched = await showRewardedAd(() => {
-      this.currentReward = reward || 0.02;
-      this.grantRewardDirect();
-    }, 10000);
-    
-    if (rewardedWatched) {
-      return Promise.resolve({ amount: this.currentReward });
-    }
-    
-    // Rewarded ad failed → open fallback modal with countdown
+    // Open fallback modal with countdown (ad networks disabled)
     const modal = document.getElementById('adModal');
     modal.classList.add('show');
     
@@ -379,10 +369,19 @@ function loadEarnPage() {
   if (!sessionStorage.getItem('en_ad_shown')) {
     sessionStorage.setItem('en_ad_shown', '1');
     setTimeout(() => {
-      showRewardedAd(() => {
-        adManager.currentReward = 0.02;
-        adManager.grantRewardDirect();
-      }, 5000);
+      adManager.currentReward = 0.02;
+      adManager.currentTitle = 'Auto Interstitial';
+      adManager.currentAdId = 'auto_'+Date.now();
+      adManager.state = 'loading';
+      const modal = document.getElementById('adModal');
+      modal.classList.add('show');
+      adManager.renderLoadingUI();
+      setTimeout(() => {
+        adManager.state = 'playing';
+        adManager.renderPlayingUI();
+        adManager.startCountdown();
+        adManager.trackVisibility();
+      }, 1600);
     }, 5000);
   }
 }

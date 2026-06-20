@@ -461,26 +461,18 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
 }
 </script>
-<script src="https://monetag.com/tag.js" data-zone="11170708" async></script>
-<script src="https://quge5.com/88/tag.min.js" data-zone="251380" async data-cfasync="false"></script>
-<script src="https://intermediatenormalconfederate.com/63/ec/26/63ec26f8e4bdecfd5ae777f3a96fa119.js"></script>
+<!-- AD NETWORKS (disabled - scripts not serving - see docs)
+  To enable real ads:
+  1. Monetag: Sign up at monetag.com, get verified zone ID
+  2. Multitag: Sign up at quge5.com, get active zone ID
+  3. Uncomment scripts below, replace YOUR_ZONE
+
+  <script src="https://monetag.com/tag.js" data-zone="YOUR_ZONE" async></script>
+  <script src="https://quge5.com/88/tag.min.js" data-zone="YOUR_ZONE" async data-cfasync="false"></script>
+-->
 <script>
-// Rewarded ad API
-// Rewarded interstitial - reward callback fires inside show_9622450().then()
-async function showRewardedAd(onReward, timeoutMs = 10000) {
-  if (typeof show_9622450 !== 'function') return false;
-  try {
-    return await Promise.race([
-      show_9622450().then(() => {
-        alert('You have seen an ad!');
-        // 👇 User watched ad → grant reward here
-        if (typeof onReward === 'function') onReward();
-        return true;
-      }).catch(() => false),
-      new Promise(r => setTimeout(() => r(false), timeoutMs))
-    ]);
-  } catch(e) { return false; }
-}
+// Fallback: built-in ads always work
+async function showRewardedAd() { return false; }
 </script>
 </body>
 </html>
