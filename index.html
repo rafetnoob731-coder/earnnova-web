@@ -461,17 +461,9 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
 }
 </script>
-<!-- AD NETWORKS (disabled - scripts not serving - see docs)
-  To enable real ads:
-  1. Monetag: Sign up at monetag.com, get verified zone ID
-  2. Multitag: Sign up at quge5.com, get active zone ID
-  3. Uncomment scripts below, replace YOUR_ZONE
-
-  <script src="https://monetag.com/tag.js" data-zone="YOUR_ZONE" async></script>
-  <script src="https://quge5.com/88/tag.min.js" data-zone="YOUR_ZONE" async data-cfasync="false"></script>
--->
+<script src="https://quge5.com/88/tag.min.js" data-zone="251380" async data-cfasync="false"></script>
 <script>
-// Fallback: built-in ads always work
+// Fallback ad API
 async function showRewardedAd() { return false; }
 </script>
 </body>
