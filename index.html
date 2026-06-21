@@ -236,6 +236,8 @@
         <div class="skeleton"></div>
         <div class="skeleton mt-1"></div>
       </div>
+      <!-- Adsterra Banner -->
+      <div id="adsterra-banner" style="min-height:90px;margin:16px 0;display:flex;justify-content:center;overflow:hidden;border-radius:12px;background:rgba(255,255,255,0.02)"></div>
     </div>
 
     <!-- PAGE: PLANS -->
@@ -461,10 +463,25 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
 }
 </script>
+
+<!-- Adsterra Ad Network -->
+<script type=text/javascript>
+  atOptions = {
+    'key' : '430ec9a9c3b2a1492b22ecb72e4ace01',
+    'format' : 'iframe',
+    'height' : 90,
+    'width' : 728,
+    'params' : {}
+  };
+</script>
+<script type=text/javascript src=//www.highperformancecpm.com/430ec9a9c3b2a1492b22ecb72e4ace01/invoke.js></script>
+
+<!-- Multitag -->
 <script src="https://quge5.com/88/tag.min.js" data-zone="251380" async data-cfasync="false"></script>
+
 <script>
-// Fallback ad API
+// Ad APIs - returns false (uses built-in fallback ads)
+// Adsterra banner loads from static tag above
 async function showRewardedAd() { return false; }
 </script>
 </body>
-</html>
