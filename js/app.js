@@ -17,6 +17,42 @@ class EarnnovaAdManager {
     this.isVisible = false;
     this.visibleTime = 0;
     this.observer = null;
+    this.failCount = 0; // consecutive ad load failures
+    this.maxFailBeforeSkip = 3;
+  }
+
+  // ─── SHOW ERROR PLACEHOLDER (gentle, calm) ───
+  showErrorPlaceholder() {
+    this.failCount++;
+    this.state = 'failed';
+    const content = document.getElementById('modalAdContent');
+    const footer = document.getElementById('modalAdFooter');
+    if (!content || !footer) return;
+    
+    const isIndo = localStorage.getItem('en_lang') === 'id';
+    
+    if (this.failCount >= 2) {
+      // Frustration recovery (2+ failures)
+      content.innerHTML = '<div class="ad-error-wrap"><div class="ad-error-icon">😅</div>'
+        + '<h3 class="ad-error-title">'+(isIndo?'Yah, lagi error nih':'Ad not loading?')+'</h3>'
+        + '<p class="ad-error-body">'+(isIndo?'Kami akan coba lagi, ya. Reward tetap kamu dapatkan!':'Don\'t worry — we\'ll try again. You\'ll still earn your reward.')+'</p>'
+        + '<div class="ad-error-attempt">'+(isIndo?'Percobaan '+this.failCount+' dari '+this.maxFailBeforeSkip:'Attempt '+this.failCount+' of '+this.maxFailBeforeSkip)+'</div>'
+        + '</div>';
+      footer.innerHTML = '<div class="ad-error-actions">'
+        + '<button class="auth-glass-btn" onclick="window._retryAd()" style="flex:1;padding:10px">🔄 '+(isIndo?'Muat Ulang':'Try Again')+'</button>'
+        + '<button class="ad-error-skip" onclick="window._skipAd()">⏭ '+(isIndo?'Lewati':'Skip')+'</button>'
+        + '</div>';
+    } else {
+      // First failure — gentle placeholder
+      content.innerHTML = '<div class="ad-error-wrap"><div class="ad-error-icon">☁️</div>'
+        + '<h3 class="ad-error-title">'+(isIndo?'Iklan sedang sibuk':'Ad is taking a moment')+'</h3>'
+        + '<p class="ad-error-body">'+(isIndo?'Jangan khawatir — coba segarkan. Reward tetap kamu dapatkan!':'Don\'t worry — let\'s refresh. You\'ll still earn your reward!')+'</p>'
+        + '</div>';
+      footer.innerHTML = '<div class="ad-error-actions">'
+        + '<button class="auth-glass-btn" onclick="window._retryAd()" style="flex:1;padding:10px">🔄 '+(isIndo?'Coba Lagi':'Try Again')+'</button>'
+        + '<button class="ad-error-skip" onclick="window._skipAd()">⏭ '+(isIndo?'Lewati':'Skip')+'</button>'
+        + '</div>';
+    }
   }
 
   // ─── PLAY AD (main entry point) ───
@@ -28,21 +64,47 @@ class EarnnovaAdManager {
     this.state = 'loading';
     this.isAuto = isAuto;
     
-    // Open fallback modal with countdown (ad networks disabled)
     const modal = document.getElementById('adModal');
     modal.classList.add('show');
     
     // Phase 1: Loading UI
     this.renderLoadingUI();
     await this.sleep(500); this.advanceStep(0);
-    
     await this.sleep(300); this.advanceStep(1);
     
-    // Phase 2: Fallback countdown ad
+    // Try loading network ad
+    const networkLoaded = await this.tryLoadNetworkAd();
+    
+    if (!networkLoaded && this.failCount > 0) {
+      // Show error placeholder (only after previous failures)
+      this.showErrorPlaceholder();
+      return;
+    }
+    
+    // Phase 2: Fallback countdown ad (normal flow)
+    this.failCount = 0;
     this.state = 'playing';
     this.renderPlayingUI();
     this.startCountdown();
     this.trackVisibility();
+  }
+
+  // ─── TRY LOAD NETWORK AD ───
+  async tryLoadNetworkAd() {
+    try {
+      const adScripts = document.querySelectorAll('script[src*="highperformancecpm"], script[src*="effectivecpmnetwork"], script[src*="highperformanceformat"], script[src*="5gvci"]');
+      if (adScripts.length > 0) {
+        await this.sleep(800);
+        // Check if any script errored
+        const errored = Array.from(adScripts).some(s => s.dataset.errored === '1');
+        if (errored) return false;
+      }
+      await this.sleep(500);
+      return true; // default success → plays fallback countdown
+    } catch(e) {
+      return true; // on error, still play countdown
+    }
+  }
     
     return new Promise((resolve) => {
       this.onReward = resolve;
@@ -234,6 +296,34 @@ class EarnnovaAdManager {
 }
 
 const adManager = new EarnnovaAdManager();
+
+// ===== AD ERROR HANDLING (retry / skip) =====
+window._retryAd = function() {
+  // Re-trigger the ad with same params
+  const modal = document.getElementById('adModal');
+  modal.classList.remove('show');
+  setTimeout(() => {
+    const ad = window._pendingAd;
+    if (ad) {
+      adManager.play(ad.id, ad.reward, ad.title, ad.duration).catch(() => {});
+    }
+  }, 300);
+};
+window._skipAd = function() {
+  // Skip to fallback countdown with reward
+  adManager.failCount = 0;
+  adManager.state = 'playing';
+  adManager.renderPlayingUI();
+  adManager.startCountdown();
+  adManager.trackVisibility();
+};
+window._testAdError = function() {
+  // Demo: force-show the error placeholder
+  adManager.failCount = 1;
+  const modal = document.getElementById('adModal');
+  modal.classList.add('show');
+  adManager.showErrorPlaceholder();
+};
 
 // ===== COOLDOWN SYSTEM (10 min between ads) =====
 const COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
