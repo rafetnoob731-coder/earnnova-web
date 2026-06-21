@@ -402,3 +402,10 @@ body {
 .text-center { text-align:center; }
 .text-muted { color:var(--slate-500) !important; }
 .flex-1 { flex:1; }
+
+/* ===== COOLDOWN ===== */
+.cooldown-card { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; background:rgba(255,255,255,0.03); border-radius:20px; border:1px solid rgba(255,255,255,0.06); text-align:center; min-height:200px; }
+.cooldown-icon { font-size:48px; margin-bottom:12px; }
+.cooldown-label { font-size:14px; color:var(--slate-500); margin-bottom:8px; }
+.cooldown-timer { font-size:48px; font-weight:700; font-family: 'JetBrains Mono', monospace; color:var(--amber); text-shadow:0 0 20px rgba(245,158,11,0.3); }
+.cooldown-sub { font-size:12px; color:var(--slate-500); margin-top:8px; }

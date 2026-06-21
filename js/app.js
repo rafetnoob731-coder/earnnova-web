@@ -209,8 +209,10 @@ class EarnnovaAdManager {
     }
     
     this.close();
+    startCooldown(); // 10-min cooldown
     updateUI();
     todayStats();
+    loadEarnPage(); // refresh earn page to show cooldown
     showToast('+$' + this.currentReward.toFixed(2) + ' earned! 🎉');
     
     if (this.onReward) this.onReward({ amount: this.currentReward });
@@ -228,6 +230,54 @@ class EarnnovaAdManager {
 }
 
 const adManager = new EarnnovaAdManager();
+
+// ===== COOLDOWN SYSTEM (10 min between ads) =====
+const COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
+function getCooldownEnd() {
+  try { return parseInt(localStorage.getItem('en_cd_end')||'0'); } catch(e) { return 0; }
+}
+function setCooldownEnd(ts) {
+  try { localStorage.setItem('en_cd_end', String(ts)); } catch(e) {}
+}
+function isCooldownActive() {
+  return Date.now() < getCooldownEnd();
+}
+function getCooldownRemaining() {
+  return Math.max(0, getCooldownEnd() - Date.now());
+}
+function startCooldown() {
+  setCooldownEnd(Date.now() + COOLDOWN_MS);
+}
+function updateCooldownUI() {
+  const el = document.getElementById('cooldownTimer');
+  if (!el) return;
+  if (isCooldownActive()) {
+    const rem = getCooldownRemaining();
+    const min = Math.floor(rem / 60000);
+    const sec = Math.floor((rem % 60000) / 1000);
+    el.textContent = min + ':' + (''+sec).padStart(2,'0');
+  } else {
+    el.textContent = 'Ready!';
+  }
+}
+function renderCooldown() {
+  const list = document.getElementById('adsGrid');
+  if (!list) return;
+  const rem = getCooldownRemaining();
+  const min = Math.floor(rem / 60000);
+  const sec = Math.floor((rem % 60000) / 1000);
+  list.innerHTML = '<div class="cooldown-card"><div class="cooldown-icon">⏳</div><div class="cooldown-label">Next ad available in</div><div class="cooldown-timer" id="cooldownTimer">'+min+':'+(''+sec).padStart(2,'0')+'</div><div class="cooldown-sub">Come back after the timer</div></div>';
+  // Live countdown
+  if (window._cdInterval) clearInterval(window._cdInterval);
+  window._cdInterval = setInterval(() => {
+    if (!isCooldownActive()) {
+      clearInterval(window._cdInterval);
+      loadEarnPage();
+      return;
+    }
+    updateCooldownUI();
+  }, 1000);
+}
 
 // ===== FIRESTORE TIMEOUT =====
 function fbTimeout(promise, ms = 5000) {
@@ -363,6 +413,11 @@ async function todayStats() {
 // ===== EARN =====
 function loadEarnPage() {
   todayStats();
+  updateCooldownUI();
+  if (isCooldownActive()) {
+    renderCooldown();
+    return;
+  }
   renderAds(FALLBACK_ADS.map((a,i)=>({id:'fb_'+i,...a})));
   loadFirestoreAds();
   // Auto-show interstitial ad after 5s
@@ -403,6 +458,13 @@ async function loadFirestoreAds() {
 
 // ===== OPEN AD (uses AdManager) =====
 function openAd(id, reward, title, duration) {
+  if (isCooldownActive()) {
+    const rem = getCooldownRemaining();
+    const min = Math.floor(rem / 60000);
+    const sec = Math.floor((rem % 60000) / 1000);
+    showToast('Wait '+min+':'+(''+sec).padStart(2,'0')+' for next ad', 'error');
+    return;
+  }
   window.openAdId = id;
   adManager.play(id, reward, title, duration).catch(() => {});
 }
