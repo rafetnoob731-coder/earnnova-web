@@ -5,8 +5,9 @@ function showAlert(msg, type = 'error') {
   const box = document.getElementById('alertBox');
   if (box) {
     box.textContent = msg;
-    box.className = 'alert-box alert-' + type;
-    setTimeout(() => box.style.display = 'none', 5000);
+    box.className = 'auth-glass-alert ' + type;
+    box.style.display = 'block';
+    setTimeout(() => { box.style.display = 'none'; }, 5000);
   }
 }
 

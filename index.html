@@ -9,6 +9,7 @@
   <meta name="description" content="EARNNOVA - Premium earning platform">
   <link rel="manifest" href="manifest.json">
   <title>EARNNOVA</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <link rel="stylesheet" href="css/style.css">
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -46,75 +47,89 @@
 
 <!-- ===== AUTH ===== -->
 <div id="authPage" class="page-view hidden">
-  <div class="auth-bg-gradient"></div>
-  <div class="auth-backdrop"></div>
-  <div class="auth-container">
-    <div class="auth-brand">
-      <div class="auth-logo">E</div>
-      <h1>EARNNOVA</h1>
-      <p class="auth-tagline">Earn. Grow. Thrive.</p>
+  <!-- Video Background -->
+  <div class="auth-video-wrapper">
+    <video class="auth-video" autoplay muted loop playsinline>
+      <source src="assets/video/Earn.mp4" type="video/mp4">
+    </video>
+  </div>
+
+  <!-- Unmute Button -->
+  <button id="unmuteBtn" class="auth-unmute" style="display:none">
+    <i class="fas fa-volume-mute"></i>
+  </button>
+
+  <div class="auth-glass-container">
+    <!-- Brand -->
+    <div class="auth-glass-brand">
+      <div class="auth-glass-logo">✦ EARNNOVA</div>
+      <div class="auth-glass-underline"></div>
+      <div class="auth-glass-subtitle">Earn · Grow · Thrive</div>
     </div>
-    <div id="alertBox" class="alert-box"></div>
+
+    <div id="alertBox" class="auth-glass-alert"></div>
 
     <!-- Login -->
-    <form id="loginForm" class="auth-form">
-      <div class="input-group">
+    <form id="loginForm" class="auth-glass-form">
+      <div class="auth-glass-input">
+        <i class="fas fa-envelope"></i>
         <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email">
-        <span class="input-icon">✉️</span>
       </div>
-      <div class="input-group">
+      <div class="auth-glass-input">
+        <i class="fas fa-lock"></i>
         <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
-        <span class="input-icon">🔒</span>
       </div>
-      <div class="auth-row">
-        <label class="checkbox-label"><input type="checkbox" id="remember"> Remember</label>
-        <a href="#" id="forgotLink" class="link">Forgot?</a>
+      <div class="auth-glass-row">
+        <label class="auth-glass-check"><input type="checkbox" id="remember" checked> Remember me</label>
+        <a href="#" id="forgotLink" class="auth-glass-link">Forgot?</a>
       </div>
-      <button type="submit" id="loginBtn" class="btn btn-primary btn-block">Sign In</button>
+      <button type="submit" id="loginBtn" class="auth-glass-btn">Sign In</button>
     </form>
 
     <!-- Register -->
-    <form id="registerForm" class="auth-form hidden">
-      <div class="input-group">
+    <form id="registerForm" class="auth-glass-form hidden">
+      <div class="auth-glass-input">
+        <i class="fas fa-user"></i>
         <input type="text" id="regName" placeholder="Full Name" required>
-        <span class="input-icon">👤</span>
       </div>
-      <div class="input-group">
+      <div class="auth-glass-input">
+        <i class="fas fa-envelope"></i>
         <input type="email" id="regEmail" placeholder="Email" required>
-        <span class="input-icon">✉️</span>
       </div>
-      <div class="input-group">
+      <div class="auth-glass-input">
+        <i class="fas fa-lock"></i>
         <input type="password" id="regPassword" placeholder="Password (6+ chars)" required minlength="6">
-        <span class="input-icon">🔒</span>
       </div>
-      <div class="input-group">
+      <div class="auth-glass-input">
+        <i class="fas fa-gift"></i>
         <input type="text" id="regReferral" placeholder="Referral code (optional)">
-        <span class="input-icon">🎁</span>
       </div>
-      <button type="submit" id="registerBtn" class="btn btn-primary btn-block">Create Account</button>
+      <button type="submit" id="registerBtn" class="auth-glass-btn">Create Account</button>
     </form>
 
     <!-- Forgot -->
-    <form id="forgotForm" class="auth-form hidden">
-      <div class="input-group">
+    <form id="forgotForm" class="auth-glass-form hidden">
+      <p class="auth-glass-desc">Enter your email and we'll send you a reset link.</p>
+      <div class="auth-glass-input">
+        <i class="fas fa-envelope"></i>
         <input type="email" id="forgotEmail" placeholder="Email" required>
-        <span class="input-icon">✉️</span>
       </div>
-      <button type="submit" id="forgotBtn" class="btn btn-primary btn-block">Send Reset Link</button>
-      <p class="text-center mt-2"><a href="#" id="backToLogin" class="link">← Back to Sign In</a></p>
+      <button type="submit" id="forgotBtn" class="auth-glass-btn">Send Reset Link</button>
+      <p class="auth-glass-back"><a href="#" id="backToLogin" class="auth-glass-link">← Back to Sign In</a></p>
     </form>
 
-    <div class="auth-divider"><span>or</span></div>
-    <button id="googleBtn" class="btn btn-outline btn-block">Continue with Google</button>
+    <div class="auth-glass-divider"><span>or</span></div>
+    <button id="googleBtn" class="auth-glass-btn auth-glass-btn-outline"><i class="fab fa-google"></i> Continue with Google</button>
 
-    <div class="auth-footer">
-      <span id="toggleText">No account?</span>
-      <a href="#" id="toggleLink" class="link">Sign Up</a>
+    <div class="auth-glass-footer">
+      <span id="toggleText" class="auth-glass-muted">No account?</span>
+      <a href="#" id="toggleLink" class="auth-glass-link">Sign Up</a>
     </div>
-    <div class="auth-policy-links">
-      <a href="privacy.html" class="policy-link" target="_blank">Privacy</a>
-      <span style="color:var(--slate-600)">•</span>
-      <a href="terms.html" class="policy-link" target="_blank">Terms</a>
+
+    <div class="auth-glass-policy">
+      <a href="privacy.html" target="_blank" class="auth-glass-link">Privacy</a>
+      <span class="auth-glass-dot">•</span>
+      <a href="terms.html" target="_blank" class="auth-glass-link">Terms</a>
     </div>
   </div>
 </div>
@@ -601,5 +616,22 @@ if (window.atOptions) {
 
 // Ad APIs
 async function showRewardedAd() { return false; }
+
+// Auth video unmute
+const authVideo = document.querySelector('.auth-video');
+const unmuteBtn = document.getElementById('unmuteBtn');
+if (authVideo && unmuteBtn) {
+  unmuteBtn.style.display = 'flex';
+  unmuteBtn.addEventListener('click', () => {
+    if (authVideo.muted) {
+      authVideo.muted = false;
+      authVideo.volume = 0.3;
+      unmuteBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+    } else {
+      authVideo.muted = true;
+      unmuteBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+    }
+  });
+}
 </script>
 </body>
