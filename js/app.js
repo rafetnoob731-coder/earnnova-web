@@ -554,6 +554,60 @@ function clearBlock() {
   try { localStorage.removeItem('en_block'); } catch(e) {}
 }
 
+// ===== AD SCRIPTS (load dynamically after auth) =====
+function initAds() {
+  // Don't load on auth page — only inside app
+  if (document.getElementById('authPage') && !document.getElementById('authPage').classList.contains('hidden')) return;
+  
+  function loadScript(src, attrs = {}) {
+    return new Promise((resolve) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.async = false; // preserve execution order
+      Object.keys(attrs).forEach(k => s.setAttribute(k, attrs[k]));
+      s.onload = resolve;
+      s.onerror = resolve;
+      document.body.appendChild(s);
+    });
+  }
+  
+  // Register service worker first
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+  }
+  
+  // Load all ad scripts sequentially
+  loadScript('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9307459733796967', {crossorigin:'anonymous'});
+  loadScript('https://5gvci.com/nt/sdk.js?z=11170708', {'data-cfasync':'false'});
+  
+  // Adsterra/CPM — wait a beat then load sequentially
+  setTimeout(async () => {
+    // Helper: set atOptions then load invoke
+    async function loadInvoke(key, format, h, w, extra) {
+      window.atOptions = { key, format, 'height': h, 'width': w, 'params': {} };
+      const url = '//www.' + (extra?.domain || 'highperformancecpm.com') + '/' + key + '/invoke.js';
+      await loadScript(url);
+      trackAdShown(extra?.network || 'adsterra');
+    }
+    
+    // Load each atOptions + invoke pair sequentially (preserves order)
+    await loadInvoke('430ec9a9c3b2a1492b22ecb72e4ace01', 'iframe', 90, 728);
+    
+    await loadScript('https://pl29828442.effectivecpmnetwork.com/2e/83/ea/2e83eab240b4afc016ede828af8a897a.js');
+    await loadScript('https://pl29828443.effectivecpmnetwork.com/ac40f76d59b8e8c281fb380b91c2bf21/invoke.js');
+    
+    await loadInvoke('679c41f5cd1133dfcfb8ddd3254605d4', 'iframe', 300, 160, { domain: 'highperformanceformat.com' });
+    await loadInvoke('11127fe81ff9922c5ece58925c849fd8', 'iframe', 60, 468, { domain: 'highperformanceformat.com' });
+    
+    await loadScript('https://www.effectivecpmnetwork.com/zjzbzfk7?key=5be534a9c13e9ed7a663c6cc527b5b74');
+    await loadScript('https://pl29828447.effectivecpmnetwork.com/fc/ac/01/fcac01bcf8a7bc1e80bbba3ba4a24fed.js');
+    await loadScript('https://quge5.com/88/tag.min.js', {'data-zone': '251380', 'data-cfasync': 'false'});
+    
+    // Show ad containers
+    document.getElementById('container-ac40f76d59b8e8c281fb380b91c2bf21')?.style.removeProperty('display');
+  }, 1000);
+}
+
 // ===== INIT =====
 function initApp() {
   // Check if account is blocked
@@ -592,6 +646,7 @@ function initApp() {
   showView('appPage');
   updateUI(); navigate('home');
   startCarousel();
+  initAds(); // load ad scripts only after auth
   if(!localStorage.getItem('en_welcomed')) { localStorage.setItem('en_welcomed','1'); setTimeout(()=>showNotif('🎉 Welcome!','Tap Earn to start earning!','🎉'),2000); }
   function t() { const d=new Date(); document.getElementById('statusTime').textContent=d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); document.getElementById('greetTime').textContent=d.getHours()<12?'Morning':d.getHours()<18?'Afternoon':'Evening'; }
   t(); setInterval(t,10000);

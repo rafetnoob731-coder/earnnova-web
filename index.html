@@ -519,93 +519,25 @@
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>
 <script src="js/admin.js"></script>
-<!-- ===== AD NETWORKS ===== -->
-
-<!-- Google AdSense -->
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9307459733796967" crossorigin="anonymous"></script>
-
-<!-- Monetag SDK + Service Worker -->
-<script src="https://5gvci.com/nt/sdk.js?z=11170708" async data-cfasync="false"></script>
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
-}
-</script>
-
-<!-- ===== ADSTERRA / CPM NETWORK PLACEMENTS ===== -->
-
-<!-- 1) 728x90 Banner -->
-<script type=text/javascript>
-  atOptions = {
-    'key' : '430ec9a9c3b2a1492b22ecb72e4ace01',
-    'format' : 'iframe',
-    'height' : 90,
-    'width' : 728,
-    'params' : {}
-  };
-</script>
-<script type=text/javascript src=//www.highperformancecpm.com/430ec9a9c3b2a1492b22ecb72e4ace01/invoke.js></script>
-
-<!-- 2) Native/Pop Script -->
-<script src="https://pl29828442.effectivecpmnetwork.com/2e/83/ea/2e83eab240b4afc016ede828af8a897a.js"></script>
-
-<!-- 3) Invoke with container -->
-<div id="container-ac40f76d59b8e8c281fb380b91c2bf21"></div>
-<script async="async" data-cfasync="false" src="https://pl29828443.effectivecpmnetwork.com/ac40f76d59b8e8c281fb380b91c2bf21/invoke.js"></script>
-
-<!-- 4) 160x300 Skyscraper -->
-<script>
-  atOptions = {
-    'key' : '679c41f5cd1133dfcfb8ddd3254605d4',
-    'format' : 'iframe',
-    'height' : 300,
-    'width' : 160,
-    'params' : {}
-  };
-</script>
-<script src="https://www.highperformanceformat.com/679c41f5cd1133dfcfb8ddd3254605d4/invoke.js"></script>
-
-<!-- 5) 468x60 Banner -->
-<script>
-  atOptions = {
-    'key' : '11127fe81ff9922c5ece58925c849fd8',
-    'format' : 'iframe',
-    'height' : 60,
-    'width' : 468,
-    'params' : {}
-  };
-</script>
-<script src="https://www.highperformanceformat.com/11127fe81ff9922c5ece58925c849fd8/invoke.js"></script>
-
-<!-- 6) Popunder Script -->
-<script src="https://www.effectivecpmnetwork.com/zjzbzfk7?key=5be534a9c13e9ed7a663c6cc527b5b74"></script>
-
-<!-- 7) Additional Script -->
-<script src="https://pl29828447.effectivecpmnetwork.com/fc/ac/01/fcac01bcf8a7bc1e80bbba3ba4a24fed.js"></script>
-
-<!-- Multitag -->
-<script src="https://quge5.com/88/tag.min.js" data-zone="251380" async data-cfasync="false"></script>
+<!-- ===== AD NETWORKS (loaded after auth via JS) ===== -->
+<!-- Ad containers (visible only inside app pages) -->
+<div id="container-ac40f76d59b8e8c281fb380b91c2bf21" style="display:none"></div>
 
 <script>
-// Ad Networks Router - routes to available networks
-// Monetag: service worker + sdk.js handles popunders/native
-// Adsterra: 728x90 banner loads above
-// Multitag: native/in-page ads
+// Ad scripts load ONLY after user is authenticated
+// initAds() is called from initApp() in app.js
 
-// Frequency cap tracker (prevents Adsterra from showing >50x/day)
+// Frequency cap tracker
 const AD_LIMITS = {
-  dailyPerNetwork: 50, // max ad impressions per network per day
-  sessionGap: 10000    // 10s min between same-network ads
+  dailyPerNetwork: 50,
+  sessionGap: 10000
 };
 function canShowAd(network) {
   try {
     const today = new Date().toISOString().split('T')[0];
     const key = 'en_adcount_' + network;
     const data = JSON.parse(localStorage.getItem(key) || '{"date":"","count":0,"last":0}');
-    if (data.date !== today) {
-      data.date = today;
-      data.count = 0;
-    }
+    if (data.date !== today) { data.date = today; data.count = 0; }
     if (data.count >= AD_LIMITS.dailyPerNetwork) return false;
     if (Date.now() - data.last < AD_LIMITS.sessionGap) return false;
     return true;
@@ -622,15 +554,7 @@ function trackAdShown(network) {
     localStorage.setItem(key, JSON.stringify(data));
   } catch(e) {}
 }
-// Track each Adsterra impression
-if (window.atOptions) {
-  const orig = document.querySelector('script[src*="highperformancecpm"]');
-  if (orig) {
-    orig.addEventListener('load', () => trackAdShown('adsterra'));
-  }
-}
 
-// Ad APIs
 async function showRewardedAd() { return false; }
 
 // Auth video unmute
