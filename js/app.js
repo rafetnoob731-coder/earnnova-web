@@ -320,12 +320,74 @@ function fbTimeout(promise, ms = 5000) {
 
 // ===== FALLBACK DATA =====
 const FALLBACK_ADS = [
-  {title:'Premium Video', reward:0.10, duration:30},
-  {title:'Quick Cash', reward:0.05, duration:15},
-  {title:'Featured Offer', reward:0.15, duration:45},
-  {title:'Standard Banner', reward:0.03, duration:10},
-  {title:'Bonus Reward', reward:0.20, duration:60},
+  {
+    id: 'fb_001',
+    title: 'Premium Wireless Earbuds',
+    description: 'Studio sound, 24hr battery. Limited offer.',
+    cta: 'Shop Now',
+    image: 'https://placehold.co/600x400/4F46E5/FFFFFF?text=Wireless+Earbuds',
+    bgColor: '#4F46E5',
+    textColor: '#FFFFFF',
+    tileSize: 'medium',
+    reward: 0.10, duration: 30
+  },
+  {
+    id: 'fb_002',
+    title: 'Daily Skincare Routine',
+    description: 'Natural, cruelty-free. 20% off first order.',
+    cta: 'Learn More',
+    image: 'https://placehold.co/600x400/0EA5E9/FFFFFF?text=Skincare+Set',
+    bgColor: '#0EA5E9',
+    textColor: '#FFFFFF',
+    tileSize: 'medium',
+    reward: 0.05, duration: 15
+  },
+  {
+    id: 'fb_003',
+    title: 'Home Workout Gear',
+    description: 'Comfort meets performance. Free shipping.',
+    cta: 'Get Offer',
+    image: 'https://placehold.co/600x400/22C55E/FFFFFF?text=Workout+Essentials',
+    bgColor: '#22C55E',
+    textColor: '#FFFFFF',
+    tileSize: 'small',
+    reward: 0.03, duration: 10
+  },
+  {
+    id: 'fb_004',
+    title: 'Learn a New Skill Today',
+    description: 'Thousands of courses. Start free trial.',
+    cta: 'Start Now',
+    image: 'https://placehold.co/600x400/F59E0B/FFFFFF?text=Online+Courses',
+    bgColor: '#F59E0B',
+    textColor: '#FFFFFF',
+    tileSize: 'large',
+    reward: 0.15, duration: 45
+  },
+  {
+    id: 'fb_005',
+    title: 'Eco-Friendly Water Bottle',
+    description: 'BPA-free, keeps cold 24h. 15% off.',
+    cta: 'Shop Now',
+    image: 'https://placehold.co/600x400/8B5CF6/FFFFFF?text=Eco+Bottle',
+    bgColor: '#8B5CF6',
+    textColor: '#FFFFFF',
+    tileSize: 'medium',
+    reward: 0.08, duration: 20
+  }
 ];
+// Render a fallback ad into any container (banner or tile)
+function renderFallbackAd(ad, slot) {
+  const isBanner = slot === 'banner';
+  return '<div class="fallback-ad" style="background:'+ad.bgColor+';color:'+ad.textColor+';padding:16px;border-radius:12px;display:flex;align-items:center;gap:16px;'+(isBanner?'width:100%;':'max-width:300px;')+'">'
+    +'<img src="'+ad.image+'" alt="'+ad.title+'" style="width:'+(isBanner?'80px':'100px')+';height:auto;border-radius:8px;">'
+    +'<div>'
+    +'<h4 style="margin:0;font-size:'+(isBanner?'16px':'14px')+'">'+ad.title+'</h4>'
+    +'<p style="margin:4px 0;font-size:13px;opacity:0.9">'+ad.description+'</p>'
+    +'<button style="background:#FFFFFF;color:'+ad.bgColor+';border:none;padding:6px 16px;border-radius:20px;font-weight:bold;cursor:pointer" onclick="openAd(\''+ad.id+'\','+(ad.reward||0.02)+',\''+ad.title+'\','+(ad.duration||30)+')">'+ad.cta+'</button>'
+    +'</div></div>';
+}
+
 const FALLBACK_PLANS = [
   {name:'Starter',price:5,dailyEarnings:0.50,duration:30,features:'Basic earning'},
   {name:'Silver',price:15,dailyEarnings:2.00,duration:30,features:'More ads'},
@@ -513,7 +575,7 @@ function loadEarnPage() {
     renderCooldown();
     return;
   }
-  renderAds(FALLBACK_ADS.map((a,i)=>({id:'fb_'+i,...a})));
+  renderAds(FALLBACK_ADS);
   loadFirestoreAds();
   // Update today count badge
   document.getElementById('todayCount').textContent = getRemainingDailyAds() + '/' + DAILY_AD_LIMIT + ' today';
@@ -542,7 +604,19 @@ function renderAds(ads) {
   list.innerHTML='';
   ads.forEach(a=>{
     const t=(a.title||'Ad').replace(/'/g,"\\'");
-    list.innerHTML+=`<div class="ad-tile" onclick="openAd('${a.id}',${a.reward||0.02},'${t}',${a.duration||30})"><span class="ad-tile-icon">🎬</span><div class="ad-tile-info"><h4>${a.title||'Ad'}</h4><p>${a.duration||30}s watch</p></div><span class="ad-tile-reward">+$${(a.reward||0.02).toFixed(2)}</span></div>`;
+    const bg = a.bgColor || 'var(--navy-800)';
+    const txt = a.textColor || '#fff';
+    const img = a.image || '';
+    const desc = a.description || (a.duration||30)+'s watch';
+    list.innerHTML+=`<div class="ad-tile" onclick="openAd('${a.id}',${a.reward||0.02},'${t}',${a.duration||30})" style="background:${bg};color:${txt};position:relative;overflow:hidden;">
+      ${img ? `<div class="ad-tile-img" style="background-image:url('${img}')"></div>` : `<span class="ad-tile-icon">🎬</span>`}
+      <div class="ad-tile-info">
+        <h4>${a.title||'Ad'}</h4>
+        <p style="opacity:0.85;font-size:12px">${desc}</p>
+        <div class="ad-tile-cta">${a.cta||'Watch'} · <strong>+$${(a.reward||0.02).toFixed(2)}</strong></div>
+      </div>
+      ${!img ? `<span class="ad-tile-reward">+$${(a.reward||0.02).toFixed(2)}</span>` : ''}
+    </div>`;
   });
 }
 async function loadFirestoreAds() {

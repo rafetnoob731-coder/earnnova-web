@@ -249,17 +249,35 @@ body {
 
 .ads-grid { display:flex; flex-direction:column; gap:8px; }
 .ad-tile {
-  display:flex; align-items:center; gap:12px;
-  padding:12px 14px; background:var(--white); border-radius:var(--radius-sm);
-  box-shadow:var(--shadow); cursor:pointer; transition:var(--transition);
-  border:1.5px solid transparent;
+  display:flex; align-items:center; gap:14px;
+  padding:0; min-height:80px; border-radius:14px;
+  cursor:pointer; transition:transform 0.2s,box-shadow 0.2s;
+  position:relative; overflow:hidden;
 }
-.ad-tile:active { transform:scale(0.98); border-color:var(--emerald); }
-.ad-tile-icon { font-size:24px; }
-.ad-tile-info { flex:1; }
-.ad-tile-info h4 { font-size:14px; font-weight:600; color:var(--slate-900); }
-.ad-tile-info p { font-size:11px; color:var(--slate-500); }
-.ad-tile-reward { font-weight:700; font-size:15px; color:var(--emerald); }
+.ad-tile:active { transform:scale(0.98); }
+.ad-tile-img {
+  width:80px; height:80px; flex-shrink:0;
+  background-size:cover; background-position:center;
+  border-radius:14px 0 0 14px;
+}
+.ad-tile-icon { font-size:28px; padding:12px; }
+.ad-tile-info { flex:1; padding:12px 0; }
+.ad-tile-info h4 { font-size:14px; font-weight:700; margin:0; }
+.ad-tile-info p { font-size:12px; margin:2px 0 6px; opacity:0.85; }
+.ad-tile-cta {
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:11px; font-weight:600;
+  background:rgba(255,255,255,0.2); padding:3px 12px;
+  border-radius:20px; backdrop-filter:blur(4px);
+}
+.ad-tile-reward { font-weight:700; font-size:15px; padding-right:14px; white-space:nowrap; }
+
+/* ===== FALLBACK ADS (brand-safe creatives) ===== */
+.fallback-ad { box-shadow:0 2px 12px rgba(0,0,0,0.1); transition:transform 0.2s; }
+.fallback-ad:hover { transform:translateY(-1px); }
+.fallback-ad button { transition:transform 0.2s,box-shadow 0.2s; }
+.fallback-ad button:hover { transform:scale(1.05); box-shadow:0 2px 8px rgba(0,0,0,0.15); }
+.fallback-ad button:active { transform:scale(0.95); }
 
 /* ===== PLANS ===== */
 .plans-grid { display:flex; flex-direction:column; gap:12px; }
