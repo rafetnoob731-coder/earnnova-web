@@ -352,8 +352,56 @@ function navigate(page) {
 }
 document.querySelectorAll('.nav-item[data-page]').forEach(i=>i.addEventListener('click',()=>navigate(i.dataset.page)));
 
+// ===== BLOCK / SUSPENSION SYSTEM =====
+function getBlockInfo() {
+  try {
+    const b = JSON.parse(localStorage.getItem('en_block') || '{}');
+    if (!b.until || Date.now() >= b.until) { localStorage.removeItem('en_block'); return null; }
+    return b;
+  } catch(e) { return null; }
+}
+function setBlock(days, reason) {
+  const until = Date.now() + days * 86400000;
+  try { localStorage.setItem('en_block', JSON.stringify({ until, reason, start: Date.now() })); } catch(e) {}
+}
+function clearBlock() {
+  try { localStorage.removeItem('en_block'); } catch(e) {}
+}
+
 // ===== INIT =====
 function initApp() {
+  // Check if account is blocked
+  const block = getBlockInfo();
+  if (block) {
+    document.getElementById('splash').classList.add('hide');
+    document.getElementById('appPage').classList.add('hidden');
+    document.getElementById('authPage').classList.add('hidden');
+    const rem = block.until - Date.now();
+    const d = Math.floor(rem / 86400000);
+    const h = Math.floor((rem % 86400000) / 3600000);
+    const m = Math.floor((rem % 3600000) / 60000);
+    document.getElementById('blockPage').classList.remove('hidden');
+    document.getElementById('blockReason').textContent = block.reason || 'Policy violation';
+    document.getElementById('blockTimer').textContent = d + 'd ' + h + 'h ' + m + 'm';
+    
+    // Live countdown
+    if (window._blockInt) clearInterval(window._blockInt);
+    window._blockInt = setInterval(() => {
+      const b = getBlockInfo();
+      if (!b) {
+        clearInterval(window._blockInt);
+        location.reload();
+        return;
+      }
+      const r = b.until - Date.now();
+      document.getElementById('blockTimer').textContent = 
+        Math.floor(r / 86400000) + 'd ' +
+        Math.floor((r % 86400000) / 3600000) + 'h ' +
+        Math.floor((r % 3600000) / 60000) + 'm';
+    }, 10000);
+    return;
+  }
+  
   document.getElementById('splash').classList.add('hide');
   showView('appPage');
   updateUI(); navigate('home');
