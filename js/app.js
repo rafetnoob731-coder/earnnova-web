@@ -75,8 +75,11 @@ class EarnnovaAdManager {
       currentUserData.totalEarned = (currentUserData.totalEarned||0) + this.currentReward;
       currentUserData.adsWatched = (currentUserData.adsWatched||0) + 1;
     }
+    incrementDailyAdCount(); // track daily limit
+    startCooldown(); // 10-min cooldown
     updateUI();
     todayStats();
+    loadEarnPage();
     showToast('+$' + this.currentReward.toFixed(2) + ' earned! 🎉');
     if (this.onReward) this.onReward({ amount: this.currentReward });
     setTimeout(() => showNotif('💰 Reward!', 'You earned $' + this.currentReward.toFixed(2), '💰'), 500);
@@ -207,6 +210,7 @@ class EarnnovaAdManager {
       currentUserData.totalEarned = (currentUserData.totalEarned||0) + this.currentReward;
       currentUserData.adsWatched = (currentUserData.adsWatched||0) + 1;
     }
+    incrementDailyAdCount(); // track daily limit
     
     this.close();
     startCooldown(); // 10-min cooldown
@@ -277,6 +281,36 @@ function renderCooldown() {
     }
     updateCooldownUI();
   }, 1000);
+}
+
+// ===== DAILY AD LIMIT (anti-spam) =====
+const DAILY_AD_LIMIT = 30; // max ads per day per user
+function getDailyAdCount() {
+  const today = new Date().toISOString().split('T')[0];
+  if (currentUserData?.lastAdDate === today && currentUserData?.todayAds) {
+    return currentUserData.todayAds;
+  }
+  // Reset if date changed
+  if (currentUserData && currentUserData.lastAdDate !== today) {
+    currentUserData.lastAdDate = today;
+    currentUserData.todayAds = 0;
+    // Try to reset on Firestore too
+    try { usersRef.doc(currentUser.uid).update({ todayAds: 0, lastAdDate: today }); } catch(e) {}
+  }
+  return 0;
+}
+function incrementDailyAdCount() {
+  if (!currentUserData) return;
+  const today = new Date().toISOString().split('T')[0];
+  currentUserData.lastAdDate = today;
+  currentUserData.todayAds = (currentUserData.todayAds || 0) + 1;
+  try { usersRef.doc(currentUser.uid).update({ todayAds: firebase.firestore.FieldValue.increment(1), lastAdDate: today }); } catch(e) {}
+}
+function isDailyLimitReached() {
+  return getDailyAdCount() >= DAILY_AD_LIMIT;
+}
+function getRemainingDailyAds() {
+  return Math.max(0, DAILY_AD_LIMIT - getDailyAdCount());
 }
 
 // ===== FIRESTORE TIMEOUT =====
@@ -462,14 +496,29 @@ async function todayStats() {
 function loadEarnPage() {
   todayStats();
   updateCooldownUI();
+  // Update daily limit display
+  const remAds = getRemainingDailyAds();
+  const limitEl = document.getElementById('dailyLimitDisplay');
+  if (limitEl) {
+    limitEl.textContent = remAds + '/' + DAILY_AD_LIMIT;
+    limitEl.style.color = remAds <= 5 ? 'var(--amber)' : remAds <= 0 ? 'var(--red)' : 'var(--emerald)';
+  }
+  if (isDailyLimitReached()) {
+    const list = document.getElementById('adsGrid');
+    if (list) list.innerHTML = '<div class="cooldown-card"><div class="cooldown-icon">📊</div><div class="cooldown-label">Daily limit reached</div><div class="cooldown-sub">You\'ve watched ' + DAILY_AD_LIMIT + ' ads today. Come back tomorrow!</div></div>';
+    updateCooldownUI();
+    return;
+  }
   if (isCooldownActive()) {
     renderCooldown();
     return;
   }
   renderAds(FALLBACK_ADS.map((a,i)=>({id:'fb_'+i,...a})));
   loadFirestoreAds();
-  // Auto-show interstitial ad after 5s
-  if (!sessionStorage.getItem('en_ad_shown')) {
+  // Update today count badge
+  document.getElementById('todayCount').textContent = getRemainingDailyAds() + '/' + DAILY_AD_LIMIT + ' today';
+  // Auto-show interstitial ad after 5s (only if under daily limit)
+  if (!sessionStorage.getItem('en_ad_shown') && !isDailyLimitReached()) {
     sessionStorage.setItem('en_ad_shown', '1');
     setTimeout(() => {
       adManager.currentReward = 0.02;
@@ -506,6 +555,10 @@ async function loadFirestoreAds() {
 
 // ===== OPEN AD (uses AdManager) =====
 function openAd(id, reward, title, duration) {
+  if (isDailyLimitReached()) {
+    showToast('Daily limit reached ('+DAILY_AD_LIMIT+' ads). Come back tomorrow!', 'error');
+    return;
+  }
   if (isCooldownActive()) {
     const rem = getCooldownRemaining();
     const min = Math.floor(rem / 60000);
