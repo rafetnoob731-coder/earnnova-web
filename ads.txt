@@ -1,0 +1,4 @@
+google.com, pub-9307459733796967, DIRECT, f08c47fec0942fa0
+# Adsterra (if you have a publisher ID, add: adsterra.com, PUBLISHER_ID, DIRECT)
+# Monetag (5gvci.com domain)
+5gvci.com, 11170708, RESELLER
