@@ -466,6 +466,22 @@
   </nav>
 </div>
 
+<!-- ===== HUMAN VERIFICATION MODAL ===== -->
+<div id="verifyModal" class="modal-overlay">
+  <div class="verify-card">
+    <div class="verify-icon">🤖</div>
+    <h3 class="verify-title">Human Verification</h3>
+    <p class="verify-desc">Please solve this to continue</p>
+    <div class="verify-question" id="verifyQuestion">3 + 4 = ?</div>
+    <div class="verify-input-wrap">
+      <input type="number" id="verifyInput" class="verify-input" placeholder="Answer" autofocus>
+    </div>
+    <p class="verify-error" id="verifyError" style="display:none">❌ Wrong answer, try again</p>
+    <button class="auth-glass-btn" onclick="submitVerification()" style="margin-top:8px">✅ Verify & Watch</button>
+    <button class="verify-skip" onclick="closeVerification()">Cancel</button>
+  </div>
+</div>
+
 <!-- ===== AD WATCH MODAL (Monetag) ===== -->
 <div id="adModal" class="modal-overlay">
   <div class="modal-full">

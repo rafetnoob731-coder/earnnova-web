@@ -640,9 +640,53 @@ function openAd(id, reward, title, duration) {
     showToast('Wait '+min+':'+(''+sec).padStart(2,'0')+' for next ad', 'error');
     return;
   }
-  window.openAdId = id;
-  adManager.play(id, reward, title, duration).catch(() => {});
+  // Human verification step
+  window._pendingAd = { id, reward, title, duration };
+  showVerification();
 }
+
+// ===== HUMAN VERIFICATION =====
+function showVerification() {
+  const modal = document.getElementById('verifyModal');
+  if (modal) {
+    modal.classList.add('show');
+    // Simple math challenge
+    const a = Math.floor(Math.random() * 10) + 1;
+    const b = Math.floor(Math.random() * 10) + 1;
+    window._verifyAnswer = a + b;
+    document.getElementById('verifyQuestion').textContent = 'What is ' + a + ' + ' + b + '?';
+    document.getElementById('verifyInput').value = '';
+    document.getElementById('verifyInput').focus();
+    document.getElementById('verifyError').style.display = 'none';
+  }
+}
+function submitVerification() {
+  const input = document.getElementById('verifyInput');
+  const val = parseInt(input.value);
+  if (val === window._verifyAnswer) {
+    document.getElementById('verifyModal').classList.remove('show');
+    const ad = window._pendingAd;
+    if (ad) {
+      window.openAdId = ad.id;
+      adManager.play(ad.id, ad.reward, ad.title, ad.duration).catch(() => {});
+    }
+  } else {
+    document.getElementById('verifyError').style.display = 'block';
+    input.value = '';
+    input.focus();
+  }
+}
+function closeVerification() {
+  document.getElementById('verifyModal').classList.remove('show');
+  window._pendingAd = null;
+}
+// Enter key submits verification
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.getElementById('verifyModal').classList.contains('show')) {
+    e.preventDefault();
+    submitVerification();
+  }
+});
 function closeAdModal() { adManager.close(); }
 
 // ===== PLANS =====
