@@ -1,923 +1,630 @@
 // =============================================
-// EARNNOVA - Premium Dashboard
+// EARNNOVA — MULTI-PAGE PLATFORM v4.0
 // =============================================
 let currentUser = null, currentUserData = null;
+const ADMIN_EMAIL = 'rafetnoob731@gmail.com';
+let isAdminUser = false;
 
-// ===== MONETAG AD MANAGER =====
-class EarnnovaAdManager {
-  constructor() {
-    this.zoneId = '11170708'; // Monetag zone ID
-    this.state = 'idle'; // idle|loading|playing|completed|failed
-    this.timer = null;
-    this.watchStart = 0;
-    this.minWatchMs = 5000;
-    this.currentReward = 0.02;
-    this.currentAdId = null;
-    this.onReward = null;
-    this.isVisible = false;
-    this.visibleTime = 0;
-    this.observer = null;
-    this.failCount = 0; // consecutive ad load failures
-    this.maxFailBeforeSkip = 3;
-  }
-
-  // ─── SHOW ERROR PLACEHOLDER (gentle, calm) ───
-  showErrorPlaceholder() {
-    this.failCount++;
-    this.state = 'failed';
-    const content = document.getElementById('modalAdContent');
-    const footer = document.getElementById('modalAdFooter');
-    if (!content || !footer) return;
-    
-    const isIndo = localStorage.getItem('en_lang') === 'id';
-    
-    if (this.failCount >= 2) {
-      // Frustration recovery (2+ failures)
-      content.innerHTML = '<div class="ad-error-wrap"><div class="ad-error-icon">😅</div>'
-        + '<h3 class="ad-error-title">'+(isIndo?'Yah, lagi error nih':'Ad not loading?')+'</h3>'
-        + '<p class="ad-error-body">'+(isIndo?'Kami akan coba lagi, ya. Reward tetap kamu dapatkan!':'Don\'t worry — we\'ll try again. You\'ll still earn your reward.')+'</p>'
-        + '<div class="ad-error-attempt">'+(isIndo?'Percobaan '+this.failCount+' dari '+this.maxFailBeforeSkip:'Attempt '+this.failCount+' of '+this.maxFailBeforeSkip)+'</div>'
-        + '</div>';
-      footer.innerHTML = '<div class="ad-error-actions">'
-        + '<button class="auth-glass-btn" onclick="window._retryAd()" style="flex:1;padding:10px">🔄 '+(isIndo?'Muat Ulang':'Try Again')+'</button>'
-        + '<button class="ad-error-skip" onclick="window._skipAd()">⏭ '+(isIndo?'Lewati':'Skip')+'</button>'
-        + '</div>';
-    } else {
-      // First failure — gentle placeholder
-      content.innerHTML = '<div class="ad-error-wrap"><div class="ad-error-icon">☁️</div>'
-        + '<h3 class="ad-error-title">'+(isIndo?'Iklan sedang sibuk':'Ad is taking a moment')+'</h3>'
-        + '<p class="ad-error-body">'+(isIndo?'Jangan khawatir — coba segarkan. Reward tetap kamu dapatkan!':'Don\'t worry — let\'s refresh. You\'ll still earn your reward!')+'</p>'
-        + '</div>';
-      footer.innerHTML = '<div class="ad-error-actions">'
-        + '<button class="auth-glass-btn" onclick="window._retryAd()" style="flex:1;padding:10px">🔄 '+(isIndo?'Coba Lagi':'Try Again')+'</button>'
-        + '<button class="ad-error-skip" onclick="window._skipAd()">⏭ '+(isIndo?'Lewati':'Skip')+'</button>'
-        + '</div>';
-    }
-  }
-
-  // ─── PLAY AD (main entry point) ───
-  async play(adId, reward, title, duration, isAuto = false) {
-    this.currentAdId = adId || 'ad_'+Date.now();
-    this.currentReward = reward || 0.02;
-    this.currentTitle = title || 'Ad';
-    this.duration = duration || 30;
-    this.state = 'loading';
-    this.isAuto = isAuto;
-    
-    const modal = document.getElementById('adModal');
-    modal.classList.add('show');
-    
-    // Phase 1: Loading UI
-    this.renderLoadingUI();
-    await this.sleep(500); this.advanceStep(0);
-    await this.sleep(300); this.advanceStep(1);
-    
-    // Try loading network ad
-    const networkLoaded = await this.tryLoadNetworkAd();
-    
-    if (!networkLoaded && this.failCount > 0) {
-      // Show error placeholder (only after previous failures)
-      this.showErrorPlaceholder();
-      return;
-    }
-    
-    // Phase 2: Fallback countdown ad (normal flow)
-    this.failCount = 0;
-    this.state = 'playing';
-    this.renderPlayingUI();
-    this.startCountdown();
-    this.trackVisibility();
-  }
-
-  // ─── TRY LOAD NETWORK AD ───
-  async tryLoadNetworkAd() {
-    try {
-      const adScripts = document.querySelectorAll('script[src*="highperformancecpm"], script[src*="effectivecpmnetwork"], script[src*="highperformanceformat"], script[src*="5gvci"]');
-      if (adScripts.length > 0) {
-        await this.sleep(800);
-        // Check if any script errored
-        const errored = Array.from(adScripts).some(s => s.dataset.errored === '1');
-        if (errored) return false;
-      }
-      await this.sleep(500);
-      return true; // default success → plays fallback countdown
-    } catch(e) {
-      return true; // on error, still play countdown
-    }
-  }
-    
-    return new Promise((resolve) => {
-      this.onReward = resolve;
-    });
-  }
-
-  // Direct reward grant (when rewarded ad completes)
-  async grantRewardDirect() {
-    let ok = false;
-    try {
-      await fbTimeout(usersRef.doc(currentUser.uid).update({
-        balance: firebase.firestore.FieldValue.increment(this.currentReward),
-        totalEarned: firebase.firestore.FieldValue.increment(this.currentReward),
-        adsWatched: firebase.firestore.FieldValue.increment(1)
-      }));
-      await fbTimeout(transactionsRef.add({
-        userId: currentUser.uid, type: 'Ad Reward',
-        amount: this.currentReward, status: 'completed',
-        description: this.currentTitle + ' (rewarded)',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }));
-      ok = true;
-    } catch(e) {}
-    
-    locAdd('bal', this.currentReward);
-    locAdd('earned', this.currentReward);
-    locAdd('watched', 1);
-    if (currentUserData) {
-      currentUserData.balance = (currentUserData.balance||0) + this.currentReward;
-      currentUserData.totalEarned = (currentUserData.totalEarned||0) + this.currentReward;
-      currentUserData.adsWatched = (currentUserData.adsWatched||0) + 1;
-    }
-    incrementDailyAdCount(); // track daily limit
-    startCooldown(); // 10-min cooldown
-    updateUI();
-    todayStats();
-    loadEarnPage();
-    showToast('+$' + this.currentReward.toFixed(2) + ' earned! 🎉');
-    if (this.onReward) this.onReward({ amount: this.currentReward });
-    setTimeout(() => showNotif('💰 Reward!', 'You earned $' + this.currentReward.toFixed(2), '💰'), 500);
-  }
-
-  renderLoadingUI() {
-    document.getElementById('modalAdContent').innerHTML = `
-      <div class="ad-player-box">
-        <div class="ad-player-screen">
-          <div class="ad-player-icon">📺</div>
-          <div class="ad-player-label">Initializing...</div>
-        </div>
-        <div class="ad-progress-steps" id="adSteps">
-          <div class="ad-step active"></div>
-          <div class="ad-step"></div>
-          <div class="ad-step"></div>
-        </div>
-        <div class="ad-ring-wrap">
-          <svg viewBox="0 0 100 100" width="80" height="80">
-            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6"/>
-            <circle cx="50" cy="50" r="42" fill="none" stroke="url(#ag)" stroke-width="6" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round" transform="rotate(-90,50,50)" id="adRing"/>
-            <defs><linearGradient id="ag" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#10B981"/><stop offset="1" stop-color="#059669"/></linearGradient></defs>
-          </svg>
-          <div class="ad-ring-text" id="adTimerDisplay">${this.duration}</div>
-        </div>
-        <div class="ad-reward-big">💰 +$${this.currentReward.toFixed(2)}</div>
-      </div>`;
-    
-    document.getElementById('modalAdFooter').innerHTML = `
-      <div class="ad-reward-info"><span>💰 Reward: <strong>+$${this.currentReward.toFixed(2)}</strong></span><span>⏱️ <span id="timeLeft">0s</span></span></div>
-      <button id="adActionBtn" class="btn btn-primary btn-block" disabled>⏳ Loading ad...</button>`;
-  }
-
-  advanceStep(idx) {
-    const steps = document.querySelectorAll('.ad-step');
-    const labels = ['Loading SDK...', 'Fetching ad...', 'Starting...'];
-    if (steps[idx]) { steps[idx].classList.add('done'); steps[idx].classList.remove('active'); }
-    if (steps[idx+1]) steps[idx+1].classList.add('active');
-    const label = document.querySelector('.ad-player-label');
-    if (label && labels[idx+1]) label.textContent = labels[idx+1];
-  }
-
-  renderPlayingUI() {
-    const screen = document.querySelector('.ad-player-screen');
-    if (screen) {
-      screen.innerHTML = `<div class="ad-player-icon">▶️</div><div class="ad-player-label">Ad Playing</div>`;
-    }
-    const btn = document.getElementById('adActionBtn');
-    if (btn) { btn.disabled = false; btn.textContent = '⏳ Watching...'; }
-  }
-
-  startCountdown() {
-    let sec = this.duration;
-    const ring = document.getElementById('adRing');
-    const timer = document.getElementById('adTimerDisplay');
-    const timeLeft = document.getElementById('timeLeft');
-    const btn = document.getElementById('adActionBtn');
-    const circ = 264;
-    this.watchStart = Date.now();
-    
-    if (this.timer) clearInterval(this.timer);
-    this.timer = setInterval(() => {
-      sec--;
-      const p = sec / this.duration;
-      if (ring) ring.style.strokeDashoffset = circ * (1 - p);
-      if (timer) timer.textContent = Math.max(sec, 0);
-      if (timeLeft) timeLeft.textContent = Math.max(sec, 0) + 's';
-      
-      if (sec <= 0) {
-        clearInterval(this.timer);
-        this.state = 'completed';
-        if (timer) timer.textContent = '✅';
-        if (btn) { btn.disabled = false; btn.textContent = '✅ Claim $' + this.currentReward.toFixed(2); btn.onclick = () => this.claim(); }
-        if (timeLeft) timeLeft.textContent = 'Done!';
-      }
-    }, 1000);
-  }
-
-  trackVisibility() {
-    this.observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting && e.intersectionRatio >= 0.5) {
-          this.isVisible = true;
-        } else {
-          this.isVisible = false;
-        }
-      });
-    }, { threshold: [0.5] });
-    const el = document.querySelector('.ad-player-screen');
-    if (el) this.observer.observe(el);
-  }
-
-  async claim() {
-    const btn = document.getElementById('adActionBtn');
-    if (btn) { btn.disabled = true; btn.textContent = '⏳ Claiming...'; }
-    
-    const elapsed = Date.now() - this.watchStart;
-    const visPct = this.isVisible ? 1.0 : 0.8; // if not tracked, assume good
-    
-    if (elapsed < this.minWatchMs || visPct < 0.5) {
-      showToast('Ad too short, try again', 'error');
-      if (btn) { btn.disabled = false; btn.textContent = 'Try Again'; }
-      return;
-    }
-    
-    // Grant reward (Firestore + local)
-    let ok = false;
-    try {
-      await fbTimeout(usersRef.doc(currentUser.uid).update({
-        balance: firebase.firestore.FieldValue.increment(this.currentReward),
-        totalEarned: firebase.firestore.FieldValue.increment(this.currentReward),
-        adsWatched: firebase.firestore.FieldValue.increment(1)
-      }));
-      await fbTimeout(transactionsRef.add({
-        userId: currentUser.uid, type: 'Ad Reward',
-        amount: this.currentReward, status: 'completed',
-        description: this.currentTitle,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }));
-      ok = true;
-    } catch(e) {}
-    
-    locAdd('bal', this.currentReward);
-    locAdd('earned', this.currentReward);
-    locAdd('watched', 1);
-    if (currentUserData) {
-      currentUserData.balance = (currentUserData.balance||0) + this.currentReward;
-      currentUserData.totalEarned = (currentUserData.totalEarned||0) + this.currentReward;
-      currentUserData.adsWatched = (currentUserData.adsWatched||0) + 1;
-    }
-    incrementDailyAdCount(); // track daily limit
-    
-    this.close();
-    startCooldown(); // 10-min cooldown
-    updateUI();
-    todayStats();
-    loadEarnPage(); // refresh earn page to show cooldown
-    showToast('+$' + this.currentReward.toFixed(2) + ' earned! 🎉');
-    
-    if (this.onReward) this.onReward({ amount: this.currentReward });
-    setTimeout(() => showNotif('💰 Reward!', 'You earned $' + this.currentReward.toFixed(2), '💰'), 500);
-  }
-
-  close() {
-    document.getElementById('adModal').classList.remove('show');
-    if (this.timer) clearInterval(this.timer);
-    if (this.observer) this.observer.disconnect();
-    this.state = 'idle';
-  }
-
-  sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-}
-
-const adManager = new EarnnovaAdManager();
-
-// ===== AD ERROR HANDLING (retry / skip) =====
-window._retryAd = function() {
-  // Re-trigger the ad with same params
-  const modal = document.getElementById('adModal');
-  modal.classList.remove('show');
-  setTimeout(() => {
-    const ad = window._pendingAd;
-    if (ad) {
-      adManager.play(ad.id, ad.reward, ad.title, ad.duration).catch(() => {});
-    }
-  }, 300);
-};
-window._skipAd = function() {
-  // Skip to fallback countdown with reward
-  adManager.failCount = 0;
-  adManager.state = 'playing';
-  adManager.renderPlayingUI();
-  adManager.startCountdown();
-  adManager.trackVisibility();
-};
-window._testAdError = function() {
-  // Demo: force-show the error placeholder
-  adManager.failCount = 1;
-  const modal = document.getElementById('adModal');
-  modal.classList.add('show');
-  adManager.showErrorPlaceholder();
-};
-
-// ===== COOLDOWN SYSTEM (10 min between ads) =====
-const COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
-function getCooldownEnd() {
-  try { return parseInt(localStorage.getItem('en_cd_end')||'0'); } catch(e) { return 0; }
-}
-function setCooldownEnd(ts) {
-  try { localStorage.setItem('en_cd_end', String(ts)); } catch(e) {}
-}
-function isCooldownActive() {
-  return Date.now() < getCooldownEnd();
-}
-function getCooldownRemaining() {
-  return Math.max(0, getCooldownEnd() - Date.now());
-}
-function startCooldown() {
-  setCooldownEnd(Date.now() + COOLDOWN_MS);
-}
-function updateCooldownUI() {
-  const el = document.getElementById('cooldownTimer');
-  if (!el) return;
-  if (isCooldownActive()) {
-    const rem = getCooldownRemaining();
-    const min = Math.floor(rem / 60000);
-    const sec = Math.floor((rem % 60000) / 1000);
-    el.textContent = min + ':' + (''+sec).padStart(2,'0');
-  } else {
-    el.textContent = 'Ready!';
-  }
-}
-function renderCooldown() {
-  const list = document.getElementById('adsGrid');
-  if (!list) return;
-  const rem = getCooldownRemaining();
-  const min = Math.floor(rem / 60000);
-  const sec = Math.floor((rem % 60000) / 1000);
-  list.innerHTML = '<div class="cooldown-card"><div class="cooldown-icon">⏳</div><div class="cooldown-label">Next ad available in</div><div class="cooldown-timer" id="cooldownTimer">'+min+':'+(''+sec).padStart(2,'0')+'</div><div class="cooldown-sub">Come back after the timer</div></div>';
-  // Live countdown
-  if (window._cdInterval) clearInterval(window._cdInterval);
-  window._cdInterval = setInterval(() => {
-    if (!isCooldownActive()) {
-      clearInterval(window._cdInterval);
-      loadEarnPage();
-      return;
-    }
-    updateCooldownUI();
-  }, 1000);
-}
-
-// ===== DAILY AD LIMIT (anti-spam) =====
-const DAILY_AD_LIMIT = 30; // max ads per day per user
-function getDailyAdCount() {
-  const today = new Date().toISOString().split('T')[0];
-  if (currentUserData?.lastAdDate === today && currentUserData?.todayAds) {
-    return currentUserData.todayAds;
-  }
-  // Reset if date changed
-  if (currentUserData && currentUserData.lastAdDate !== today) {
-    currentUserData.lastAdDate = today;
-    currentUserData.todayAds = 0;
-    // Try to reset on Firestore too
-    try { usersRef.doc(currentUser.uid).update({ todayAds: 0, lastAdDate: today }); } catch(e) {}
-  }
-  return 0;
-}
-function incrementDailyAdCount() {
-  if (!currentUserData) return;
-  const today = new Date().toISOString().split('T')[0];
-  currentUserData.lastAdDate = today;
-  currentUserData.todayAds = (currentUserData.todayAds || 0) + 1;
-  try { usersRef.doc(currentUser.uid).update({ todayAds: firebase.firestore.FieldValue.increment(1), lastAdDate: today }); } catch(e) {}
-}
-function isDailyLimitReached() {
-  return getDailyAdCount() >= DAILY_AD_LIMIT;
-}
-function getRemainingDailyAds() {
-  return Math.max(0, DAILY_AD_LIMIT - getDailyAdCount());
-}
+// ===== PROTECTION LAYERS =====
+const PROTECTION_LAYERS = [
+  'Firebase Auth','Human Verification','10-min Cooldown',
+  '30/day Limit','Account Block','Device Fingerprint',
+  'Bot Detection','Safe Mode Fallback'
+];
 
 // ===== FIRESTORE TIMEOUT =====
-function fbTimeout(promise, ms = 5000) {
-  return Promise.race([promise, new Promise((_,r)=>setTimeout(()=>r(new Error('TIMEOUT')),ms))]);
+function fbTimeout(promise, ms) {
+  return Promise.race([promise, new Promise((_,r)=>setTimeout(()=>r(new Error('TIMEOUT')),ms||5000))]);
 }
-
-// ===== FALLBACK DATA =====
-const FALLBACK_ADS = [
-  {
-    id: 'fb_001',
-    title: 'Premium Wireless Earbuds',
-    description: 'Studio sound, 24hr battery. Limited offer.',
-    cta: 'Shop Now',
-    image: 'https://placehold.co/600x400/4F46E5/FFFFFF?text=Wireless+Earbuds',
-    bgColor: '#4F46E5',
-    textColor: '#FFFFFF',
-    tileSize: 'medium',
-    reward: 0.10, duration: 30
-  },
-  {
-    id: 'fb_002',
-    title: 'Daily Skincare Routine',
-    description: 'Natural, cruelty-free. 20% off first order.',
-    cta: 'Learn More',
-    image: 'https://placehold.co/600x400/0EA5E9/FFFFFF?text=Skincare+Set',
-    bgColor: '#0EA5E9',
-    textColor: '#FFFFFF',
-    tileSize: 'medium',
-    reward: 0.05, duration: 15
-  },
-  {
-    id: 'fb_003',
-    title: 'Home Workout Gear',
-    description: 'Comfort meets performance. Free shipping.',
-    cta: 'Get Offer',
-    image: 'https://placehold.co/600x400/22C55E/FFFFFF?text=Workout+Essentials',
-    bgColor: '#22C55E',
-    textColor: '#FFFFFF',
-    tileSize: 'small',
-    reward: 0.03, duration: 10
-  },
-  {
-    id: 'fb_004',
-    title: 'Learn a New Skill Today',
-    description: 'Thousands of courses. Start free trial.',
-    cta: 'Start Now',
-    image: 'https://placehold.co/600x400/F59E0B/FFFFFF?text=Online+Courses',
-    bgColor: '#F59E0B',
-    textColor: '#FFFFFF',
-    tileSize: 'large',
-    reward: 0.15, duration: 45
-  },
-  {
-    id: 'fb_005',
-    title: 'Eco-Friendly Water Bottle',
-    description: 'BPA-free, keeps cold 24h. 15% off.',
-    cta: 'Shop Now',
-    image: 'https://placehold.co/600x400/8B5CF6/FFFFFF?text=Eco+Bottle',
-    bgColor: '#8B5CF6',
-    textColor: '#FFFFFF',
-    tileSize: 'medium',
-    reward: 0.08, duration: 20
-  }
-];
-// Render a fallback ad into any container (banner or tile)
-function renderFallbackAd(ad, slot) {
-  const isBanner = slot === 'banner';
-  return '<div class="fallback-ad" style="background:'+ad.bgColor+';color:'+ad.textColor+';padding:16px;border-radius:12px;display:flex;align-items:center;gap:16px;'+(isBanner?'width:100%;':'max-width:300px;')+'">'
-    +'<img src="'+ad.image+'" alt="'+ad.title+'" style="width:'+(isBanner?'80px':'100px')+';height:auto;border-radius:8px;">'
-    +'<div>'
-    +'<h4 style="margin:0;font-size:'+(isBanner?'16px':'14px')+'">'+ad.title+'</h4>'
-    +'<p style="margin:4px 0;font-size:13px;opacity:0.9">'+ad.description+'</p>'
-    +'<button style="background:#FFFFFF;color:'+ad.bgColor+';border:none;padding:6px 16px;border-radius:20px;font-weight:bold;cursor:pointer" onclick="openAd(\''+ad.id+'\','+(ad.reward||0.02)+',\''+ad.title+'\','+(ad.duration||30)+')">'+ad.cta+'</button>'
-    +'</div></div>';
-}
-
-const FALLBACK_PLANS = [
-  {name:'Starter',price:5,dailyEarnings:0.50,duration:30,features:'Basic earning'},
-  {name:'Silver',price:15,dailyEarnings:2.00,duration:30,features:'More ads'},
-  {name:'Gold',price:30,dailyEarnings:5.00,duration:30,features:'Unlimited ads'},
-  {name:'Diamond',price:60,dailyEarnings:12.00,duration:30,features:'VIP rewards'},
-];
 
 // ===== LOCAL CACHE =====
-function loc(key,def=0) { try{return parseFloat(localStorage.getItem('en_'+key)||String(def))}catch(e){return def} }
+function loc(key,def) { try{return parseFloat(localStorage.getItem('en_'+key)||String(def||0))}catch(e){return def||0} }
 function locSet(key,val) { try{localStorage.setItem('en_'+key,String(val))}catch(e){} }
 function locAdd(key,amt) { const v=loc(key,0)+amt; locSet(key,v); return v; }
 
 // ===== AUTH =====
-auth.onAuthStateChanged(user => {
-  if (user) { currentUser=user; loadUserData(user.uid); }
-  else { currentUser=null; currentUserData=null; document.getElementById('splash').classList.add('hide'); showView('authPage'); }
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    currentUser = user;
+    try { await usersRef.doc(user.uid).update({lastLogin:firebase.firestore.FieldValue.serverTimestamp()}); } catch(e) {}
+    loadUserData(user.uid);
+  } else {
+    currentUser = null; currentUserData = null;
+    document.getElementById('splash')?.classList.add('hide');
+    showView('authPage');
+  }
 });
 
 async function loadUserData(uid) {
   try {
-    const doc=await fbTimeout(usersRef.doc(uid).get());
-    if (doc.exists) { currentUserData={id:uid,...doc.data()}; if(currentUser.email===ADMIN_EMAIL) currentUserData.isAdmin=true; initApp(); }
-    else { if(currentUser) await createUserDoc(currentUser); await loadUserData(currentUser.uid); }
+    const doc = await fbTimeout(usersRef.doc(uid).get());
+    if (doc.exists) { currentUserData = {id:uid,...doc.data()}; initApp(); }
+    else { if (currentUser) await createUserDoc(currentUser); await loadUserData(currentUser.uid); }
   } catch(e) {
-    currentUserData={id:currentUser?.uid||'local',name:currentUser?.displayName||currentUser?.email?.split('@')[0]||'User',email:currentUser?.email||'',balance:loc('bal'),totalEarned:loc('earned'),adsWatched:loc('watched'),isAdmin:currentUser?.email===ADMIN_EMAIL};
+    currentUserData = {id:currentUser?.uid||'',name:currentUser?.displayName||currentUser?.email?.split('@')[0]||'User',email:currentUser?.email||'',balance:loc('bal'),totalEarned:loc('earned'),adsWatched:loc('watched')};
     initApp();
   }
 }
+
 async function createUserDoc(user) {
   await fbTimeout(usersRef.doc(user.uid).set({
-    uid:user.uid,email:user.email,name:user.displayName||user.email.split('@')[0],photo:user.photoURL||'',phone:'',
-    balance:0,totalEarned:0,totalWithdrawn:0,adsWatched:0,todayAds:0,lastAdDate:'',
-    referralCode:Math.random().toString(36).substring(2,10).toUpperCase(),referredBy:'',
-    streak:0,lastActive:'',planId:null,planExpiry:null,
-    isActive:true,isAdmin:user.email===ADMIN_EMAIL,
-    createdAt:firebase.firestore.FieldValue.serverTimestamp(),lastLogin:firebase.firestore.FieldValue.serverTimestamp()
+    uid:user.uid, email:user.email, name:user.displayName||user.email.split('@')[0],
+    balance:0, totalEarned:0, totalWithdrawn:0, adsWatched:0,
+    todayAds:0, lastAdDate:'', isActive:true, isAdmin:false,
+    planId:null, planExpiry:null, phone:'',
+    referralCode:Math.random().toString(36).substring(2,10).toUpperCase(),
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
   }));
 }
 
 // ===== VIEW =====
-function showView(id) { document.querySelectorAll('.page-view').forEach(p=>p.classList.add('hidden')); document.getElementById(id)?.classList.remove('hidden'); }
+function showView(id) {
+  document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('hidden');
+}
 
+// ===== NAVIGATION =====
 function navigate(page) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+page)?.classList.add('active');
-  document.querySelectorAll('.nav-item[data-page]').forEach(i=>i.classList.toggle('active',i.dataset.page===page));
-  switch(page) {
-    case'home': loadDashboard(); break;
-    case'earn': loadEarnPage(); break;
-    case'plans': loadPlans(); break;
-    case'referrals': loadReferrals(); break;
-    case'history': loadHistory(page); break;
-    case'admin':
-      if(currentUserData?.isAdmin||currentUser?.email===ADMIN_EMAIL) { adminLoadStats(); adminLoadUsers(); }
-      else { showToast('Admin only','error'); navigate('home'); }
-      break;
-  }
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const pg = document.getElementById('page-'+page);
+  if (pg) pg.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.toggle('active', i.dataset.page===page));
+  // Load page content
+  if (page==='home') { updateUI(); loadDashboard(); }
+  else if (page==='earn') { updateUI(); loadEarnPage(); }
+  else if (page==='withdraw') loadWithdraw();
+  else if (page==='plans') loadPlans();
+  else if (page==='referrals') loadReferrals();
+  else if (page==='profile') loadProfile();
 }
-document.querySelectorAll('.nav-item[data-page]').forEach(i=>i.addEventListener('click',()=>navigate(i.dataset.page)));
+document.querySelectorAll('.nav-item').forEach(i => i.addEventListener('click', () => navigate(i.dataset.page)));
 
-// ===== BLOCK / SUSPENSION SYSTEM =====
-function getBlockInfo() {
+// ===== INIT APP =====
+function initApp() {
+  // Check block
   try {
-    const b = JSON.parse(localStorage.getItem('en_block') || '{}');
-    if (!b.until || Date.now() >= b.until) { localStorage.removeItem('en_block'); return null; }
-    return b;
-  } catch(e) { return null; }
-}
-function setBlock(days, reason) {
-  const until = Date.now() + days * 86400000;
-  try { localStorage.setItem('en_block', JSON.stringify({ until, reason, start: Date.now() })); } catch(e) {}
-}
-function clearBlock() {
-  try { localStorage.removeItem('en_block'); } catch(e) {}
+    const b = JSON.parse(localStorage.getItem('en_block')||'{}');
+    if (b.until && Date.now() < b.until) {
+      showView('blockPage');
+      document.getElementById('blockReason').textContent = b.reason||'Policy violation';
+      const ut = () => { const r = b.until-Date.now(); document.getElementById('blockTimer').textContent = Math.floor(r/86400000)+'d '+Math.floor((r%86400000)/3600000)+'h '+Math.floor((r%3600000)/60000)+'m'; };
+      ut(); setInterval(() => { try{const bb=JSON.parse(localStorage.getItem('en_block')||'{}'); if(!bb.until||Date.now()>=bb.until){localStorage.removeItem('en_block');location.reload()} ut(); }catch(e){}},10000);
+      return;
+    }
+  } catch(e) {}
+  
+  document.getElementById('splash').classList.add('hide');
+  showView('appPage');
+  checkIsAdmin(); updateUserID(); updateUI();
+  navigate('home');
+  initAds();
+  // Clock
+  const clk = () => { const d=new Date(); document.getElementById('statusTime').textContent=d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); };
+  clk(); setInterval(clk,10000);
+  if (!localStorage.getItem('en_welcomed')) { localStorage.setItem('en_welcomed','1'); setTimeout(()=>showNotif('💰 Welcome!','Watch ads, earn rewards','🎉'),2000); }
 }
 
-// ===== AD SCRIPTS (load dynamically after auth) =====
+// ===== AD SCRIPTS =====
 function initAds() {
-  // Don't load on auth page — only inside app
-  if (document.getElementById('authPage') && !document.getElementById('authPage').classList.contains('hidden')) return;
-  
-  function loadScript(src, attrs = {}) {
-    return new Promise((resolve) => {
-      const s = document.createElement('script');
-      s.src = src;
-      s.async = false; // preserve execution order
-      Object.keys(attrs).forEach(k => s.setAttribute(k, attrs[k]));
-      s.onload = resolve;
-      s.onerror = resolve;
-      document.body.appendChild(s);
+  function loadScript(src, attrs) {
+    return new Promise(resolve => {
+      const s = document.createElement('script'); s.src = src; s.async = false;
+      if (attrs) Object.keys(attrs).forEach(k => s.setAttribute(k, attrs[k]));
+      s.onload = resolve; s.onerror = resolve; document.body.appendChild(s);
     });
   }
-  
-  // Register service worker first
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
-  }
-  
-  // Load all ad scripts sequentially
-  loadScript('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9307459733796967', {crossorigin:'anonymous'});
-  loadScript('https://5gvci.com/nt/sdk.js?z=11170708', {'data-cfasync':'false'});
-  
-  // Adsterra/CPM — wait a beat then load sequentially
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(()=>{});
+  loadScript('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9307459733796967',{crossorigin:'anonymous'});
+  loadScript('https://5gvci.com/nt/sdk.js?z=11170708',{'data-cfasync':'false'});
   setTimeout(async () => {
-    // Helper: set atOptions then load invoke
-    async function loadInvoke(key, format, h, w, extra) {
-      window.atOptions = { key, format, 'height': h, 'width': w, 'params': {} };
-      const url = '//www.' + (extra?.domain || 'highperformancecpm.com') + '/' + key + '/invoke.js';
-      await loadScript(url);
-      trackAdShown(extra?.network || 'adsterra');
-    }
-    
-    // Load each atOptions + invoke pair sequentially (preserves order)
-    await loadInvoke('430ec9a9c3b2a1492b22ecb72e4ace01', 'iframe', 90, 728);
-    
+    async function loadInvoke(key,f,h,w,ex) { window.atOptions = {key,format:f,'height':h,'width':w,'params':{}}; await loadScript('//www.'+(ex?.domain||'highperformancecpm.com')+'/'+key+'/invoke.js'); }
+    await loadInvoke('430ec9a9c3b2a1492b22ecb72e4ace01','iframe',90,728);
     await loadScript('https://pl29828442.effectivecpmnetwork.com/2e/83/ea/2e83eab240b4afc016ede828af8a897a.js');
     await loadScript('https://pl29828443.effectivecpmnetwork.com/ac40f76d59b8e8c281fb380b91c2bf21/invoke.js');
-    
-    await loadInvoke('679c41f5cd1133dfcfb8ddd3254605d4', 'iframe', 300, 160, { domain: 'highperformanceformat.com' });
-    await loadInvoke('11127fe81ff9922c5ece58925c849fd8', 'iframe', 60, 468, { domain: 'highperformanceformat.com' });
-    
+    await loadInvoke('679c41f5cd1133dfcfb8ddd3254605d4','iframe',300,160,{domain:'highperformanceformat.com'});
+    await loadInvoke('11127fe81ff9922c5ece58925c849fd8','iframe',60,468,{domain:'highperformanceformat.com'});
     await loadScript('https://www.effectivecpmnetwork.com/zjzbzfk7?key=5be534a9c13e9ed7a663c6cc527b5b74');
     await loadScript('https://pl29828447.effectivecpmnetwork.com/fc/ac/01/fcac01bcf8a7bc1e80bbba3ba4a24fed.js');
-    await loadScript('https://quge5.com/88/tag.min.js', {'data-zone': '251380', 'data-cfasync': 'false'});
-    
-    // Show ad containers
+    await loadScript('https://quge5.com/88/tag.min.js',{'data-zone':'251380','data-cfasync':'false'});
     document.getElementById('container-ac40f76d59b8e8c281fb380b91c2bf21')?.style.removeProperty('display');
   }, 1000);
 }
 
-// ===== INIT =====
-function initApp() {
-  // Check if account is blocked
-  const block = getBlockInfo();
-  if (block) {
-    document.getElementById('splash').classList.add('hide');
-    document.getElementById('appPage').classList.add('hidden');
-    document.getElementById('authPage').classList.add('hidden');
-    const rem = block.until - Date.now();
-    const d = Math.floor(rem / 86400000);
-    const h = Math.floor((rem % 86400000) / 3600000);
-    const m = Math.floor((rem % 3600000) / 60000);
-    document.getElementById('blockPage').classList.remove('hidden');
-    document.getElementById('blockReason').textContent = block.reason || 'Policy violation';
-    document.getElementById('blockTimer').textContent = d + 'd ' + h + 'h ' + m + 'm';
-    
-    // Live countdown
-    if (window._blockInt) clearInterval(window._blockInt);
-    window._blockInt = setInterval(() => {
-      const b = getBlockInfo();
-      if (!b) {
-        clearInterval(window._blockInt);
-        location.reload();
-        return;
-      }
-      const r = b.until - Date.now();
-      document.getElementById('blockTimer').textContent = 
-        Math.floor(r / 86400000) + 'd ' +
-        Math.floor((r % 86400000) / 3600000) + 'h ' +
-        Math.floor((r % 3600000) / 60000) + 'm';
-    }, 10000);
-    return;
-  }
-  
-  document.getElementById('splash').classList.add('hide');
-  showView('appPage');
-  updateUI(); navigate('home');
-  startCarousel();
-  initAds(); // load ad scripts only after auth
-  if(!localStorage.getItem('en_welcomed')) { localStorage.setItem('en_welcomed','1'); setTimeout(()=>showNotif('🎉 Welcome!','Tap Earn to start earning!','🎉'),2000); }
-  function t() { const d=new Date(); document.getElementById('statusTime').textContent=d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); document.getElementById('greetTime').textContent=d.getHours()<12?'Morning':d.getHours()<18?'Afternoon':'Evening'; }
-  t(); setInterval(t,10000);
+// ===== ADMIN SYSTEM =====
+function checkIsAdmin() {
+  isAdminUser = currentUser?.email===ADMIN_EMAIL || currentUserData?.isAdmin===true;
+  const t = document.getElementById('adminToggleBtn'); if (t) t.style.display = isAdminUser?'flex':'none';
+  const b = document.getElementById('userTypeBadge'); if (b) { b.textContent = isAdminUser?'🛡️ ADMIN':'👤 USER'; b.className = isAdminUser?'badge-admin':'badge-user'; }
 }
-
-function updateUI() {
-  const d=currentUserData; if(!d) return;
-  const bal=Math.max(d.balance||0,loc('bal'));
-  const earned=Math.max(d.totalEarned||0,loc('earned'));
-  document.getElementById('greetAvatar').textContent=(d.name||'U')[0].toUpperCase();
-  document.getElementById('greetName').textContent=d.name||'User';
-  document.getElementById('balanceDisplay').textContent='$'+bal.toFixed(2);
-  document.getElementById('statAds').textContent=d.adsWatched||0;
-  document.getElementById('statEarned').textContent='$'+earned.toFixed(2);
-  document.getElementById('wdBalance').textContent='$'+bal.toFixed(2);
-  document.getElementById('profAvatar').textContent=(d.name||'U')[0].toUpperCase();
-  document.getElementById('profName').textContent=d.name||'User';
-  document.getElementById('profEmail').textContent=d.email||'';
-  document.getElementById('profEditName').value=d.name||'';
-  document.getElementById('profEditPhone').value=d.phone||'';
-  document.getElementById('refLinkInput').value=`${window.location.origin}/?ref=${d.referralCode||''}`;
-  const ab=document.getElementById('adminEntryBtn');
-  if(ab) ab.style.display=(d.isAdmin||currentUser?.email===ADMIN_EMAIL)?'flex':'none';
+function updateUserID() {
+  const el = document.getElementById('userIDDisplay');
+  if (el && currentUser) { el.textContent = 'ID: '+currentUser.uid.substring(0,8); el.title = currentUser.uid; }
 }
+function toggleAdminPanel() {
+  const p = document.getElementById('adminPanel'); if (!p) return;
+  p.classList.toggle('hidden');
+  if (!p.classList.contains('hidden')) adminSearch();
+}
+document.getElementById('adminToggleBtn')?.addEventListener('click', toggleAdminPanel);
 
-// ===== DASHBOARD =====
-async function loadDashboard() {
-  updateUI(); if(!currentUser) return;
+async function adminSearch() {
+  const q = document.getElementById('adminSearchInput')?.value.trim().toLowerCase();
+  const r = document.getElementById('adminSearchResults'); if (!r) return;
+  r.innerHTML = '<div class="admin-loading">🔍 Searching...</div>';
   try {
-    const s=await fbTimeout(transactionsRef.where('userId','==',currentUser.uid).orderBy('createdAt','desc').limit(5).get());
-    const list=document.getElementById('recentList');
-    if(s.empty) list.innerHTML='<div class="empty-state"><div class="empty-icon">🚀</div><p>Start earning!</p><button class="btn btn-primary btn-sm mt-1" onclick="navigate(\'earn\')">Watch First Ad →</button></div>';
-    else {
-      list.innerHTML='';
-      s.forEach(d=>{const t=d.data();const sign=(t.amount||0)>=0?'+':'';const color=(t.amount||0)>=0?'var(--emerald)':'var(--red)';list.innerHTML+=`<div class="activity-item"><span class="ai-icon">🎬</span><div class="ai-info"><strong>${t.type||'Transaction'}</strong><small>${fmtDate(t.createdAt)}</small></div><span class="ai-amount" style="color:${color}">${sign}$${Math.abs(t.amount||0).toFixed(2)}</span></div>`;});
+    let users = [];
+    if (q && q.length>=6) { try { const d=await fbTimeout(usersRef.doc(q).get()); if (d.exists) users.push({id:q,...d.data()}); } catch(e){} }
+    if (users.length===0) { const snap=await fbTimeout(usersRef.get()); snap.forEach(d=>{ const u=d.data(); const dq=q||''; if(!dq||(u.email||'').toLowerCase().includes(dq)||(u.name||'').toLowerCase().includes(dq)||d.id.includes(dq)) users.push({id:d.id,...u}); }); }
+    if (users.length>20) users=users.slice(0,20);
+    if (!users.length) { r.innerHTML='<div class="admin-empty">❌ No users found</div>'; return; }
+    r.innerHTML = '<div class="admin-result-count">Found '+users.length+' user(s)</div>';
+    users.forEach(u => {
+      const blocked = u.isActive===false;
+      const sid = u.id.substring(0,8);
+      r.innerHTML += '<div class="admin-user-card'+(blocked?' blocked':'')+'">'
+        +'<div class="admin-user-header">'
+        +'<span class="admin-user-avatar">'+(u.name||'?')[0]+'</span>'
+        +'<div class="admin-user-info"><strong>'+(u.name||'Unknown')+'</strong>'
+        +'<span class="admin-user-email">'+(u.email||'')+'</span>'
+        +'<span class="admin-user-id">ID: '+sid+'...</span></div>'
+        +'<span class="admin-user-status '+(blocked?'status-blocked':'status-active')+'">'+(blocked?'🚫 BANNED':'✅ Active')+'</span></div>'
+        +'<div class="admin-user-stats">'
+        +'<span>💰 $'+(u.balance||0).toFixed(2)+'</span>'
+        +'<span>📺 '+(u.adsWatched||0)+' ads</span>'
+        +'<span>📋 '+(u.planId||'None')+'</span></div>'
+        +'<div class="admin-user-actions">'
+        +(blocked
+          ?'<button class="btn btn-primary btn-xs" onclick="adminUnbanUser(\''+u.id+'\')">✅ Unban</button>'
+          :'<button class="btn btn-xs" style="background:var(--red);color:white" onclick="adminBanUser(\''+u.id+'\',\''+(u.name||'').replace(/'/g,'')+'\')">🚫 Ban</button>')
+        +'<button class="btn btn-outline btn-xs" onclick="adminSetPlan(\''+u.id+'\',\''+(u.name||'').replace(/'/g,'')+'\')">📋 Plan</button>'
+        +'<button class="btn btn-outline btn-xs" onclick="adminAddBalance(\''+u.id+'\',\''+(u.name||'').replace(/'/g,'')+'\')">💰 Add</button>'
+        +'</div></div>';
+    });
+  } catch(e) { r.innerHTML='<div class="admin-empty">⚠️ Error: '+e.message+'</div>'; }
+}
+async function adminBanUser(uid,name) {
+  if (!confirm('Ban '+name+' for 7 days?')) return;
+  try { await fbTimeout(usersRef.doc(uid).update({isActive:false})); await fbTimeout(db.collection('blocks').doc(uid).set({until:Date.now()+7*86400000,reason:'Banned by admin',bannedAt:firebase.firestore.FieldValue.serverTimestamp()})); showToast('✅ '+name+' banned'); adminSearch(); } catch(e) { showToast(e.message,'error'); }
+}
+async function adminUnbanUser(uid) {
+  if (!confirm('Unban this user?')) return;
+  try { await fbTimeout(usersRef.doc(uid).update({isActive:true})); await fbTimeout(db.collection('blocks').doc(uid).delete()); showToast('✅ Unbanned'); adminSearch(); } catch(e) { showToast(e.message,'error'); }
+}
+async function adminSetPlan(uid,name) {
+  const plan = prompt('Plan for '+name+'? (starter/silver/gold/diamond or empty to remove):');
+  if (plan===null) return;
+  try { if (plan.trim()==='') { await fbTimeout(usersRef.doc(uid).update({planId:null,planExpiry:null})); showToast('✅ Plan removed'); } else { await fbTimeout(usersRef.doc(uid).update({planId:plan.trim().toLowerCase(),planExpiry:new Date(Date.now()+30*86400000)})); showToast('✅ Plan set'); } adminSearch(); } catch(e) { showToast(e.message,'error'); }
+}
+async function adminAddBalance(uid,name) {
+  const amt = prompt('Add balance to '+name+'? ($):');
+  if (amt===null||isNaN(parseFloat(amt))) return;
+  try { await fbTimeout(usersRef.doc(uid).update({balance:firebase.firestore.FieldValue.increment(Math.abs(parseFloat(amt)))})); showToast('✅ $'+Math.abs(parseFloat(amt)).toFixed(2)+' added'); adminSearch(); } catch(e) { showToast(e.message,'error'); }
+}
+
+// ===== COOLDOWN =====
+const COOLDOWN_MS = 600000;
+function cdEnd() { try{return parseInt(localStorage.getItem('en_cd_end')||'0')}catch(e){return 0} }
+function isCD() { return Date.now() < cdEnd(); }
+function cdRem() { return Math.max(0, cdEnd()-Date.now()); }
+function startCD() { localStorage.setItem('en_cd_end', String(Date.now()+COOLDOWN_MS)); }
+
+// ===== DAILY LIMIT =====
+const DAILY_LIMIT = 30;
+function getDaily() {
+  const t = new Date().toISOString().split('T')[0];
+  if (currentUserData?.lastAdDate===t && currentUserData?.todayAds) return currentUserData.todayAds;
+  if (currentUserData && currentUserData.lastAdDate!==t) { currentUserData.lastAdDate=t; currentUserData.todayAds=0; try{usersRef.doc(currentUser.uid).update({todayAds:0,lastAdDate:t})}catch(e){} }
+  return 0;
+}
+function incDaily() {
+  if (!currentUserData) return;
+  const t = new Date().toISOString().split('T')[0];
+  currentUserData.lastAdDate=t; currentUserData.todayAds=(currentUserData.todayAds||0)+1;
+  try{usersRef.doc(currentUser.uid).update({todayAds:firebase.firestore.FieldValue.increment(1),lastAdDate:t})}catch(e){}
+}
+function isLimit() { return getDaily() >= DAILY_LIMIT; }
+function remDaily() { return Math.max(0, DAILY_LIMIT-getDaily()); }
+
+// ===== STREAK =====
+function getStreak() {
+  try { const s=JSON.parse(localStorage.getItem('en_streak')||'{}'); const t=new Date().toISOString().split('T')[0]; if(s.date===t) return s.count||0; const y=new Date(Date.now()-86400000).toISOString().split('T')[0]; if(s.date===y) return s.count||0; return 0; } catch(e){return 0}
+}
+function incStreak() { const t=new Date().toISOString().split('T')[0]; localStorage.setItem('en_streak',JSON.stringify({date:t,count:getStreak()+1})); }
+function streakBonus() { const s=getStreak(); if(s>=30) return 0.50; if(s>=14) return 0.25; if(s>=7) return 0.10; if(s>=3) return 0.05; return 0; }
+
+// ===== BATCH =====
+let batchMode=false, batchCount=0, batchMax=1;
+function startBatchWatch(count) {
+  batchMode=true; batchCount=0;
+  batchMax=Math.min(count||3, remDaily());
+  if (batchMax<=0) { showToast('Daily limit!','error'); batchMode=false; return; }
+  showToast('Batch: '+batchMax+' ads 📦','info');
+  processNextBatch();
+}
+function processNextBatch() {
+  if (!batchMode || batchCount>=batchMax) { if (batchMode) { batchMode=false; showToast('Batch complete 🎉','success'); } return; }
+  batchCount++;
+  const ad = FALLBACK_ADS[Math.floor(Math.random()*FALLBACK_ADS.length)];
+  openAd(ad.id, ad.reward+streakBonus(), ad.title+' ('+batchCount+'/'+batchMax+')', ad.duration);
+}
+
+// ===== FALLBACK ADS =====
+const FALLBACK_ADS = [
+  {id:'fb_001',title:'Premium Wireless Earbuds',description:'Studio sound, 24hr battery.',cta:'Shop',image:'https://placehold.co/600x400/4F46E5/FFFFFF?text=Earbuds',bgColor:'#4F46E5',reward:0.10,duration:30},
+  {id:'fb_002',title:'Daily Skincare Routine',description:'Natural, cruelty-free. 20% off.',cta:'Learn',image:'https://placehold.co/600x400/0EA5E9/FFFFFF?text=Skincare',bgColor:'#0EA5E9',reward:0.05,duration:15},
+  {id:'fb_003',title:'Home Workout Gear',description:'Comfort meets performance.',cta:'Offer',image:'https://placehold.co/600x400/22C55E/FFFFFF?text=Workout',bgColor:'#22C55E',reward:0.03,duration:10},
+  {id:'fb_004',title:'Learn a New Skill',description:'Thousands of courses.',cta:'Start',image:'https://placehold.co/600x400/F59E0B/FFFFFF?text=Courses',bgColor:'#F59E0B',reward:0.15,duration:45},
+  {id:'fb_005',title:'Eco-Friendly Bottle',description:'BPA-free, keeps cold 24h.',cta:'Shop',image:'https://placehold.co/600x400/8B5CF6/FFFFFF?text=Bottle',bgColor:'#8B5CF6',reward:0.08,duration:20}
+];
+const FALLBACK_PLANS = [
+  {id:'starter',name:'Starter',price:5,dailyEarnings:0.50,duration:30},
+  {id:'silver',name:'Silver',price:15,dailyEarnings:2.00,duration:30},
+  {id:'gold',name:'Gold',price:30,dailyEarnings:5.00,duration:30},
+  {id:'diamond',name:'Diamond',price:60,dailyEarnings:12.00,duration:30}
+];
+
+// ===== AD MANAGER =====
+class AdMgr {
+  constructor() {
+    this.state='idle'; this.timer=null; this.watchStart=0;
+    this.minWatch=5000; this.reward=0.02; this.adId=null;
+    this.vis=false; this.obs=null; this.fails=0; this.maxFails=3;
+  }
+  showErr() {
+    this.fails++; this.state='failed';
+    const c=document.getElementById('modalAdContent'),f=document.getElementById('modalAdFooter');
+    if (!c||!f) return;
+    const id=localStorage.getItem('en_lang')==='id';
+    if (this.fails>=2) {
+      c.innerHTML='<div class="ad-error-wrap"><div class="ad-error-icon">😅</div><h3 class="ad-error-title">'+(id?'Yah error':'Ad not loading?')+'</h3><p class="ad-error-body">'+(id?'Reward tetap dapat':'You\'ll still earn')+'</p><div class="ad-error-attempt">Attempt '+this.fails+' of '+this.maxFails+'</div></div>';
+      f.innerHTML='<div class="ad-error-actions"><button class="auth-glass-btn" onclick="window._retryAd()" style="flex:1;padding:10px">🔄 '+(id?'Coba':'Try Again')+'</button><button class="ad-error-skip" onclick="window._skipAd()">⏭ '+(id?'Lewati':'Skip')+'</button></div>';
+    } else {
+      c.innerHTML='<div class="ad-error-wrap"><div class="ad-error-icon">☁️</div><h3 class="ad-error-title">'+(id?'Iklan sibuk':'Ad is taking a moment')+'</h3><p class="ad-error-body">'+(id?'Tenang, reward tetap dapat':'Don\'t worry, you\'ll still earn')+'</p></div>';
+      f.innerHTML='<div class="ad-error-actions"><button class="auth-glass-btn" onclick="window._retryAd()" style="flex:1;padding:10px">🔄 '+(id?'Coba':'Try Again')+'</button><button class="ad-error-skip" onclick="window._skipAd()">⏭ '+(id?'Lewati':'Skip')+'</button></div>';
     }
-    const r=await fbTimeout(referralsRef.where('referrerId','==',currentUser.uid).get());
-    document.getElementById('statRefs').textContent=r.size;
-    todayStats();
-  } catch(e){}
+  }
+  async play(id,reward,title,dur) {
+    this.adId=id||'ad_'+Date.now(); this.reward=reward||0.02; this.title=title||'Ad'; this.dur=dur||30;
+    this.state='loading';
+    const m=document.getElementById('adModal'); m.classList.add('show');
+    this.renderLoad(); await this.sleep(500); this.adv(0); await this.sleep(300); this.adv(1);
+    const ok=await this.tryNet(); if (!ok&&this.fails>0) { this.showErr(); return; }
+    this.fails=0; this.state='playing'; this.renderPlay(); this.cd(); this.trackVis();
+  }
+  async tryNet() {
+    try { const s=document.querySelectorAll('script[src*="highperformancecpm"],script[src*="effectivecpmnetwork"],script[src*="highperformanceformat"],script[src*="5gvci"]'); if (s.length>0) { await this.sleep(800); if (Array.from(s).some(x=>x.dataset.errored==='1')) return false; } await this.sleep(500); return true; } catch(e){return true}
+  }
+  async grant() {
+    try { await fbTimeout(usersRef.doc(currentUser.uid).update({balance:firebase.firestore.FieldValue.increment(this.reward),totalEarned:firebase.firestore.FieldValue.increment(this.reward),adsWatched:firebase.firestore.FieldValue.increment(1)})); await fbTimeout(transactionsRef.add({userId:currentUser.uid,type:'Ad Reward',amount:this.reward,status:'completed',description:this.title,createdAt:firebase.firestore.FieldValue.serverTimestamp()})); } catch(e){}
+    locAdd('bal',this.reward); locAdd('earned',this.reward); locAdd('watched',1);
+    if (currentUserData) { currentUserData.balance=(currentUserData.balance||0)+this.reward; currentUserData.totalEarned=(currentUserData.totalEarned||0)+this.reward; currentUserData.adsWatched=(currentUserData.adsWatched||0)+1; }
+    incDaily(); incStreak(); startCD();
+    const sp=document.createElement('div'); sp.className='sparkle-burst'; document.body.appendChild(sp); setTimeout(()=>sp.remove(),800);
+    showToast('+$'+this.reward.toFixed(2)+' earned! 🎉');
+    if (batchMode&&batchCount<batchMax) { setTimeout(()=>processNextBatch(),1200); } else { updateUI(); }
+  }
+  renderLoad() {
+    document.getElementById('modalAdContent').innerHTML='<div class="ad-player-box"><div class="ad-player-screen"><div class="ad-player-icon">📺</div><div class="ad-player-label">Initializing...</div></div><div class="ad-progress-steps" id="adSteps"><div class="ad-step active"></div><div class="ad-step"></div><div class="ad-step"></div></div><div class="ad-ring-wrap"><svg viewBox="0 0 100 100" width="80" height="80"><circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"/><circle cx="50" cy="50" r="42" fill="none" stroke="url(#ag)" stroke-width="6" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round" transform="rotate(-90,50,50)" id="adRing"/><defs><linearGradient id="ag" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#10B981"/><stop offset="1" stop-color="#059669"/></linearGradient></defs></svg><div class="ad-ring-text" id="adTimerDisplay">'+this.dur+'</div></div><div class="ad-reward-big">💰 +$'+this.reward.toFixed(2)+'</div></div>';
+    document.getElementById('modalAdFooter').innerHTML='<div class="ad-reward-info"><span>💰 Reward: <strong>+$'+this.reward.toFixed(2)+'</strong></span><span>⏱️ <span id="timeLeft">0s</span></span></div><button id="adActionBtn" class="btn btn-primary btn-block" disabled>⏳ Loading...</button>';
+  }
+  adv(idx) {
+    const s=document.querySelectorAll('.ad-step'),l=['Loading SDK...','Fetching ad...','Starting...'];
+    if (s[idx]) { s[idx].classList.add('done'); s[idx].classList.remove('active'); }
+    if (s[idx+1]) s[idx+1].classList.add('active');
+    const lb=document.querySelector('.ad-player-label'); if (lb&&l[idx+1]) lb.textContent=l[idx+1];
+  }
+  renderPlay() {
+    const s=document.querySelector('.ad-player-screen'); if (s) s.innerHTML='<div class="ad-player-icon">▶️</div><div class="ad-player-label">Ad Playing</div>';
+    const b=document.getElementById('adActionBtn'); if (b) { b.disabled=false; b.textContent='⏳ Watching...'; }
+  }
+  cd() {
+    let s=this.dur; const r=document.getElementById('adRing'),t=document.getElementById('adTimerDisplay'),tl=document.getElementById('timeLeft'),b=document.getElementById('adActionBtn'),c=264; this.watchStart=Date.now();
+    if (this.timer) clearInterval(this.timer);
+    this.timer=setInterval(()=>{s--; const p=s/this.dur; if(r) r.style.strokeDashoffset=c*(1-p); if(t) t.textContent=Math.max(s,0); if(tl) tl.textContent=Math.max(s,0)+'s'; if(s<=0){clearInterval(this.timer);this.state='completed';if(t)t.textContent='✅';if(b){b.disabled=false;b.textContent='✅ Claim $'+this.reward.toFixed(2);b.onclick=()=>this.claim();}if(tl)tl.textContent='Done!';}},1000);
+  }
+  trackVis() {
+    this.obs=new IntersectionObserver(e=>{e.forEach(x=>{this.vis=x.isIntersecting&&x.intersectionRatio>=0.5})},{threshold:[0.5]});
+    const el=document.querySelector('.ad-player-screen'); if (el) this.obs.observe(el);
+  }
+  async claim() {
+    const b=document.getElementById('adActionBtn'); if (b) { b.disabled=true; b.textContent='⏳ Claiming...'; }
+    if (Date.now()-this.watchStart<this.minWatch||(this.vis?1:.8)<0.5) { showToast('Ad too short','error'); if (b) b.disabled=false; return; }
+    this.close(); await this.grant();
+  }
+  close() { document.getElementById('adModal').classList.remove('show'); if (this.timer) clearInterval(this.timer); if (this.obs) this.obs.disconnect(); this.state='idle'; }
+  sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
 }
+const adm = new AdMgr();
+window._retryAd=()=>{document.getElementById('adModal').classList.remove('show');setTimeout(()=>{const a=window._pendingAd;if(a)adm.play(a.id,a.reward,a.title,a.dur).catch(()=>{})},300)};
+window._skipAd=()=>{adm.fails=0;adm.state='playing';adm.renderPlay();adm.cd();adm.trackVis()};
 
-async function todayStats() {
-  try {
-    const s=await fbTimeout(transactionsRef.where('userId','==',currentUser.uid).where('type','==','Ad Reward').orderBy('createdAt','desc').get());
-    const today=new Date().toISOString().split('T')[0]; let c=0;
-    s.forEach(d=>{const t=d.data();if(t.createdAt){const dt=t.createdAt.toDate?t.createdAt.toDate():new Date(t.createdAt);if(dt.toISOString().split('T')[0]===today)c++;}});
-    document.getElementById('goalCount').textContent=Math.min(c,5)+'/5';
-    document.getElementById('goalFill').style.width=Math.min(c/5*100,100)+'%';
-  } catch(e){}
-}
-
-// ===== EARN =====
-function loadEarnPage() {
-  todayStats();
-  updateCooldownUI();
-  // Update daily limit display
-  const remAds = getRemainingDailyAds();
-  const limitEl = document.getElementById('dailyLimitDisplay');
-  if (limitEl) {
-    limitEl.textContent = remAds + '/' + DAILY_AD_LIMIT;
-    limitEl.style.color = remAds <= 5 ? 'var(--amber)' : remAds <= 0 ? 'var(--red)' : 'var(--emerald)';
-  }
-  if (isDailyLimitReached()) {
-    const list = document.getElementById('adsGrid');
-    if (list) list.innerHTML = '<div class="cooldown-card"><div class="cooldown-icon">📊</div><div class="cooldown-label">Daily limit reached</div><div class="cooldown-sub">You\'ve watched ' + DAILY_AD_LIMIT + ' ads today. Come back tomorrow!</div></div>';
-    updateCooldownUI();
-    return;
-  }
-  if (isCooldownActive()) {
-    renderCooldown();
-    return;
-  }
-  renderAds(FALLBACK_ADS);
-  loadFirestoreAds();
-  // Update today count badge
-  document.getElementById('todayCount').textContent = getRemainingDailyAds() + '/' + DAILY_AD_LIMIT + ' today';
-  // Auto-show interstitial ad after 5s (only if under daily limit)
-  if (!sessionStorage.getItem('en_ad_shown') && !isDailyLimitReached()) {
-    sessionStorage.setItem('en_ad_shown', '1');
-    setTimeout(() => {
-      adManager.currentReward = 0.02;
-      adManager.currentTitle = 'Auto Interstitial';
-      adManager.currentAdId = 'auto_'+Date.now();
-      adManager.state = 'loading';
-      const modal = document.getElementById('adModal');
-      modal.classList.add('show');
-      adManager.renderLoadingUI();
-      setTimeout(() => {
-        adManager.state = 'playing';
-        adManager.renderPlayingUI();
-        adManager.startCountdown();
-        adManager.trackVisibility();
-      }, 1600);
-    }, 5000);
-  }
-}
-function renderAds(ads) {
-  const list=document.getElementById('adsGrid'); if(!list) return;
-  list.innerHTML='';
-  ads.forEach(a=>{
-    const t=(a.title||'Ad').replace(/'/g,"\\'");
-    const bg = a.bgColor || 'var(--navy-800)';
-    const txt = a.textColor || '#fff';
-    const img = a.image || '';
-    const desc = a.description || (a.duration||30)+'s watch';
-    list.innerHTML+=`<div class="ad-tile" onclick="openAd('${a.id}',${a.reward||0.02},'${t}',${a.duration||30})" style="background:${bg};color:${txt};position:relative;overflow:hidden;">
-      ${img ? `<div class="ad-tile-img" style="background-image:url('${img}')"></div>` : `<span class="ad-tile-icon">🎬</span>`}
-      <div class="ad-tile-info">
-        <h4>${a.title||'Ad'}</h4>
-        <p style="opacity:0.85;font-size:12px">${desc}</p>
-        <div class="ad-tile-cta">${a.cta||'Watch'} · <strong>+$${(a.reward||0.02).toFixed(2)}</strong></div>
-      </div>
-      ${!img ? `<span class="ad-tile-reward">+$${(a.reward||0.02).toFixed(2)}</span>` : ''}
-    </div>`;
-  });
-}
-async function loadFirestoreAds() {
-  try {
-    const s=await fbTimeout(adsRef.where('isActive','==',true).get()); const ads=[];
-    s.forEach(d=>ads.push({id:d.id,...d.data()}));
-    if(ads.length>0) renderAds(ads);
-  } catch(e){}
-}
-
-// ===== OPEN AD (uses AdManager) =====
-function openAd(id, reward, title, duration) {
-  if (isDailyLimitReached()) {
-    showToast('Daily limit reached ('+DAILY_AD_LIMIT+' ads). Come back tomorrow!', 'error');
-    return;
-  }
-  if (isCooldownActive()) {
-    const rem = getCooldownRemaining();
-    const min = Math.floor(rem / 60000);
-    const sec = Math.floor((rem % 60000) / 1000);
-    showToast('Wait '+min+':'+(''+sec).padStart(2,'0')+' for next ad', 'error');
-    return;
-  }
-  // Human verification step
-  window._pendingAd = { id, reward, title, duration };
+// ===== OPEN AD =====
+function openAd(id,reward,title,dur) {
+  if (isLimit()) { showToast('Daily limit ('+DAILY_LIMIT+') reached!','error'); return; }
+  if (isCD()) { showToast('Wait for cooldown','error'); return; }
+  window._pendingAd={id:id,reward:reward,title:title,dur:dur};
   showVerification();
 }
 
-// ===== HUMAN VERIFICATION =====
+// ===== VERIFICATION =====
 function showVerification() {
-  const modal = document.getElementById('verifyModal');
-  if (modal) {
-    modal.classList.add('show');
-    // Simple math challenge
-    const a = Math.floor(Math.random() * 10) + 1;
-    const b = Math.floor(Math.random() * 10) + 1;
-    window._verifyAnswer = a + b;
-    document.getElementById('verifyQuestion').textContent = 'What is ' + a + ' + ' + b + '?';
-    document.getElementById('verifyInput').value = '';
-    document.getElementById('verifyInput').focus();
-    document.getElementById('verifyError').style.display = 'none';
-  }
+  const m=document.getElementById('verifyModal'); if (!m) return;
+  m.classList.add('show'); const a=Math.floor(Math.random()*10)+1,b=Math.floor(Math.random()*10)+1;
+  window._vAns=a+b; document.getElementById('verifyQuestion').textContent='What is '+a+' + '+b+'?';
+  document.getElementById('verifyInput').value=''; document.getElementById('verifyInput').focus();
+  document.getElementById('verifyError').style.display='none';
 }
 function submitVerification() {
-  const input = document.getElementById('verifyInput');
-  const val = parseInt(input.value);
-  if (val === window._verifyAnswer) {
+  if (parseInt(document.getElementById('verifyInput').value)===window._vAns) {
     document.getElementById('verifyModal').classList.remove('show');
-    const ad = window._pendingAd;
-    if (ad) {
-      window.openAdId = ad.id;
-      adManager.play(ad.id, ad.reward, ad.title, ad.duration).catch(() => {});
-    }
-  } else {
-    document.getElementById('verifyError').style.display = 'block';
-    input.value = '';
-    input.focus();
-  }
+    const a=window._pendingAd; if (a) adm.play(a.id,a.reward,a.title,a.dur).catch(()=>{});
+  } else { document.getElementById('verifyError').style.display='block'; document.getElementById('verifyInput').value=''; document.getElementById('verifyInput').focus(); }
 }
-function closeVerification() {
-  document.getElementById('verifyModal').classList.remove('show');
-  window._pendingAd = null;
+function closeVerification() { document.getElementById('verifyModal').classList.remove('show'); window._pendingAd=null; }
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('verifyModal')?.classList.contains('show')){e.preventDefault();submitVerification()}});
+function closeAdModal() { adm.close(); }
+document.getElementById('adActionBtn')?.addEventListener('click',()=>{if(adm.state==='completed')adm.claim()});
+
+// ===== UPDATE UI =====
+function updateUI() {
+  const d=currentUserData; if (!d) return;
+  const bal=Math.max(d.balance||0,loc('bal'));
+  const earned=Math.max(d.totalEarned||0,loc('earned'));
+  // Balance
+  const bel=document.getElementById('balanceDisplay'); if (bel) { const ov=bel.textContent; const nv='$'+bal.toFixed(2); bel.textContent=nv; if (ov!==nv) { bel.classList.remove('pulse'); void bel.offsetWidth; bel.classList.add('pulse'); setTimeout(()=>bel.classList.remove('pulse'),500); } }
+  document.getElementById('wdBalance')&&(document.getElementById('wdBalance').textContent='$'+bal.toFixed(2));
+  document.getElementById('statAds')&&(document.getElementById('statAds').textContent=d.adsWatched||0);
+  document.getElementById('statEarned')&&(document.getElementById('statEarned').textContent='$'+earned.toFixed(2));
+  document.getElementById('profName')&&(document.getElementById('profName').textContent=d.name||'User');
+  document.getElementById('profEmail')&&(document.getElementById('profEmail').textContent=d.email||'');
+  document.getElementById('profAvatar')&&(document.getElementById('profAvatar').textContent=(d.name||'U')[0].toUpperCase());
+  document.getElementById('profEditName')&&(document.getElementById('profEditName').value=d.name||'');
+  document.getElementById('profEditPhone')&&(document.getElementById('profEditPhone').value=d.phone||'');
+  document.getElementById('profUID')&&(document.getElementById('profUID').textContent='ID: '+(currentUser?.uid?.substring(0,8)||'---'));
+  const ref=document.getElementById('refLinkInput'); if (ref) ref.value=window.location.origin+'/?ref='+(d.referralCode||'');
+  checkIsAdmin(); updateUserID();
 }
-// Enter key submits verification
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && document.getElementById('verifyModal').classList.contains('show')) {
-    e.preventDefault();
-    submitVerification();
-  }
-});
-function closeAdModal() { adManager.close(); }
+
+// ===== HOME / DASHBOARD =====
+async function loadDashboard() {
+  updateUI(); if (!currentUser) return;
+  // Update daily
+  const r=remDaily(); const dl=document.getElementById('dailyLimitDisplay'); if (dl) { dl.textContent=r+'/'+DAILY_LIMIT; dl.style.color=r<=5?'var(--amber)':r<=0?'var(--red)':'var(--emerald)'; }
+  const pf=document.getElementById('dailyProgressFill'); if (pf) pf.style.width=((DAILY_LIMIT-r)/DAILY_LIMIT*100)+'%';
+  // Streak
+  const se=document.getElementById('streakCount'); if (se) { const sk=getStreak(); const b=streakBonus(); se.textContent=sk+' day'+(sk!==1?'s':'')+(b>0?' (+$'+b.toFixed(2)+')':''); se.style.color=sk>=7?'var(--amber)':sk>=3?'var(--emerald)':'var(--slate-300)'; }
+  // Cooldown
+  const cs=document.getElementById('cooldownSection');
+  if (isCD()) { cs.classList.remove('hidden'); cdTimerUI(); } else { cs.classList.add('hidden'); }
+  // Activity
+  try {
+    const snap=await fbTimeout(transactionsRef.where('userId','==',currentUser.uid).orderBy('createdAt','desc').limit(5).get());
+    const list=document.getElementById('recentList');
+    if (snap.empty) { list.innerHTML='<div class="home-empty">Start earning!<br><button class="btn btn-primary btn-sm mt-1" onclick="navigate(\'earn\')">Watch First Ad →</button></div>'; } else { list.innerHTML=''; snap.forEach(d=>{const t=d.data();const s=(t.amount||0)>=0?'+':'';list.innerHTML+='<div class="activity-item"><span>🎬</span><div class="ai-info"><strong>'+(t.type||'Transaction')+'</strong><small>'+fmtDate(t.createdAt)+'</small></div><span class="ai-amount" style="color:'+((t.amount||0)>=0?'var(--emerald)':'var(--red)')+'">'+s+'$'+Math.abs(t.amount||0).toFixed(2)+'</span></div>';}); }
+    const refSnap=await fbTimeout(referralsRef.where('referrerId','==',currentUser.uid).get());
+    document.getElementById('statRefs')&&(document.getElementById('statRefs').textContent=refSnap.size);
+  } catch(e){}
+}
+let _cdInt=null;
+function cdTimerUI() {
+  if (_cdInt) clearInterval(_cdInt);
+  const upd=()=>{if(!isCD()){document.getElementById('cooldownSection')?.classList.add('hidden');loadDashboard();return}const r=cdRem(); const m=Math.floor(r/60000),s=Math.floor((r%60000)/1000); const el=document.getElementById('cooldownTimer'); if(el) el.textContent=m+':'+(''+s).padStart(2,'0');};
+  upd(); _cdInt=setInterval(upd,1000);
+}
+
+// ===== EARN PAGE =====
+function loadEarnPage() {
+  updateUI();
+  const r=remDaily(); const el=document.getElementById('earnDailyLimit'); if (el) { el.textContent=r+'/'+DAILY_LIMIT; el.style.color=r<=5?'var(--amber)':r<=0?'var(--red)':'var(--emerald)'; }
+  // Streak
+  const se=document.getElementById('earnStreakCount'); if (se) { const sk=getStreak(); const b=streakBonus(); se.textContent=sk+' day'+(sk!==1?'s':'')+(b>0?' (+$'+b.toFixed(2)+')':''); se.style.color=sk>=7?'var(--amber)':sk>=3?'var(--emerald)':'var(--slate-300)'; }
+  // Cooldown
+  const ec=document.getElementById('earnCooldownSection');
+  if (isCD()) { ec.classList.remove('hidden'); earnCDUI(); } else { ec.classList.add('hidden'); }
+  // Limit
+  const g=document.getElementById('adsGrid');
+  if (isLimit()) { g.innerHTML='<div class="home-empty" style="padding:40px 0"><div style="font-size:40px;margin-bottom:10px">📊</div><p>Daily limit reached ('+DAILY_LIMIT+' ads)</p><p class="text-muted">Come back tomorrow!</p></div>'; return; }
+  if (!isCD()) renderAds(FALLBACK_ADS);
+  loadFbAds();
+}
+let _ecdInt=null;
+function earnCDUI() {
+  if (_ecdInt) clearInterval(_ecdInt);
+  const upd=()=>{if(!isCD()){document.getElementById('earnCooldownSection')?.classList.add('hidden');loadEarnPage();return}const r=cdRem();const m=Math.floor(r/60000),s=Math.floor((r%60000)/1000);const el=document.getElementById('earnCooldownTimer');if(el)el.textContent=m+':'+(''+s).padStart(2,'0');};
+  upd(); _ecdInt=setInterval(upd,1000);
+}
+function renderAds(ads) {
+  const g=document.getElementById('adsGrid'); if (!g) return; g.innerHTML='';
+  ads.forEach(a=>{const t=(a.title||'Ad').replace(/'/g,"\\'"); const img=a.image||''; const d=a.description||(a.duration||30)+'s'; g.innerHTML+='<div class="ad-tile" onclick="openAd(\''+a.id+'\','+(a.reward||0.02)+',\''+t+'\','+(a.duration||30)+')" style="background:'+(a.bgColor||'#1E293B')+'">'+(img?'<div class="ad-tile-img" style="background-image:url(\''+img+'\')"></div>':'<span class="ad-tile-icon">🎬</span>')+'<div class="ad-tile-info"><h4>'+t+'</h4><p>'+d+'</p><div class="ad-tile-cta">'+(a.cta||'Watch')+' · <strong>+$'+(a.reward||0.02).toFixed(2)+'</strong></div></div>'+(!img?'<span class="ad-tile-reward">+$'+(a.reward||0.02).toFixed(2)+'</span>':'')+'</div>';});
+}
+async function loadFbAds() { try { const s=await fbTimeout(adsRef.where('isActive','==',true).get()); const ads=[]; s.forEach(d=>ads.push({id:d.id,...d.data()})); if (ads.length>0) renderAds(ads); } catch(e){} }
+
+// ===== WITHDRAW =====
+const wdFields={bkash:[{label:'Number',name:'account'}],nagad:[{label:'Number',name:'account'}],binance:[{label:'ID/Email',name:'account'}],paypal:[{label:'Email',name:'account'}],wise:[{label:'Email',name:'account'}],bank:[{label:'Account Name',name:'name'},{label:'Account No',name:'number'},{label:'Bank',name:'bank'}],crypto:[{label:'Wallet',name:'wallet'},{label:'Currency',name:'currency'}]};
+function loadWithdraw() {
+  updateUI();
+  document.querySelectorAll('.wd-method').forEach(m=>m.classList.remove('selected'));
+  document.getElementById('wdFormCard')?.classList.add('hidden');
+}
+document.querySelectorAll('.wd-method')?.forEach(c=>c.addEventListener('click',function(){document.querySelectorAll('.wd-method').forEach(x=>x.classList.remove('selected'));this.classList.add('selected');showWdForm(this.dataset.method)}));
+function showWdForm(m) {
+  const c=document.getElementById('wdFormCard'); c.classList.remove('hidden');
+  document.getElementById('wdFormTitle').textContent=m.charAt(0).toUpperCase()+m.slice(1);
+  const f=document.getElementById('wdFields'); f.innerHTML='';
+  (wdFields[m]||[{label:'Details',name:'details'}]).forEach(x=>f.innerHTML+='<div class="input-group"><input type="text" name="'+x.name+'" placeholder="'+x.label+'" required></div>');
+}
+document.getElementById('wdForm')?.addEventListener('submit',async e=>{e.preventDefault();const m=document.querySelector('.wd-method.selected');if(!m){showToast('Select method','error');return;}const a=parseFloat(document.getElementById('wdAmount')?.value);if(a<5){showToast('Min $5','error');return;}if(a>Math.max(currentUserData?.balance||0,loc('bal'))){showToast('Insufficient balance','error');return;}const fd=new FormData(e.target);const d={};fd.forEach((v,k)=>d[k]=v);try{await fbTimeout(withdrawalsRef.add({userId:currentUser.uid,userEmail:currentUser.email,userName:currentUserData?.name,method:m.dataset.method,amount:a,details:d,status:'pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()}));await fbTimeout(usersRef.doc(currentUser.uid).update({balance:firebase.firestore.FieldValue.increment(-a),totalWithdrawn:firebase.firestore.FieldValue.increment(a)}));showToast('✅ Submitted');}catch(e){locAdd('bal',-a);showToast('✅ Submitted (offline)');}document.getElementById('wdFormCard').classList.add('hidden');if(currentUserData)currentUserData.balance=(currentUserData.balance||0)-a;updateUI();});
 
 // ===== PLANS =====
 async function loadPlans() {
-  const c=document.getElementById('plansContainer'); c.innerHTML='<div class="skeleton"></div><div class="skeleton mt-1"></div>';
-  let plans=[];
-  try{const s=await fbTimeout(db.collection('plans').where('isActive','==',true).get());s.forEach(d=>plans.push({id:d.id,...d.data()}));}catch(e){}
-  if(plans.length===0) plans=FALLBACK_PLANS;
+  const c=document.getElementById('plansContainer'); if (!c) return;
+  c.innerHTML='<div class="skeleton" style="height:120px"></div>';
+  let plans=[]; try{const s=await fbTimeout(db.collection('plans').where('isActive','==',true).get());s.forEach(d=>plans.push({id:d.id,...d.data()}));}catch(e){}
+  if (!plans.length) plans=FALLBACK_PLANS;
   const cp=currentUserData?.planId;
-  c.innerHTML=plans.map(p=>`
-    <div class="plan-card ${cp===p.id?'plan-active':''}">
-      <div class="plan-badge">${p.name}</div>
-      <div class="plan-price">$${p.price}</div>
-      <div class="plan-earnings">Earn $${(p.dailyEarnings||0).toFixed(2)}/day</div>
-      <div class="plan-duration">${p.duration||30} days</div>
-      ${p.features?`<div style="font-size:12px;color:var(--slate-500);margin-bottom:12px">${p.features}</div>`:''}
-      ${cp===p.id?'<span class="plan-owned">✅ Active</span>':`<button class="btn btn-primary btn-sm btn-block" onclick="buyPlan('${p.id}','${p.name}',${p.price})">Buy $${p.price}</button>`}
-    </div>`).join('');
+  c.innerHTML=plans.map(p=>'<div class="plan-card'+(cp===p.id?' plan-active':'')+'">'
+    +'<div class="plan-badge">'+p.name+'</div>'
+    +'<div class="plan-price">$'+p.price+'</div>'
+    +'<div class="plan-earnings">Earn $'+(p.dailyEarnings||0).toFixed(2)+'/day</div>'
+    +'<div class="plan-duration">'+(p.duration||30)+' days</div>'
+    +(cp===p.id?'<span class="plan-owned">✅ Active</span>':'<button class="btn btn-primary btn-sm btn-block" onclick="buyPlan(\''+p.id+'\',\''+p.name+'\','+p.price+')">Buy $'+p.price+'</button>')
+    +'</div>').join('');
 }
 async function buyPlan(id,name,price) {
-  if(Math.max(currentUserData?.balance||0,loc('bal'))<price){showToast('Insufficient balance','error');return;}
-  if(!confirm(`Buy ${name} for $${price}?`))return;
-  try{await fbTimeout(usersRef.doc(currentUser.uid).update({balance:firebase.firestore.FieldValue.increment(-price),planId:id,planExpiry:new Date(Date.now()+30*86400000)}));showToast(name+' activated! 🚀');}catch(e){locAdd('bal',-price);showToast('Activated (offline)!');}
-  if(currentUserData){currentUserData.balance=(currentUserData.balance||0)-price;currentUserData.planId=id;}
-  updateUI();loadPlans();
+  if (Math.max(currentUserData?.balance||0,loc('bal'))<price) { showToast('Insufficient balance','error'); return; }
+  if (!confirm('Buy '+name+' for $'+price+'?')) return;
+  try { await fbTimeout(usersRef.doc(currentUser.uid).update({balance:firebase.firestore.FieldValue.increment(-price),planId:id,planExpiry:new Date(Date.now()+30*86400000)})); showToast(name+' activated! 🚀'); } catch(e) { locAdd('bal',-price); showToast('Activated (offline)!'); }
+  if (currentUserData) { currentUserData.balance=(currentUserData.balance||0)-price; currentUserData.planId=id; }
+  updateUI(); loadPlans();
 }
 
 // ===== REFERRALS =====
 async function loadReferrals() {
+  updateUI();
   try {
     const s=currentUser?await fbTimeout(referralsRef.where('referrerId','==',currentUser.uid).get()):{size:0,forEach:()=>{}};
     document.getElementById('refCount').textContent=s.size;
     let b=0;
-    document.querySelectorAll('.milestone').forEach(m=>{const n=parseInt(m.dataset.count);const ck=m.querySelector('.ms-check');if(s.size>=n){ck.textContent='✅';ck.classList.add('unlocked');b+=n===1?.5:n===5?2.5:5;}});
+    document.querySelectorAll('#refMilestones .milestone').forEach(m=>{const n=parseInt(m.dataset.count);const ck=m.querySelector('.ms-check');if(s.size>=n){ck.textContent='✅';ck.classList.add('unlocked');b+=n===1?.5:n===5?2.5:5;}});
     document.getElementById('refEarned').textContent='$'+b.toFixed(2);
     const body=document.getElementById('refListBody');
-    if(s.size===0) body.innerHTML='<div class="empty-state"><p>No referrals yet</p></div>';
-    else {body.innerHTML='';s.forEach(d=>{const r=d.data();body.innerHTML+=`<div class="activity-item"><span class="ai-icon">👥</span><div class="ai-info"><strong>${r.referredName||'User'}</strong><small>${fmtDate(r.createdAt)}</small></div><span class="ai-amount" style="color:var(--emerald)">+$${(r.bonus||0).toFixed(2)}</span></div>`;});}
+    if (s.size===0) body.innerHTML='<div class="home-empty">No referrals yet</div>';
+    else { body.innerHTML=''; s.forEach(d=>{const r=d.data();body.innerHTML+='<div class="activity-item"><span>👥</span><div class="ai-info"><strong>'+(r.referredName||'User')+'</strong><small>'+fmtDate(r.createdAt)+'</small></div><span class="ai-amount" style="color:var(--emerald)">+$'+(r.bonus||0).toFixed(2)+'</span></div>';}); }
   } catch(e){}
 }
-document.getElementById('copyRefBtn')?.addEventListener('click',()=>{const i=document.getElementById('refLinkInput');i.select();document.execCommand('copy');showToast('Copied! 📋');});
-
-// ===== HISTORY =====
-async function loadHistory(f) {
-  try {
-    let q=transactionsRef.where('userId','==',currentUser.uid).orderBy('createdAt','desc');
-    if(f==='earned') q=q.where('type','==','Ad Reward'); else if(f==='withdrawal') q=q.where('type','==','Withdrawal');
-    const s=await fbTimeout(q.get()); const body=document.getElementById('historyBody');
-    if(s.empty){body.innerHTML='<div class="empty-state"><div class="empty-icon">📜</div><p>No transactions</p></div>';return;}
-    body.innerHTML='';
-    s.forEach(d=>{const t=d.data();const sign=(t.amount||0)>=0?'+':'';const color=(t.amount||0)>=0?'var(--emerald)':'var(--red)';body.innerHTML+=`<div class="activity-item"><span class="ai-icon">🎬</span><div class="ai-info"><strong>${t.type||'Transaction'}</strong><small>${fmtDate(t.createdAt)} • ${t.status||'completed'}</small></div><span class="ai-amount" style="color:${color}">${sign}$${Math.abs(t.amount||0).toFixed(2)}</span></div>`;});
-  } catch(e){}
-}
-document.querySelectorAll('.htab').forEach(t=>t.addEventListener('click',function(){document.querySelectorAll('.htab').forEach(x=>x.classList.remove('active'));this.classList.add('active');loadHistory(this.dataset.filter);}));
+document.getElementById('copyRefBtn')?.addEventListener('click',()=>{const i=document.getElementById('refLinkInput');if(i){i.select();document.execCommand('copy');showToast('Copied! 📋');}});
 
 // ===== PROFILE =====
+function loadProfile() { updateUI(); }
 document.getElementById('profileForm')?.addEventListener('submit',async e=>{e.preventDefault();const n=document.getElementById('profEditName').value.trim(),p=document.getElementById('profEditPhone').value.trim();try{await fbTimeout(usersRef.doc(currentUser.uid).update({name:n,phone:p}));showToast('Updated ✅');}catch(e){showToast('Saved locally');}if(currentUserData){currentUserData.name=n;currentUserData.phone=p;}updateUI();});
 document.getElementById('logoutBtn')?.addEventListener('click',async()=>{if(confirm('Sign out?'))await auth.signOut();});
 
-// ===== WITHDRAW =====
-document.querySelectorAll('.wd-method').forEach(c=>c.addEventListener('click',function(){document.querySelectorAll('.wd-method').forEach(x=>x.classList.remove('selected'));this.classList.add('selected');showWdForm(this.dataset.method);}));
-const wdFields={bkash:[{label:'Number',name:'account'}],nagad:[{label:'Number',name:'account'}],binance:[{label:'ID/Email',name:'account'}],paypal:[{label:'Email',name:'account'}],wise:[{label:'Email',name:'account'}],bank:[{label:'Account Name',name:'name'},{label:'Account No',name:'number'},{label:'Bank',name:'bank'}],crypto:[{label:'Wallet',name:'wallet'},{label:'Currency',name:'currency'}]};
-function showWdForm(m){const c=document.getElementById('wdFormCard');c.classList.remove('hidden');document.getElementById('wdFormTitle').textContent=m.charAt(0).toUpperCase()+m.slice(1);const f=document.getElementById('wdFields');f.innerHTML='';(wdFields[m]||[{label:'Details',name:'details'}]).forEach(x=>f.innerHTML+=`<div class="input-group"><input type="text" name="${x.name}" placeholder="${x.label}" required></div>`);}
-document.getElementById('wdForm')?.addEventListener('submit',async e=>{e.preventDefault();const m=document.querySelector('.wd-method.selected');if(!m){showToast('Select method','error');return;}const a=parseFloat(document.getElementById('wdAmount')?.value);if(a<5){showToast('Min $5','error');return;}if(a>Math.max(currentUserData?.balance||0,loc('bal'))){showToast('Insufficient','error');return;}const fd=new FormData(document.getElementById('wdForm'));const d={};fd.forEach((v,k)=>d[k]=v);try{await fbTimeout(withdrawalsRef.add({userId:currentUser.uid,userEmail:currentUser.email,userName:currentUserData?.name,method:m.dataset.method,amount:a,details:d,status:'pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()}));await fbTimeout(usersRef.doc(currentUser.uid).update({balance:firebase.firestore.FieldValue.increment(-a),totalWithdrawn:firebase.firestore.FieldValue.increment(a)}));showToast('Submitted ✅');}catch(e){locAdd('bal',-a);showToast('Submitted (offline) ✅');}document.getElementById('wdFormCard').classList.add('hidden');if(currentUserData)currentUserData.balance=(currentUserData.balance||0)-a;updateUI();});
+// ===== SHARED =====
+function fmtDate(ts) { if (!ts) return ''; const d=ts.toDate?ts.toDate():new Date(ts); const diff=Date.now()-d; if (diff<60000) return 'Just now'; if (diff<3600000) return Math.floor(diff/60000)+'m ago'; if (diff<86400000) return Math.floor(diff/3600000)+'h ago'; return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+function showToast(msg,type) { const c=document.getElementById('toast'); if (!c) return; const t=document.createElement('div'); t.className='toast toast-'+(type||'success'); t.textContent=msg; c.appendChild(t); setTimeout(()=>t.remove(),3000); }
+function showNotif(t,m,i) { document.getElementById('notifIcon').textContent=i||'💰'; document.getElementById('notifTitle').textContent=t; document.getElementById('notifMsg').textContent=m; document.getElementById('notifModal').classList.add('show'); }
+function closeNotif() { document.getElementById('notifModal').classList.remove('show'); }
 
-// ===== NOTIFICATIONS =====
-function showNotif(t,m,icon){document.getElementById('notifIcon').textContent=icon||'🎉';document.getElementById('notifTitle').textContent=t;document.getElementById('notifMsg').textContent=m;document.getElementById('notifModal').classList.add('show');}
-function closeNotif(){document.getElementById('notifModal').classList.remove('show');}
+// ===== 3D TOUCH TILT EFFECT =====
+// Adds gyroscopic tilt on ad tiles, plan cards, and action buttons
+(function init3DTouch() {
+  const tiltElements = '.ad-tile, .plan-card, .home-action-btn, .wd-method, .admin-user-card, .prof-card, .ref-hero';
+  
+  document.addEventListener('touchmove', function(e) {
+    const touches = e.touches;
+    if (!touches || touches.length === 0) return;
+    const touch = touches[0];
+    
+    // Find the element under the finger that supports tilt
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!el) return;
+    
+    const tiltEl = el.closest(tiltElements);
+    if (!tiltEl) {
+      // Reset all tilted elements
+      document.querySelectorAll(tiltElements).forEach(el => {
+        if (el.dataset.tilting) {
+          el.style.transform = el.dataset.origTransform || '';
+          el.style.transition = 'transform 0.5s cubic-bezier(0.23,1,0.32,1)';
+          delete el.dataset.tilting;
+          setTimeout(() => { if (el.style) el.style.transition = ''; }, 500);
+        }
+      });
+      return;
+    }
+    
+    if (tiltEl.dataset.noTilt) return;
+    
+    const rect = tiltEl.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    // Calculate tilt based on finger position relative to center
+    const deltaX = (touch.clientX - centerX) / (rect.width / 2);
+    const deltaY = (touch.clientY - centerY) / (rect.height / 2);
+    
+    // Clamp
+    const rotateY = Math.max(-8, Math.min(8, deltaX * 6));
+    const rotateX = Math.max(-8, Math.min(8, -deltaY * 6));
+    
+    if (!tiltEl.dataset.origTransform) {
+      tiltEl.dataset.origTransform = tiltEl.style.transform || '';
+    }
+    
+    tiltEl.dataset.tilting = '1';
+    tiltEl.style.transition = 'transform 0.08s linear';
+    tiltEl.style.transform = tiltEl.dataset.origTransform + 
+      ' perspective(600px) rotateX(' + rotateX + 'deg) rotateY(' + rotateY + 'deg) scale3d(1.02,1.02,1.02)';
+  }, { passive: true });
+  
+  // Reset tilt on touch end
+  document.addEventListener('touchend', function() {
+    document.querySelectorAll(tiltElements).forEach(el => {
+      if (el.dataset.tilting) {
+        el.style.transform = el.dataset.origTransform || '';
+        el.style.transition = 'transform 0.5s cubic-bezier(0.23,1,0.32,1)';
+        delete el.dataset.tilting;
+        setTimeout(() => { if (el.style) el.style.transition = ''; }, 500);
+      }
+    });
+  }, { passive: true });
+  
+  // Mouse support for desktop testing
+  let mouseTiltEl = null;
+  document.addEventListener('mousemove', function(e) {
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const tiltEl = el ? el.closest(tiltElements) : null;
+    
+    if (tiltEl && tiltEl !== mouseTiltEl) {
+      // Reset old
+      if (mouseTiltEl && mouseTiltEl.dataset.tilting) {
+        mouseTiltEl.style.transform = mouseTiltEl.dataset.origTransform || '';
+        mouseTiltEl.style.transition = 'transform 0.5s cubic-bezier(0.23,1,0.32,1)';
+        delete mouseTiltEl.dataset.tilting;
+      }
+      mouseTiltEl = tiltEl;
+    }
+    
+    if (!tiltEl || tiltEl.dataset.noTilt) {
+      if (mouseTiltEl && mouseTiltEl.dataset.tilting) {
+        mouseTiltEl.style.transform = mouseTiltEl.dataset.origTransform || '';
+        mouseTiltEl.style.transition = 'transform 0.5s cubic-bezier(0.23,1,0.32,1)';
+        delete mouseTiltEl.dataset.tilting;
+      }
+      mouseTiltEl = null;
+      return;
+    }
+    
+    const rect = tiltEl.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    const deltaX = (e.clientX - centerX) / (rect.width / 2);
+    const deltaY = (e.clientY - centerY) / (rect.height / 2);
+    
+    const rotateY = Math.max(-5, Math.min(5, deltaX * 4));
+    const rotateX = Math.max(-5, Math.min(5, -deltaY * 4));
+    
+    if (!tiltEl.dataset.origTransform) {
+      tiltEl.dataset.origTransform = tiltEl.style.transform || '';
+    }
+    
+    tiltEl.dataset.tilting = '1';
+    tiltEl.style.transition = 'transform 0.15s ease-out';
+    tiltEl.style.transform = tiltEl.dataset.origTransform + 
+      ' perspective(600px) rotateX(' + rotateX + 'deg) rotateY(' + rotateY + 'deg) scale3d(1.01,1.01,1.01)';
+  });
+  
+  document.addEventListener('mouseleave', function() {
+    if (mouseTiltEl && mouseTiltEl.dataset.tilting) {
+      mouseTiltEl.style.transform = mouseTiltEl.dataset.origTransform || '';
+      mouseTiltEl.style.transition = 'transform 0.5s cubic-bezier(0.23,1,0.32,1)';
+      delete mouseTiltEl.dataset.tilting;
+    }
+    mouseTiltEl = null;
+  });
+})();
 
-// ===== CAROUSEL =====
-function startCarousel() {
-  if(carouselTimer) clearInterval(carouselTimer);
-  const track=document.getElementById('carouselTrack'); const dots=document.querySelectorAll('.dot');
-  if(!track||!dots.length) return;
-  carouselTimer=setInterval(()=>{carouselIdx=(carouselIdx+1)%dots.length;track.style.transform=`translateX(-${carouselIdx*100}%)`;dots.forEach((d,i)=>d.classList.toggle('active',i===carouselIdx));},5000);
-  let sx=0;
-  track.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;},{passive:true});
-  track.addEventListener('touchend',e=>{const d=sx-e.changedTouches[0].clientX;if(Math.abs(d)>50){if(d>0&&carouselIdx<dots.length-1)carouselIdx++;else if(d<0&&carouselIdx>0)carouselIdx--;track.style.transform=`translateX(-${carouselIdx*100}%)`;dots.forEach((x,i)=>x.classList.toggle('active',i===carouselIdx));}},{passive:true});
-}
-
-let carouselIdx = 0, carouselTimer = null;
-
-// ===== COMMON =====
-function fmtDate(ts) { if(!ts)return'';const d=ts.toDate?ts.toDate():new Date(ts);const diff=Date.now()-d;if(diff<60000)return'Just now';if(diff<3600000)return Math.floor(diff/60000)+'m ago';if(diff<86400000)return Math.floor(diff/3600000)+'h ago';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
-function showToast(msg,type='success'){const c=document.getElementById('toast');const t=document.createElement('div');t.className='toast toast-'+type;t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),3000);}
-document.getElementById('toggleBalance')?.addEventListener('click',()=>{const e=document.getElementById('balanceDisplay');if(e.dataset.hid==='1'){e.textContent='$'+Math.max(currentUserData?.balance||0,loc('bal')).toFixed(2);e.dataset.hid='0';}else{e.textContent='****';e.dataset.hid='1';}});
-
-// Safety splash hide
-setTimeout(()=>{document.getElementById('splash')?.classList.add('hide');if(!currentUser)showView('authPage');},5000);
+// ===== SAFETY =====
+setTimeout(()=>{const s=document.getElementById('splash');if(s)s.classList.add('hide');if(!currentUser)showView('authPage');else if(document.getElementById('appPage')?.classList.contains('hidden'))showView('appPage');},5000);

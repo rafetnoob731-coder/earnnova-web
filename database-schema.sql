@@ -3,6 +3,10 @@
 ## Source
 Comprehensive database design prompt from user (June 2026). Covers ad tracking, user earnings, real-time logging.
 
+## FOREIGN KEY FIX
+All REFERENCES now use ON DELETE CASCADE or ON DELETE SET NULL to prevent
+"FOREIGN KEY constraint failed" errors. Ensures data integrity without blocking inserts.
+
 ---
 
 ## 1. USERS TABLE
@@ -16,7 +20,7 @@ CREATE TABLE users (
   device_id TEXT,
   country TEXT,
   referral_code TEXT UNIQUE,
-  referred_by UUID REFERENCES users(id),
+  referred_by UUID REFERENCES users(id) ON DELETE SET NULL,
   ad_block_status BOOLEAN DEFAULT false,
   total_earnings DECIMAL(12,2) DEFAULT 0,
   wallet_balance DECIMAL(12,2) DEFAULT 0,
@@ -36,7 +40,7 @@ CREATE TABLE users (
 ```sql
 CREATE TABLE ad_requests (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   device_id TEXT,
   session_id TEXT,
   ad_network TEXT CHECK (ad_network IN ('monetag','admob','applovin','unity','other')),
@@ -64,8 +68,8 @@ CREATE TABLE ad_requests (
 ```sql
 CREATE TABLE ad_impressions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  ad_request_id UUID REFERENCES ad_requests(id),
-  user_id UUID REFERENCES users(id),
+  ad_request_id UUID REFERENCES ad_requests(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   ad_network TEXT,
   ad_type TEXT,
   earnings_amount DECIMAL(10,4),
@@ -84,8 +88,8 @@ CREATE TABLE ad_impressions (
 ```sql
 CREATE TABLE ad_errors (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  ad_request_id UUID REFERENCES ad_requests(id),
-  user_id UUID REFERENCES users(id),
+  ad_request_id UUID REFERENCES ad_requests(id) ON DELETE SET NULL,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   device_id TEXT,
   ad_network TEXT,
   error_code TEXT,
@@ -109,8 +113,8 @@ CREATE TABLE ad_errors (
 ```sql
 CREATE TABLE user_earnings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id),
-  ad_impression_id UUID REFERENCES ad_impressions(id),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  ad_impression_id UUID REFERENCES ad_impressions(id) ON DELETE SET NULL,
   amount DECIMAL(10,4),
   currency TEXT DEFAULT 'USD',
   source TEXT CHECK (source IN ('ad_watch','referral_bonus','mission_reward','daily_bonus','spin_win')),
@@ -149,7 +153,7 @@ CREATE TABLE ad_config (
 ```sql
 CREATE TABLE sessions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   device_id TEXT,
   session_token TEXT UNIQUE,
   ip_address TEXT,
@@ -172,7 +176,7 @@ CREATE TABLE diagnostic_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   log_type TEXT CHECK (log_type IN ('info','warning','error','debug','fatal')),
   component TEXT,
-  user_id UUID REFERENCES users(id),
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   device_id TEXT,
   session_id TEXT,
   log_message TEXT,
@@ -188,8 +192,8 @@ CREATE TABLE diagnostic_logs (
 ```sql
 CREATE TABLE referrals (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  referrer_id UUID REFERENCES users(id),
-  referred_user_id UUID REFERENCES users(id),
+  referrer_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  referred_user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   referral_code_used TEXT,
   status TEXT CHECK (status IN ('pending','active','completed','expired')),
   bonus_earned DECIMAL(10,4) DEFAULT 0,
@@ -221,8 +225,8 @@ CREATE TABLE missions (
 
 CREATE TABLE user_mission_progress (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id),
-  mission_id UUID REFERENCES missions(id),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  mission_id UUID REFERENCES missions(id) ON DELETE CASCADE,
   progress_value INTEGER DEFAULT 0,
   is_completed BOOLEAN DEFAULT false,
   completed_at TIMESTAMPTZ,
@@ -239,7 +243,7 @@ CREATE TABLE user_mission_progress (
 ```sql
 CREATE TABLE withdrawals (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   amount DECIMAL(10,4),
   currency TEXT DEFAULT 'USD',
   payment_method TEXT CHECK (payment_method IN ('bkash','nagad','paypal','crypto','bank_transfer')),
@@ -247,7 +251,7 @@ CREATE TABLE withdrawals (
   status TEXT CHECK (status IN ('pending','processing','completed','failed','cancelled')),
   transaction_id TEXT,
   processing_fee DECIMAL(10,4) DEFAULT 0,
-  approved_by UUID REFERENCES users(id),
+  approved_by UUID REFERENCES users(id) ON DELETE SET NULL,
   requested_at TIMESTAMPTZ DEFAULT NOW(),
   processed_at TIMESTAMPTZ,
   completed_at TIMESTAMPTZ,
@@ -262,7 +266,7 @@ CREATE TABLE withdrawals (
 ```sql
 CREATE TABLE wallet_transactions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   transaction_type TEXT CHECK (transaction_type IN ('credit','debit','hold','refund')),
   amount DECIMAL(10,4),
   previous_balance DECIMAL(10,4),
@@ -281,7 +285,7 @@ CREATE TABLE wallet_transactions (
 ```sql
 CREATE TABLE notifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   notification_type TEXT CHECK (notification_type IN ('earning','mission','referral','system','ad_ready')),
   title TEXT,
   body TEXT,

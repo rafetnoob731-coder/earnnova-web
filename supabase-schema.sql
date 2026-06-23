@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
   total_withdrawn DECIMAL(12,2) DEFAULT 0,
   ads_watched INTEGER DEFAULT 0,
   referral_code TEXT UNIQUE NOT NULL,
-  referred_by UUID REFERENCES users(id),
+  referred_by UUID REFERENCES users(id) ON DELETE SET NULL,
   is_active BOOLEAN DEFAULT true,
   is_admin BOOLEAN DEFAULT false,
   fcm_token TEXT,

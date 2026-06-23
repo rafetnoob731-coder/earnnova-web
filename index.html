@@ -11,121 +11,65 @@
   <title>EARNNOVA</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <link rel="stylesheet" href="css/style.css">
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 <body>
 
-<!-- ===== SPLASH ===== -->
+<!-- SPLASH -->
 <div id="splash">
-  <div class="splash-ring"></div>
   <div class="splash-logo">E</div>
   <div class="splash-title">EARNNOVA</div>
   <div class="splash-dot"></div>
 </div>
 
-<!-- ===== TOAST ===== -->
+<!-- TOAST -->
 <div id="toast"></div>
 
-<!-- ===== BLOCK PAGE ===== -->
-<div id="blockPage" class="page-view hidden">
-  <div class="auth-bg-gradient"></div>
-  <div class="auth-backdrop"></div>
-  <div class="block-container">
-    <div class="block-icon">🚫</div>
-    <h1 class="block-title">Account Blocked</h1>
-    <p class="block-reason" id="blockReason">Policy violation</p>
-    <div class="block-timer-wrap">
-      <div class="block-timer-label">Time remaining</div>
-      <div class="block-timer" id="blockTimer">0d 0h 0m</div>
-    </div>
-    <p class="block-footer-text">This block will automatically expire.<br>Please review our <a href="terms.html" target="_blank" style="color:var(--emerald);">Terms of Service</a> for details.</p>
-  </div>
-</div>
-
-<!-- ===== AUTH ===== -->
+<!-- AUTH PAGE -->
 <div id="authPage" class="page-view hidden">
-  <!-- Video Background -->
   <div class="auth-video-wrapper">
     <video class="auth-video" autoplay muted loop playsinline>
       <source src="assets/video/Earn.mp4" type="video/mp4">
     </video>
   </div>
-
-  <!-- Unmute Button -->
-  <button id="unmuteBtn" class="auth-unmute" style="display:none">
-    <i class="fas fa-volume-mute"></i>
-  </button>
-
+  <button id="unmuteBtn" class="auth-unmute" style="display:none"><i class="fas fa-volume-mute"></i></button>
   <div class="auth-glass-container">
-    <!-- Brand -->
     <div class="auth-glass-brand">
       <div class="auth-glass-logo">✦ EARNNOVA</div>
       <div class="auth-glass-underline"></div>
       <div class="auth-glass-subtitle">Earn · Grow · Thrive</div>
     </div>
-
     <div id="alertBox" class="auth-glass-alert"></div>
-
-    <!-- Login -->
     <form id="loginForm" class="auth-glass-form">
-      <div class="auth-glass-input">
-        <i class="fas fa-envelope"></i>
-        <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email">
-      </div>
-      <div class="auth-glass-input">
-        <i class="fas fa-lock"></i>
-        <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
-      </div>
+      <div class="auth-glass-input"><i class="fas fa-envelope"></i><input type="email" id="loginEmail" placeholder="Email" required autocomplete="email"></div>
+      <div class="auth-glass-input"><i class="fas fa-lock"></i><input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password"></div>
       <div class="auth-glass-row">
         <label class="auth-glass-check"><input type="checkbox" id="remember" checked> Remember me</label>
         <a href="#" id="forgotLink" class="auth-glass-link">Forgot?</a>
       </div>
       <button type="submit" id="loginBtn" class="auth-glass-btn">Sign In</button>
     </form>
-
-    <!-- Register -->
     <form id="registerForm" class="auth-glass-form hidden">
-      <div class="auth-glass-input">
-        <i class="fas fa-user"></i>
-        <input type="text" id="regName" placeholder="Full Name" required>
-      </div>
-      <div class="auth-glass-input">
-        <i class="fas fa-envelope"></i>
-        <input type="email" id="regEmail" placeholder="Email" required>
-      </div>
-      <div class="auth-glass-input">
-        <i class="fas fa-lock"></i>
-        <input type="password" id="regPassword" placeholder="Password (6+ chars)" required minlength="6">
-      </div>
-      <div class="auth-glass-input">
-        <i class="fas fa-gift"></i>
-        <input type="text" id="regReferral" placeholder="Referral code (optional)">
-      </div>
+      <div class="auth-glass-input"><i class="fas fa-user"></i><input type="text" id="regName" placeholder="Full Name" required></div>
+      <div class="auth-glass-input"><i class="fas fa-envelope"></i><input type="email" id="regEmail" placeholder="Email" required></div>
+      <div class="auth-glass-input"><i class="fas fa-lock"></i><input type="password" id="regPassword" placeholder="Password (6+ chars)" required minlength="6"></div>
+      <div class="auth-glass-input"><i class="fas fa-gift"></i><input type="text" id="regReferral" placeholder="Referral code (optional)"></div>
       <button type="submit" id="registerBtn" class="auth-glass-btn">Create Account</button>
     </form>
-
-    <!-- Forgot -->
     <form id="forgotForm" class="auth-glass-form hidden">
-      <p class="auth-glass-desc">Enter your email and we'll send you a reset link.</p>
-      <div class="auth-glass-input">
-        <i class="fas fa-envelope"></i>
-        <input type="email" id="forgotEmail" placeholder="Email" required>
-      </div>
+      <p class="auth-glass-desc">Enter your email for a reset link.</p>
+      <div class="auth-glass-input"><i class="fas fa-envelope"></i><input type="email" id="forgotEmail" placeholder="Email" required></div>
       <button type="submit" id="forgotBtn" class="auth-glass-btn">Send Reset Link</button>
       <p class="auth-glass-back"><a href="#" id="backToLogin" class="auth-glass-link">← Back to Sign In</a></p>
     </form>
-
     <div class="auth-glass-divider"><span>or</span></div>
     <button id="googleBtn" class="auth-glass-btn auth-glass-btn-outline"><i class="fab fa-google"></i> Continue with Google</button>
-
     <div class="auth-glass-footer">
       <span id="toggleText" class="auth-glass-muted">No account?</span>
       <a href="#" id="toggleLink" class="auth-glass-link">Sign Up</a>
     </div>
-
     <div class="auth-glass-policy">
       <a href="privacy.html" target="_blank" class="auth-glass-link">Privacy</a>
       <span class="auth-glass-dot">•</span>
@@ -134,365 +78,239 @@
   </div>
 </div>
 
+<!-- BLOCK PAGE -->
+<div id="blockPage" class="page-view hidden">
+  <div class="block-container">
+    <div class="block-icon">🚫</div>
+    <h1 class="block-title">Account Blocked</h1>
+    <p class="block-reason" id="blockReason">Policy violation</p>
+    <div class="block-timer-wrap">
+      <div class="block-timer-label">Time remaining</div>
+      <div class="block-timer" id="blockTimer">0d 0h 0m</div>
+    </div>
+    <p class="block-footer-text">Auto-expires. Review <a href="terms.html" target="_blank" style="color:var(--emerald);">Terms</a></p>
+  </div>
+</div>
+
 <!-- ===== MAIN APP ===== -->
 <div id="appPage" class="page-view hidden">
-
+  
   <!-- Status Bar -->
   <div class="status-bar">
     <span class="status-time" id="statusTime">9:41</span>
     <span class="status-icons">📶 🔋</span>
   </div>
-
-  <!-- Main Content Area -->
+  
+  <!-- Scrollable Content -->
   <div class="app-content" id="appContent">
-
-    <!-- PAGE: HOME -->
+    
+    <!-- ===== HOME PAGE ===== -->
     <div id="page-home" class="page active">
-      <!-- Greeting -->
-      <div class="greet-card">
-        <div class="greet-row">
-          <div>
-            <p class="greet-sub">Good <span id="greetTime">Morning</span></p>
-            <h2 class="greet-name" id="greetName">User</h2>
-          </div>
-          <div class="greet-avatar" id="greetAvatar">U</div>
+      <!-- Top Bar -->
+      <div class="earn-top-bar">
+        <div>
+          <div class="earn-balance-label"><span id="userTypeBadge" class="badge-user">👤 USER</span> Balance</div>
+          <div class="earn-balance" id="balanceDisplay">$0.00</div>
         </div>
-        <div class="balance-display" id="balanceDisplay">$0.00</div>
-        <div class="balance-label">Total Balance <button id="toggleBalance" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;margin-left:8px">👁️</button></div>
-        <div class="balance-actions">
-          <button class="btn btn-amber btn-sm" onclick="navigate('earn')">🎬 Watch Ad</button>
-          <button class="btn btn-sm" style="background:rgba(255,255,255,0.1);color:white" onclick="navigate('withdraw')">💳 Withdraw</button>
+        <div class="earn-user-info">
+          <span class="earn-user-id" id="userIDDisplay">ID: ---</span>
+          <button class="btn-admin-toggle" id="adminToggleBtn" title="Admin" style="display:none"><i class="fas fa-shield-halved"></i></button>
         </div>
       </div>
 
-      <!-- Stats -->
-      <div class="stats-row">
-        <div class="stat-card glass">
-          <div class="stat-icon">📺</div>
-          <div class="stat-num" id="statAds">0</div>
-          <div class="stat-label">Ads</div>
-        </div>
-        <div class="stat-card glass">
-          <div class="stat-icon">👥</div>
-          <div class="stat-num" id="statRefs">0</div>
-          <div class="stat-label">Referrals</div>
-        </div>
-        <div class="stat-card glass">
-          <div class="stat-icon">💸</div>
-          <div class="stat-num" id="statEarned">$0</div>
-          <div class="stat-label">Earned</div>
-        </div>
+      <!-- Stats Row -->
+      <div class="home-stats">
+        <div class="home-stat"><span class="hs-icon">📺</span><span class="hs-num" id="statAds">0</span><span class="hs-label">Ads</span></div>
+        <div class="home-stat"><span class="hs-icon">👥</span><span class="hs-num" id="statRefs">0</span><span class="hs-label">Referrals</span></div>
+        <div class="home-stat"><span class="hs-icon">💸</span><span class="hs-num" id="statEarned">$0</span><span class="hs-label">Earned</span></div>
       </div>
 
-      <!-- Banner Carousel -->
-      <div class="carousel-container" id="carousel">
-        <div class="carousel-track" id="carouselTrack">
-          <div class="carousel-slide glass" style="background:linear-gradient(135deg,rgba(0,212,255,0.2),rgba(124,58,237,0.2))">
-            <div class="carousel-content">
-              <span class="carousel-badge hot">HOT</span>
-              <h4>Earn Double Today!</h4>
-              <p>Watch 3 ads → get +$0.06 bonus</p>
-              <button class="btn btn-primary btn-xs" onclick="navigate('earn')">Claim Now</button>
-            </div>
-          </div>
-          <div class="carousel-slide glass" style="background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(59,130,246,0.2))">
-            <div class="carousel-content">
-              <span class="carousel-badge new">NEW</span>
-              <h4>Refer & Earn $5</h4>
-              <p>Share with friends, get $5 each</p>
-              <button class="btn btn-primary btn-xs" onclick="navigate('referrals')">Invite Now</button>
-            </div>
-          </div>
-          <div class="carousel-slide glass" style="background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(239,68,68,0.2))">
-            <div class="carousel-content">
-              <span class="carousel-badge limited">LIMITED</span>
-              <h4>Streak Bonus Active</h4>
-              <p>7-day streak → +$0.50 reward</p>
-              <button class="btn btn-primary btn-xs" onclick="navigate('earn')">Watch Now</button>
-            </div>
-          </div>
-        </div>
-        <div class="carousel-dots" id="carouselDots"><span class="dot active"></span><span class="dot"></span><span class="dot"></span></div>
+      <!-- Daily Progress -->
+      <div class="earn-progress">
+        <div class="earn-progress-row"><span>📊 Today</span><span class="earn-progress-count" id="dailyLimitDisplay">0/30</span></div>
+        <div class="earn-progress-bar"><div class="earn-progress-fill" id="dailyProgressFill" style="width:0%"></div></div>
       </div>
+
+      <!-- Streak -->
+      <div class="earn-streak"><span>🔥 Streak</span><span class="earn-streak-count" id="streakCount">0 days</span></div>
 
       <!-- Quick Actions -->
-      <div class="actions-row">
-        <button class="action-btn" onclick="navigate('earn')"><span class="ab-icon">🎬</span>Watch</button>
-        <button class="action-btn" onclick="navigate('referrals')"><span class="ab-icon">👥</span>Refer</button>
-        <button class="action-btn" onclick="navigate('history')"><span class="ab-icon">📜</span>History</button>
-        <button class="action-btn" onclick="navigate('plans')"><span class="ab-icon">📋</span>Plans</button>
+      <div class="home-actions">
+        <button class="home-action-btn" onclick="navigate('earn')"><span>🎬</span>Watch</button>
+        <button class="home-action-btn" onclick="navigate('withdraw')"><span>💳</span>Withdraw</button>
+        <button class="home-action-btn" onclick="navigate('plans')"><span>📋</span>Plans</button>
+        <button class="home-action-btn" onclick="navigate('referrals')"><span>👥</span>Refer</button>
+      </div>
+
+      <!-- Cooldown -->
+      <div id="cooldownSection" class="hidden">
+        <div class="earn-cooldown">
+          <div class="cooldown-icon">⏳</div>
+          <div class="cooldown-label">Next ad available in</div>
+          <div class="cooldown-timer" id="cooldownTimer">10:00</div>
+        </div>
+      </div>
+
+      <!-- Admin Panel -->
+      <div id="adminPanel" class="admin-panel hidden">
+        <div class="admin-panel-header"><h3>🛡️ Admin Control</h3><button class="btn-close-panel" onclick="toggleAdminPanel()">✕</button></div>
+        <div class="admin-search">
+          <input type="text" id="adminSearchInput" placeholder="Search by ID, email, or name..." onkeydown="if(event.key==='Enter')adminSearch()">
+          <button class="btn btn-primary btn-sm" onclick="adminSearch()">🔍 Search</button>
+        </div>
+        <div id="adminSearchResults" class="admin-results"><div class="admin-empty">Search for a user to manage</div></div>
       </div>
 
       <!-- Recent Activity -->
-      <div class="section-head">
-        <h3>Recent Activity</h3>
-        <a href="#" class="link" onclick="navigate('history')">View All</a>
-      </div>
-      <div class="activity-list" id="recentList">
-        <div class="activity-empty" id="recentEmpty">
-          <div class="empty-icon">🚀</div>
-          <p>Your first transaction will appear here</p>
-          <button class="btn btn-primary btn-sm mt-1" onclick="navigate('earn')">Watch First Ad →</button>
-        </div>
-      </div>
-
-      <!-- Native Ad -->
-      <div class="native-ad glass" id="nativeAd">
-        <div class="native-ad-tag">SPONSORED</div>
-        <div class="native-ad-body">
-          <div class="native-ad-icon">📱</div>
-          <div>
-            <h4>Earn $10 for watching 10s</h4>
-            <p>By Premium Partner</p>
-          </div>
-        </div>
-        <button class="btn btn-primary btn-xs" onclick="navigate('earn')">Watch $0.05</button>
+      <div class="section-title">📜 Recent Activity</div>
+      <div id="recentList" class="activity-list">
+        <div class="home-empty">Start earning!<br><button class="btn btn-primary btn-sm mt-1" onclick="navigate('earn')">Watch First Ad →</button></div>
       </div>
     </div>
 
-    <!-- PAGE: EARN -->
+    <!-- ===== EARN PAGE ===== -->
     <div id="page-earn" class="page">
-      <div class="page-header">
-        <h1>Earn Center</h1>
-        <span class="badge-cyan" id="todayCount">0 ads today</span>
+      <div class="page-header"><h2>🎬 Earn Center</h2></div>
+      
+      <div class="daily-limit-bar">
+        <span>📊 Today's usage</span>
+        <span class="daily-limit-count" id="earnDailyLimit">0/30</span>
       </div>
-
-      <!-- Today's Goal -->
-      <div class="earn-hero">
-        <span class="earn-hero-icon">🎯</span>
-        <div><h3>Today's Goal</h3><p>Watch 5 ads for +$0.05 bonus</p></div>
-        <div class="goal-bar">
-          <div class="goal-fill" id="goalFill" style="width:0%"></div>
+      
+      <div class="earn-streak"><span>🔥 Streak Bonus</span><span class="earn-streak-count" id="earnStreakCount">0 days</span></div>
+      
+      <div id="earnCooldownSection" class="hidden">
+        <div class="earn-cooldown">
+          <div class="cooldown-icon">⏳</div>
+          <div class="cooldown-label">Next ad in</div>
+          <div class="cooldown-timer" id="earnCooldownTimer">10:00</div>
         </div>
       </div>
-
-      <!-- Daily Limit -->
-      <div class="daily-limit-row">
-        <span>📊 Today's usage</span>
-        <span class="daily-limit-count" id="dailyLimitDisplay">0/30</span>
+      
+      <div class="earn-batch">
+        <button class="btn btn-primary btn-sm btn-block" onclick="startBatchWatch(3)">📦 3x Batch</button>
+        <button class="btn btn-amber btn-sm btn-block" onclick="startBatchWatch(5)">🔥 5x Batch</button>
       </div>
-
-      <!-- Available Ads -->
-      <div class="section-head"><h3>Available Ads</h3></div>
+      
+      <div class="section-title">Available Ads</div>
       <div class="ads-grid" id="adsGrid">
-        <div class="skeleton"></div>
-        <div class="skeleton mt-1"></div>
+        <div class="skeleton"></div><div class="skeleton mt-1"></div>
       </div>
-      <!-- Adsterra Banner -->
-      <div id="adsterra-banner" style="min-height:90px;margin:16px 0;display:flex;justify-content:center;overflow:hidden;border-radius:12px;background:rgba(255,255,255,0.02)"></div>
+      
+      <div id="adsterra-banner" class="ad-banner-zone"></div>
     </div>
 
-    <!-- PAGE: PLANS -->
-    <div id="page-plans" class="page">
-      <div class="page-header"><h1>Plans</h1><span class="badge-cyan">Earn daily</span></div>
-      <div class="plans-subtitle">Choose a plan to maximize your earnings</div>
-      <div id="plansContainer" class="plans-grid">
-        <div class="loading-shimmer" style="height:200px"></div>
-      </div>
-    </div>
-
-    <!-- PAGE: WITHDRAW -->
+    <!-- ===== WITHDRAW PAGE ===== -->
     <div id="page-withdraw" class="page">
-      <div class="page-header"><h1>Withdraw</h1></div>
-      <div class="balance-mini-card glass">
+      <div class="page-header"><h2>💳 Withdraw</h2></div>
+      <div class="wd-balance-card">
         <span>Available Balance</span>
         <strong id="wdBalance">$0.00</strong>
       </div>
-      <div class="withdraw-methods" id="wdMethods">
-        <div class="wd-method glass" data-method="bkash">💚 bKash</div>
-        <div class="wd-method glass" data-method="nagad">🧡 Nagad</div>
-        <div class="wd-method glass" data-method="binance">🟡 Binance</div>
-        <div class="wd-method glass" data-method="paypal">🔵 PayPal</div>
-        <div class="wd-method glass" data-method="wise">🟢 Wise</div>
-        <div class="wd-method glass" data-method="bank">🏦 Bank</div>
-        <div class="wd-method glass" data-method="crypto">₿ Crypto</div>
+      <div class="section-title">Choose Method</div>
+      <div class="wd-methods" id="wdMethods">
+        <div class="wd-method" data-method="bkash">💚 bKash</div>
+        <div class="wd-method" data-method="nagad">🧡 Nagad</div>
+        <div class="wd-method" data-method="binance">🟡 Binance</div>
+        <div class="wd-method" data-method="paypal">🔵 PayPal</div>
+        <div class="wd-method" data-method="wise">🟢 Wise</div>
+        <div class="wd-method" data-method="bank">🏦 Bank</div>
+        <div class="wd-method" data-method="crypto">₿ Crypto</div>
       </div>
-      <div id="wdFormCard" class="card glass hidden">
+      <div id="wdFormCard" class="wd-form-card hidden">
         <h3 id="wdFormTitle">Details</h3>
         <form id="wdForm">
           <div class="input-group"><input type="number" id="wdAmount" min="5" step="0.01" placeholder="Amount (min $5)"></div>
           <div id="wdFields"></div>
-          <button type="submit" class="btn btn-primary btn-block">Submit Withdrawal</button>
+          <button type="submit" class="btn btn-primary btn-block">Submit</button>
         </form>
       </div>
     </div>
 
-    <!-- PAGE: REFERRALS -->
+    <!-- ===== PLANS PAGE ===== -->
+    <div id="page-plans" class="page">
+      <div class="page-header"><h2>📋 Plans</h2></div>
+      <div id="plansContainer" class="plans-grid">
+        <div class="skeleton" style="height:120px"></div>
+      </div>
+    </div>
+
+    <!-- ===== REFERRALS PAGE ===== -->
     <div id="page-referrals" class="page">
-      <div class="page-header"><h1>Refer & Earn</h1><span class="badge-green">$5/referral</span></div>
-      
-      <div class="ref-hero glass">
+      <div class="page-header"><h2>👥 Refer & Earn</h2></div>
+      <div class="ref-hero">
         <div class="ref-hero-icon">👥</div>
-        <h2>Invite Friends, Get $5</h2>
-        <p>Share your unique referral link</p>
+        <h3>Invite Friends, Get $5</h3>
+        <p>Share your unique link</p>
         <div class="ref-link-box">
           <input type="text" id="refLinkInput" readonly>
           <button id="copyRefBtn" class="btn btn-primary btn-sm">📋 Copy</button>
         </div>
       </div>
-
-      <div class="ref-stats glass">
+      <div class="ref-stats">
         <div><strong id="refCount">0</strong><small>Referrals</small></div>
         <div><strong id="refEarned">$0.00</strong><small>Earned</small></div>
       </div>
-
-      <div class="section-head"><h3>Milestones</h3></div>
-      <div class="ref-milestones">
-        <div class="milestone glass" data-count="1"><span>🎯</span><div><strong>1 friend</strong><small>+$0.50</small></div><span class="ms-check">🔒</span></div>
-        <div class="milestone glass" data-count="5"><span>🎯</span><div><strong>5 friends</strong><small>+$2.50</small></div><span class="ms-check">🔒</span></div>
-        <div class="milestone glass" data-count="10"><span>🎯</span><div><strong>10 friends</strong><small>+$5.00</small></div><span class="ms-check">🔒</span></div>
+      <div class="section-title">Milestones</div>
+      <div id="refMilestones" class="ref-milestones">
+        <div class="milestone" data-count="1"><span>🎯</span><div><strong>1 friend</strong><small>+$0.50</small></div><span class="ms-check">🔒</span></div>
+        <div class="milestone" data-count="5"><span>🎯</span><div><strong>5 friends</strong><small>+$2.50</small></div><span class="ms-check">🔒</span></div>
+        <div class="milestone" data-count="10"><span>🎯</span><div><strong>10 friends</strong><small>+$5.00</small></div><span class="ms-check">🔒</span></div>
       </div>
-
-      <div class="ref-share">
-        <button class="btn btn-outline btn-sm" onclick="shareRef('whatsapp')">📱 WhatsApp</button>
-        <button class="btn btn-outline btn-sm" onclick="shareRef('instagram')">📸 Instagram</button>
-        <button class="btn btn-outline btn-sm" onclick="shareRef('copy')">📋 Copy Link</button>
-      </div>
-
-      <div class="section-head mt-2"><h3>Your Referrals</h3></div>
-      <div id="refListBody"><div class="activity-empty"><p>No referrals yet</p></div></div>
+      <div class="section-title">Your Referrals</div>
+      <div id="refListBody"><div class="home-empty">No referrals yet</div></div>
     </div>
 
-    <!-- PAGE: HISTORY -->
-    <div id="page-history" class="page">
-      <div class="page-header"><h1>Transactions</h1></div>
-      <div class="history-tabs glass">
-        <button class="htab active" data-filter="all">All</button>
-        <button class="htab" data-filter="earned">Earned</button>
-        <button class="htab" data-filter="withdrawal">Withdrawn</button>
-      </div>
-      <div id="historyBody" class="activity-list">
-        <div class="activity-empty"><div class="empty-icon">📜</div><p>No transactions yet</p></div>
-      </div>
-    </div>
-
-    <!-- PAGE: PROFILE -->
+    <!-- ===== PROFILE PAGE ===== -->
     <div id="page-profile" class="page">
-      <div class="page-header"><h1>Profile</h1></div>
-      <div class="profile-card glass">
-        <div class="profile-avatar" id="profAvatar">U</div>
-        <div><h2 id="profName">User</h2><p id="profEmail" class="text-muted">email@email.com</p></div>
+      <div class="page-header"><h2>👤 Profile</h2></div>
+      <div class="prof-card">
+        <div class="prof-avatar" id="profAvatar">U</div>
+        <div><h3 id="profName">User</h3><span class="prof-email" id="profEmail">email</span><span class="prof-id" id="profUID">ID: ---</span></div>
       </div>
-      <div class="card glass">
-        <form id="profileForm">
-          <div class="input-group"><input type="text" id="profEditName" placeholder="Name"></div>
-          <div class="input-group"><input type="tel" id="profEditPhone" placeholder="Phone"></div>
-          <button type="submit" class="btn btn-primary btn-block btn-sm">Save Changes</button>
-        </form>
+      <form id="profileForm" class="prof-form">
+        <div class="input-group"><input type="text" id="profEditName" placeholder="Full Name"></div>
+        <div class="input-group"><input type="tel" id="profEditPhone" placeholder="Phone Number"></div>
+        <button type="submit" class="btn btn-primary btn-block btn-sm">Save</button>
+      </form>
+      <div class="prof-policies">
+        <a href="privacy.html" target="_blank">🔒 Privacy Policy</a>
+        <a href="terms.html" target="_blank">📋 Terms of Service</a>
       </div>
-      <div class="card glass"><button id="adminEntryBtn" class="btn btn-outline btn-block" style="color:var(--purple);display:none" onclick="navigate('admin')">🔐 Admin Panel</button></div>
-      <div class="policy-row">
-        <a href="privacy.html" target="_blank" class="policy-link">🔒 Privacy Policy</a>
-        <a href="terms.html" target="_blank" class="policy-link">📋 Terms of Service</a>
-      </div>
-      <div class="card glass"><button id="logoutBtn" class="btn btn-outline btn-block" style="color:var(--error)">Sign Out</button></div>
-    </div>
-
-    <!-- PAGE: NOTIFICATIONS -->
-    <div id="page-notifications" class="page">
-      <div class="page-header"><h1>Notifications</h1><button class="icon-btn-sm" onclick="navigate('home')">✕</button></div>
-      <div id="notifList"><div class="activity-empty"><div class="empty-icon">🔔</div><p>All caught up!</p></div></div>
-    </div>
-
-    <!-- ADMIN PAGES -->
-    <!-- PAGE: ADMIN -->
-    <div id="page-admin" class="page">
-      <div class="page-header"><h1>Admin Panel</h1><span class="badge-purple">ADMIN</span></div>
-      <div class="stats-row" id="adminStats">
-        <div class="stat-card glass"><div class="stat-icon">👥</div><div class="stat-num" id="adminUsers">0</div><div class="stat-label">Users</div></div>
-        <div class="stat-card glass"><div class="stat-icon">💰</div><div class="stat-num" id="adminBalance">$0</div><div class="stat-label">Total</div></div>
-        <div class="stat-card glass"><div class="stat-icon">💳</div><div class="stat-num" id="adminWD">0</div><div class="stat-label">Pending</div></div>
-      </div>
-      
-      <div class="admin-tabs glass">
-        <button class="admin-tab active" data-atab="users">👥 Users</button>
-        <button class="admin-tab" data-atab="plans">📋 Plans</button>
-        <button class="admin-tab" data-atab="withdrawals">💳 Withdraw</button>
-        <button class="admin-tab" data-atab="notify">📬 Notify</button>
-      </div>
-      
-      <div id="adminSectionUsers" class="admin-section active">
-        <div class="card glass"><div id="adminUsersList"><div class="activity-empty"><p>Loading users...</p></div></div></div>
-      </div>
-      <div id="adminSectionPlans" class="admin-section">
-        <div class="card glass"><button class="btn btn-primary btn-sm" onclick="adminAddPlan()">+ Add Plan</button><div id="adminPlansList" class="mt-2"><div class="activity-empty"><p>Loading plans...</p></div></div></div>
-      </div>
-      <div id="adminSectionWithdrawals" class="admin-section">
-        <div class="card glass"><div id="adminWDList"><div class="activity-empty"><p>Loading withdrawals...</p></div></div></div>
-      </div>
-      <div id="adminSectionNotify" class="admin-section">
-        <div class="card glass">
-          <div class="input-group"><input type="text" id="adminNotifTitle" placeholder="Notification title"></div>
-          <div class="input-group"><textarea id="adminNotifMsg" rows="2" placeholder="Message" style="width:100%;padding:10px;background:var(--bg-el);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-sm);color:var(--text);font-family:inherit"></textarea></div>
-          <button class="btn btn-primary btn-sm btn-block" onclick="adminSendNotif()">Send to All</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Banner Ad (bottom of content) -->
-    <div class="banner-ad glass" id="bannerAd">
-      <span class="banner-ad-tag">AD</span>
-      <span>📢 Complete 5 ads → 2x earnings</span>
-      <button class="btn btn-primary btn-xs" onclick="navigate('earn')">Watch</button>
-      <button class="banner-close" id="bannerClose">✕</button>
+      <button id="logoutBtn" class="btn btn-outline btn-block" style="color:var(--red)">Sign Out</button>
     </div>
   </div>
 
-  <!-- ===== BOTTOM NAV ===== -->
-  <nav class="bottom-nav glass" id="bottomNav">
-    <div class="nav-item active" data-page="home">
-      <span class="nav-icon">🏠</span>
-      <span class="nav-label">Home</span>
-    </div>
-    <div class="nav-item" data-page="earn">
-      <span class="nav-icon">💰</span>
-      <span class="nav-label">Earn</span>
-    </div>
-    <div class="nav-item nav-watch" onclick="navigate('earn')">
-      <div class="nav-watch-btn">🎬</div>
-    </div>
-    <div class="nav-item" data-page="plans">
-      <span class="nav-icon">📋</span>
-      <span class="nav-label">Plans</span>
-    </div>
-    <div class="nav-item" data-page="referrals">
-      <span class="nav-icon">👥</span>
-      <span class="nav-label">Refer</span>
-    </div>
-    <div class="nav-item" data-page="profile">
-      <span class="nav-icon">👤</span>
-      <span class="nav-label">Profile</span>
-    </div>
+  <!-- ===== BOTTOM NAVIGATION ===== -->
+  <nav class="bottom-nav" id="bottomNav">
+    <button class="nav-item active" data-page="home"><span class="nav-icon">🏠</span><span>Home</span></button>
+    <button class="nav-item" data-page="earn"><span class="nav-icon">💰</span><span>Earn</span></button>
+    <button class="nav-item" data-page="withdraw"><span class="nav-icon">💳</span><span>Withdraw</span></button>
+    <button class="nav-item" data-page="plans"><span class="nav-icon">📋</span><span>Plans</span></button>
+    <button class="nav-item" data-page="referrals"><span class="nav-icon">👥</span><span>Refer</span></button>
+    <button class="nav-item" data-page="profile"><span class="nav-icon">👤</span><span>Profile</span></button>
   </nav>
 </div>
 
-<!-- ===== HUMAN VERIFICATION MODAL ===== -->
+<!-- VERIFICATION MODAL -->
 <div id="verifyModal" class="modal-overlay">
   <div class="verify-card">
     <div class="verify-icon">🤖</div>
     <h3 class="verify-title">Human Verification</h3>
-    <p class="verify-desc">Please solve this to continue</p>
+    <p class="verify-desc">Solve to watch ad</p>
     <div class="verify-question" id="verifyQuestion">3 + 4 = ?</div>
-    <div class="verify-input-wrap">
-      <input type="number" id="verifyInput" class="verify-input" placeholder="Answer" autofocus>
-    </div>
-    <p class="verify-error" id="verifyError" style="display:none">❌ Wrong answer, try again</p>
+    <div class="verify-input-wrap"><input type="number" id="verifyInput" class="verify-input" placeholder="Answer" autofocus></div>
+    <p class="verify-error" id="verifyError" style="display:none">❌ Wrong answer</p>
     <button class="auth-glass-btn" onclick="submitVerification()" style="margin-top:8px">✅ Verify & Watch</button>
     <button class="verify-skip" onclick="closeVerification()">Cancel</button>
   </div>
 </div>
 
-<!-- ===== AD WATCH MODAL (Monetag) ===== -->
+<!-- AD MODAL -->
 <div id="adModal" class="modal-overlay">
   <div class="modal-full">
-    <div class="modal-top-bar">
-      <button class="icon-btn-sm" onclick="closeAdModal()">✕</button>
-      <span>Watch & Earn</span>
-    </div>
-    <div class="modal-ad-content" id="modalAdContent">
-      <!-- Monetag interstitial container -->
-      <div id="monetag-interstitial" style="display:none"></div>
-    </div>
+    <div class="modal-top-bar"><button class="icon-btn-sm" onclick="closeAdModal()">✕</button><span>Watch & Earn</span></div>
+    <div class="modal-ad-content" id="modalAdContent"></div>
     <div class="modal-ad-footer" id="modalAdFooter">
       <div class="ad-reward-info">
         <span>💰 Reward: <strong id="adRewardLabel">+$0.00</strong></span>
@@ -503,75 +321,28 @@
   </div>
 </div>
 
-<!-- ===== NOTIFICATION POPUP ===== -->
+<!-- NOTIFICATION POPUP -->
 <div id="notifModal" class="modal-overlay">
-  <div class="modal glass" style="max-width:360px">
+  <div class="modal glass-premium" style="max-width:360px;padding:24px">
     <div class="notif-icon" id="notifIcon">🎉</div>
-    <div class="notif-modal-text">
-      <h2 id="notifTitle">Welcome!</h2>
-      <p id="notifMsg">Start earning by watching ads</p>
-    </div>
-    <button class="btn btn-primary btn-block mt-2" onclick="closeNotif();navigate('earn')">Let's Go →</button>
+    <div class="notif-modal-text"><h2 id="notifTitle">Earn!</h2><p id="notifMsg">Watch ads, earn rewards</p></div>
+    <button class="btn btn-primary btn-block mt-2" onclick="closeNotif()">OK</button>
   </div>
 </div>
 
 <script src="js/supabase-config.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>
-<script src="js/admin.js"></script>
-<!-- ===== AD NETWORKS (loaded after auth via JS) ===== -->
-<!-- Ad containers (visible only inside app pages) -->
 <div id="container-ac40f76d59b8e8c281fb380b91c2bf21" style="display:none"></div>
 
 <script>
-// Ad scripts load ONLY after user is authenticated
-// initAds() is called from initApp() in app.js
-
-// Frequency cap tracker
-const AD_LIMITS = {
-  dailyPerNetwork: 50,
-  sessionGap: 10000
-};
-function canShowAd(network) {
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const key = 'en_adcount_' + network;
-    const data = JSON.parse(localStorage.getItem(key) || '{"date":"","count":0,"last":0}');
-    if (data.date !== today) { data.date = today; data.count = 0; }
-    if (data.count >= AD_LIMITS.dailyPerNetwork) return false;
-    if (Date.now() - data.last < AD_LIMITS.sessionGap) return false;
-    return true;
-  } catch(e) { return true; }
-}
-function trackAdShown(network) {
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const key = 'en_adcount_' + network;
-    const data = JSON.parse(localStorage.getItem(key) || '{"date":"","count":0,"last":0}');
-    if (data.date !== today) { data.date = today; data.count = 0; }
-    data.count++;
-    data.last = Date.now();
-    localStorage.setItem(key, JSON.stringify(data));
-  } catch(e) {}
-}
-
-async function showRewardedAd() { return false; }
-
-// Auth video unmute
 const authVideo = document.querySelector('.auth-video');
 const unmuteBtn = document.getElementById('unmuteBtn');
 if (authVideo && unmuteBtn) {
   unmuteBtn.style.display = 'flex';
   unmuteBtn.addEventListener('click', () => {
-    if (authVideo.muted) {
-      authVideo.muted = false;
-      authVideo.volume = 0.3;
-      unmuteBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
-    } else {
-      authVideo.muted = true;
-      unmuteBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-    }
+    authVideo.muted ? (authVideo.muted=false,authVideo.volume=0.3,unmuteBtn.innerHTML='<i class=\"fas fa-volume-up\"></i>') : (authVideo.muted=true,unmuteBtn.innerHTML='<i class=\"fas fa-volume-mute\"></i>');
   });
 }
 </script>
-</body>
+</body></html>
