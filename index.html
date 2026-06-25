@@ -18,11 +18,15 @@
 <body>
 
 <!-- SPLASH -->
+<noscript><style>#splash{display:none}#authPage{display:flex!important}</style></noscript>
 <div id="splash">
   <div class="splash-logo">E</div>
   <div class="splash-title">EARNNOVA</div>
   <div class="splash-dot"></div>
 </div>
+<!-- ===== SAFETY: guarantee splash hides even if CDN fails ===== -->
+<script>setTimeout(function(){var s=document.getElementById('splash');if(s)s.classList.add('hide');var a=document.getElementById('authPage');if(a)a.classList.remove('hidden');},4000);</script>
+
 
 <!-- TOAST -->
 <div id="toast"></div>
