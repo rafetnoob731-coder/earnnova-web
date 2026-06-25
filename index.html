@@ -38,7 +38,6 @@
       <source src="assets/video/Earn.mp4" type="video/mp4">
     </video>
   </div>
-  <button id="unmuteBtn" class="auth-unmute" title="Toggle video sound"><i class="fas fa-volume-mute"></i></button>
   <div class="auth-glass-container">
     <div class="auth-glass-brand">
       <div class="auth-glass-logo">✦ EARNNOVA</div>
@@ -70,24 +69,6 @@
     </form>
     <div class="auth-glass-divider"><span>or</span></div>
     <button id="googleBtn" class="auth-glass-btn auth-glass-btn-outline"><i class="fab fa-google"></i> Continue with Google</button>
-    <button id="phoneBtn" class="auth-glass-btn auth-glass-btn-outline"><i class="fas fa-phone"></i> Sign in with Phone</button>
-    
-    <!-- Phone Auth Forms (hidden by default) -->
-    <div id="phoneAuthSection" class="auth-glass-phone-section hidden">
-      <div class="auth-glass-divider"><span>Phone Sign-In</span></div>
-      <div id="phoneStep1">
-        <div class="auth-glass-input"><i class="fas fa-phone"></i><input type="tel" id="phoneInput" placeholder="+1234567890" required></div>
-        <button id="sendOtpBtn" class="auth-glass-btn">📱 Send OTP</button>
-        <p class="auth-glass-back"><a href="#" id="backFromPhone" class="auth-glass-link">← Back</a></p>
-      </div>
-      <div id="phoneStep2" class="hidden">
-        <p class="auth-glass-desc">Enter the 6-digit code sent to your phone</p>
-        <div class="auth-glass-input"><i class="fas fa-key"></i><input type="text" id="otpInput" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]{6}"></div>
-        <button id="verifyOtpBtn" class="auth-glass-btn">✅ Verify</button>
-        <p class="auth-glass-back"><a href="#" id="cancelPhone" class="auth-glass-link">← Cancel</a></p>
-      </div>
-      <div id="phoneRecaptcha"></div>
-    </div>
     <div class="auth-glass-footer">
       <span id="toggleText" class="auth-glass-muted">No account?</span>
       <a href="#" id="toggleLink" class="auth-glass-link">Sign Up</a>
@@ -141,6 +122,15 @@
         </div>
       </div>
 
+      <!-- AdBlock Warning -->
+      <div id="adblockWarning" class="adblock-warning"><span class="abw-icon">🚫</span><div class="abw-text"><strong>Ad Blocker Detected</strong>Please disable your ad blocker to support the platform and earn rewards.</div></div>
+
+      <!-- Promo Slider/Carousel -->
+      <div class="slider-container">
+        <div class="slider-track" id="sliderTrack"></div>
+        <div class="slider-dots" id="sliderDots"></div>
+      </div>
+
       <!-- Stats Row -->
       <div class="home-stats">
         <div class="home-stat"><span class="hs-icon">📺</span><span class="hs-num" id="statAds">0</span><span class="hs-label">Ads</span></div>
@@ -177,6 +167,17 @@
       <!-- Admin Panel -->
       <div id="adminPanel" class="admin-panel hidden">
         <div class="admin-panel-header"><h3>🛡️ Admin Control</h3><button class="btn-close-panel" onclick="toggleAdminPanel()">✕</button></div>
+        
+        <!-- Ad Price Settings -->
+        <div class="admin-section-title">💰 Ad Pricing</div>
+        <div class="admin-price-row">
+          <span>Min Reward:</span>
+          <input type="number" id="adminPriceMin" step="0.01" min="0.01" value="0.05" class="admin-price-input">
+          <span>Max Reward:</span>
+          <input type="number" id="adminPriceMax" step="0.01" min="0.01" value="0.50" class="admin-price-input">
+          <button class="btn btn-amber btn-sm" onclick="saveAdPrices()">💾 Save</button>
+        </div>
+        
         <div class="admin-search">
           <input type="text" id="adminSearchInput" placeholder="Search by ID, email, or name..." onkeydown="if(event.key==='Enter')adminSearch()">
           <button class="btn btn-primary btn-sm" onclick="adminSearch()">🔍 Search</button>

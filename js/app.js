@@ -114,36 +114,62 @@ function initApp() {
   // Show tutorial on first visit
 }
 
-// ===== VIDEO MUTE/UNMUTE TOGGLE =====
-(function initMuteToggle() {
-  var muteBtn = document.getElementById('unmuteBtn');
-  var video = document.querySelector('.auth-video');
-  if (!muteBtn || !video) return;
-  
-  // Ensure button visible
-  muteBtn.style.display = 'flex';
-  
-  muteBtn.addEventListener('click', function() {
-    video.muted = !video.muted;
-    var icon = muteBtn.querySelector('i');
-    if (icon) {
-      icon.className = video.muted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
+// ===== AD BLOCKER DETECTION =====
+(function detectAdBlocker() {
+  var test = document.createElement('div');
+  test.innerHTML = '&nbsp;';
+  test.className = 'adsbox';
+  test.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px';
+  document.body.appendChild(test);
+  setTimeout(function() {
+    if (test.offsetHeight === 0 || test.offsetParent === null) {
+      var el = document.getElementById('adblockWarning');
+      if (el) el.classList.add('show');
     }
-    muteBtn.title = video.muted ? 'Unmute video sound' : 'Mute video sound';
-    // Flash feedback
-    muteBtn.style.transform = 'scale(1.2)';
-    setTimeout(function() { muteBtn.style.transform = ''; }, 200);
-    // Toast feedback
-    showToast(video.muted ? '🔇 Muted' : '🔊 Sound on');
-  });
-  
-  // Keyboard shortcut: M toggles mute
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'm' || e.key === 'M') {
-      muteBtn.click();
-    }
-  });
+    test.remove();
+  }, 500);
 })();
+
+// ===== HOME SLIDER =====
+let sliderIndex = 0;
+let sliderInterval = null;
+const SLIDES = [
+  { title:'🎯 Earn Daily', desc:'Watch ads and earn up to $1 each', amount:'+$0.05–$1.00', bg:'linear-gradient(135deg,#0F2027,#203A43)' },
+  { title:'📦 Batch Watch', desc:'Watch 3 ads in a row for bonus rewards', amount:'+$0.15–$3.00', bg:'linear-gradient(135deg,#1A1B2F,#16222A)' },
+  { title:'👥 Refer & Earn', desc:'Get $5 for every friend who joins', amount:'+$5/referral', bg:'linear-gradient(135deg,#1E3C2C,#2A3A2C)' },
+  { title:'🏆 Buy Plans', desc:'Boost your earnings with premium plans', amount:'Up to $10/day', bg:'linear-gradient(135deg,#2D1B3A,#1A1B2F)' }
+];
+
+function initSlider() {
+  var track = document.getElementById('sliderTrack');
+  var dots = document.getElementById('sliderDots');
+  if (!track || !dots) return;
+  track.innerHTML = SLIDES.map(function(s) {
+    return '<div class="slider-slide" style="background:' + s.bg + '"><h3>' + s.title + '</h3><p>' + s.desc + '</p><div class="slider-amount">' + s.amount + '</div></div>';
+  }).join('');
+  dots.innerHTML = SLIDES.map(function(_, i) {
+    return '<div class="slider-dot' + (i===0?' active':'') + '" onclick="goToSlide(' + i + ')"></div>';
+  }).join('');
+  sliderIndex = 0;
+  startSliderAuto();
+}
+
+function goToSlide(i) {
+  sliderIndex = i;
+  var track = document.getElementById('sliderTrack');
+  var dots = document.querySelectorAll('.slider-dot');
+  if (track) track.style.transform = 'translateX(-' + (i*100) + '%)';
+  dots.forEach(function(d, idx) { d.classList.toggle('active', idx===i); });
+  startSliderAuto();
+}
+
+function startSliderAuto() {
+  if (sliderInterval) clearInterval(sliderInterval);
+  sliderInterval = setInterval(function() {
+    var next = (sliderIndex + 1) % SLIDES.length;
+    goToSlide(next);
+  }, 5000);
+}
 
 // ===== AD SCRIPTS =====
 function initAds() {
@@ -240,6 +266,43 @@ async function adminAddBalance(uid,name) {
   const amt = prompt('Add balance to '+name+'? ($):');
   if (amt===null||isNaN(parseFloat(amt))) return;
   try { await fbTimeout(usersRef.doc(uid).update({balance:firebase.firestore.FieldValue.increment(Math.abs(parseFloat(amt)))})); showToast('✅ $'+Math.abs(parseFloat(amt)).toFixed(2)+' added'); adminSearch(); } catch(e) { showToast(e.message,'error'); }
+}
+
+// ===== ADMIN PRICE CONTROL =====
+async function loadAdPrices() {
+  try {
+    var snap = await fbTimeout(systemConfigRef.get());
+    if (snap.exists) {
+      var data = snap.data();
+      if (data.adMinReward) document.getElementById('adminPriceMin').value = data.adMinReward;
+      if (data.adMaxReward) document.getElementById('adminPriceMax').value = data.adMaxReward;
+    }
+  } catch(e) {}
+}
+
+async function saveAdPrices() {
+  var min = parseFloat(document.getElementById('adminPriceMin').value);
+  var max = parseFloat(document.getElementById('adminPriceMax').value);
+  if (isNaN(min) || isNaN(max)) { showToast('Invalid values','error'); return; }
+  if (min < 0.01) min = 0.01;
+  if (max > 5) max = 5;
+  try {
+    await fbTimeout(systemConfigRef.set({ adMinReward: min, adMaxReward: max }, { merge: true }));
+    showToast('✅ Prices saved: $' + min.toFixed(2) + ' – $' + max.toFixed(2));
+    // Update fallback ads with new prices
+    FALLBACK_ADS.forEach(function(a) {
+      a.reward = +(min + Math.random() * (max - min)).toFixed(2);
+    });
+  } catch(e) { showToast('Error saving: ' + e.message, 'error'); }
+}
+
+// ===== ERROR SHAKE ANIMATION HELPER =====
+function shakeElement(el) {
+  if (!el) return;
+  el.classList.remove('shake-error');
+  void el.offsetWidth;
+  el.classList.add('shake-error');
+  setTimeout(function() { el.classList.remove('shake-error'); }, 600);
 }
 
 // ===== COOLDOWN =====
@@ -429,6 +492,8 @@ function updateUI() {
 // ===== HOME / DASHBOARD =====
 async function loadDashboard() {
   updateUI(); if (!currentUser) return;
+  initSlider();
+  loadAdPrices();
   // Update daily
   const r=remDaily(); const dl=document.getElementById('dailyLimitDisplay'); if (dl) { dl.textContent=r+'/'+DAILY_LIMIT; dl.style.color=r<=5?'var(--amber)':r<=0?'var(--red)':'var(--emerald)'; }
   const pf=document.getElementById('dailyProgressFill'); if (pf) pf.style.width=((DAILY_LIMIT-r)/DAILY_LIMIT*100)+'%';
@@ -526,7 +591,7 @@ async function loadReferrals() {
     const s=currentUser?await fbTimeout(referralsRef.where('referrerId','==',currentUser.uid).get()):{size:0,forEach:()=>{}};
     document.getElementById('refCount').textContent=s.size;
     let b=0;
-    document.querySelectorAll('#refMilestones .milestone').forEach(m=>{const n=parseInt(m.dataset.count);const ck=m.querySelector('.ms-check');if(s.size>=n){ck.textContent='✅';ck.classList.add('unlocked');b+=n===1?.5:n===5?2.5:5;}});
+    document.querySelectorAll('#refMilestones .milestone').forEach(function(m){var n=parseInt(m.dataset.count);var ck=m.querySelector('.ms-check');if(s.size>=n){ck.textContent='✅';ck.classList.add('unlocked');if(n===1)b+=0.5;else if(n===5)b+=2.5;else if(n===10)b+=5;}});
     document.getElementById('refEarned').textContent='$'+b.toFixed(2);
     const body=document.getElementById('refListBody');
     if (s.size===0) body.innerHTML='<div class="home-empty">No referrals yet</div>';

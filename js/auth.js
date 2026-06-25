@@ -1,13 +1,19 @@
 // =============================================
 // EARNNOVA BETA - Auth Module (Mobile)
 // =============================================
-function showAlert(msg, type = 'error') {
-  const box = document.getElementById('alertBox');
+function showAlert(msg, type) {
+  if (!type) type = 'error';
+  var box = document.getElementById('alertBox');
   if (box) {
     box.textContent = msg;
     box.className = 'auth-glass-alert ' + type;
     box.style.display = 'block';
-    setTimeout(() => { box.style.display = 'none'; }, 5000);
+    // Shake + glow animation on errors
+    if (type === 'error') {
+      box.classList.add('shake-error');
+      setTimeout(function() { box.classList.remove('shake-error'); }, 600);
+    }
+    setTimeout(function() { box.style.display = 'none'; }, 5000);
   }
 }
 
@@ -117,140 +123,6 @@ function googleSignIn() {
   });
 }
 document.getElementById('googleBtn').addEventListener('click', googleSignIn);
-
-// ===== PHONE AUTH =====
-let phoneConfirmationResult = null;
-let phoneRecaptchaWidgetId = null;
-
-function initPhoneAuth() {
-  var phoneBtn = document.getElementById('phoneBtn');
-  var phoneSection = document.getElementById('phoneAuthSection');
-  var backBtn = document.getElementById('backFromPhone');
-  var cancelBtn = document.getElementById('cancelPhone');
-  var sendBtn = document.getElementById('sendOtpBtn');
-  var verifyBtn = document.getElementById('verifyOtpBtn');
-  var phoneInput = document.getElementById('phoneInput');
-  var otpInput = document.getElementById('otpInput');
-  
-  if (!phoneBtn) return;
-  
-  // Show phone form
-  phoneBtn.addEventListener('click', function() {
-    phoneSection.classList.remove('hidden');
-    document.getElementById('phoneStep1').classList.remove('hidden');
-    document.getElementById('phoneStep2').classList.add('hidden');
-    phoneBtn.style.display = 'none';
-    document.getElementById('googleBtn').style.display = 'none';
-    // Render reCAPTCHA
-    setTimeout(renderPhoneRecaptcha, 300);
-  });
-  
-  backBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    phoneSection.classList.add('hidden');
-    phoneBtn.style.display = 'flex';
-    document.getElementById('googleBtn').style.display = 'flex';
-  });
-  
-  cancelBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    phoneSection.classList.add('hidden');
-    phoneBtn.style.display = 'flex';
-    document.getElementById('googleBtn').style.display = 'flex';
-    if (phoneConfirmationResult) phoneConfirmationResult = null;
-  });
-  
-  // Send OTP
-  sendBtn.addEventListener('click', function() {
-    var phone = phoneInput.value.trim();
-    if (!phone) { showAlert('Enter phone number'); return; }
-    if (!phone.startsWith('+')) { showAlert('Use format: +1234567890'); return; }
-    sendBtn.disabled = true;
-    sendBtn.textContent = '⏳ Sending...';
-    
-    var appVerifier = new firebase.auth.RecaptchaVerifier('phoneRecaptcha', {
-      size: 'invisible',
-      callback: function() { /* reCAPTCHA solved */ }
-    });
-    
-    auth.signInWithPhoneNumber(phone, appVerifier)
-      .then(function(confirmationResult) {
-        phoneConfirmationResult = confirmationResult;
-        document.getElementById('phoneStep1').classList.add('hidden');
-        document.getElementById('phoneStep2').classList.remove('hidden');
-        sendBtn.disabled = false;
-        sendBtn.textContent = '📱 Send OTP';
-        showToast('OTP sent! 📱');
-        setTimeout(function() { otpInput.focus(); }, 500);
-      })
-      .catch(function(err) {
-        sendBtn.disabled = false;
-        sendBtn.textContent = '📱 Send OTP';
-        var msg = getAuthError(err);
-        if (err.code === 'auth/invalid-phone-number') msg = 'Invalid phone format. Use +[country][number]';
-        else if (err.code === 'auth/too-many-requests') msg = 'Too many attempts. Try again later.';
-        else if (err.code === 'auth/quota-exceeded') msg = 'SMS quota exceeded. Try Email login.';
-        showAlert(msg);
-        // Reset reCAPTCHA
-        if (appVerifier) appVerifier.clear();
-      });
-  });
-  
-  // Verify OTP
-  verifyBtn.addEventListener('click', function() {
-    var code = otpInput.value.trim();
-    if (!code || code.length < 6) { showAlert('Enter the 6-digit code'); return; }
-    verifyBtn.disabled = true;
-    verifyBtn.textContent = '⏳ Verifying...';
-    
-    phoneConfirmationResult.confirm(code)
-      .then(function(result) {
-        showToast('Signed in! ✅');
-        // Reset form
-        phoneSection.classList.add('hidden');
-        phoneBtn.style.display = 'flex';
-        document.getElementById('googleBtn').style.display = 'flex';
-        phoneInput.value = '';
-        otpInput.value = '';
-        verifyBtn.disabled = false;
-        verifyBtn.textContent = '✅ Verify';
-      })
-      .catch(function(err) {
-        verifyBtn.disabled = false;
-        verifyBtn.textContent = '✅ Verify';
-        var msg = getAuthError(err);
-        if (err.code === 'auth/invalid-verification-code') msg = 'Invalid code. Try again.';
-        else if (err.code === 'auth/code-expired') msg = 'Code expired. Request a new one.';
-        showAlert(msg);
-      });
-  });
-}
-
-function renderPhoneRecaptcha() {
-  var container = document.getElementById('phoneRecaptcha');
-  if (!container) return;
-  container.innerHTML = '';
-  try {
-    if (window.recaptchaVerifier) {
-      try { window.recaptchaVerifier.clear(); } catch(e){}
-    }
-    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('phoneRecaptcha', {
-      size: 'normal',
-      theme: 'dark',
-      callback: function() { /* solved */ }
-    });
-    window.recaptchaVerifier.render().then(function(widgetId) {
-      phoneRecaptchaWidgetId = widgetId;
-    });
-  } catch(e) {
-    console.warn('reCAPTCHA render:', e.message);
-    // Fallback to invisible
-    container.innerHTML = '';
-  }
-}
-
-// Initialize phone auth
-initPhoneAuth();
 
 // ===== FORGOT PASSWORD =====
 document.getElementById('forgotForm').addEventListener('submit', async e => {
