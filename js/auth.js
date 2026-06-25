@@ -98,15 +98,25 @@ document.getElementById('registerForm').addEventListener('submit', async e => {
   }
 });
 
-// ===== GOOGLE =====
-document.getElementById('googleBtn').addEventListener('click', async () => {
+// ===== GOOGLE (mobile-friendly with redirect fallback) =====
+function googleSignIn() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  try {
-    await auth.signInWithPopup(provider);
-  } catch(err) {
-    showAlert(getAuthError(err));
-  }
-});
+  // Try popup first (fast), fallback to redirect if popup blocked
+  auth.signInWithPopup(provider).catch(function(err) {
+    if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+      // Use redirect instead — more reliable on mobile
+      return auth.signInWithRedirect(provider);
+    }
+    var msg = getAuthError(err);
+    if (err.code === 'auth/unauthorized-domain') {
+      msg = 'Domain not authorized. Contact support or try Email login.';
+    } else if (err.code === 'auth/operation-not-allowed') {
+      msg = 'Google Sign-In not enabled in Firebase Console.';
+    }
+    showAlert(msg);
+  });
+}
+document.getElementById('googleBtn').addEventListener('click', googleSignIn);
 
 // ===== FORGOT PASSWORD =====
 document.getElementById('forgotForm').addEventListener('submit', async e => {

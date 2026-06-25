@@ -103,7 +103,136 @@ function initApp() {
   const clk = () => { const d=new Date(); document.getElementById('statusTime').textContent=d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); };
   clk(); setInterval(clk,10000);
   if (!localStorage.getItem('en_welcomed')) { localStorage.setItem('en_welcomed','1'); setTimeout(()=>showNotif('💰 Welcome!','Watch ads, earn rewards','🎉'),2000); }
+  
+  // Handle Google redirect result (mobile-friendly)
+  auth.getRedirectResult().catch(function(err) {
+    if (err.code && err.code !== 'auth/unauthorized-domain') {
+      showToast('Google sign-in: ' + (err.message||'Failed'), 'error');
+    }
+  });
+  
+  // Show tutorial on first visit
+  if (!localStorage.getItem('en_tutorial_done')) {
+    setTimeout(startTutorial, 3000);
+  }
 }
+
+// ===== TUTORIAL VOICE HELP =====
+let tutorialStep = 0;
+let tutorialActive = false;
+const TUTORIAL_STEPS = [
+  { page:'home', selector:'.home-stats', msg:'This is your dashboard. Track your earnings, streak, and progress here.', voice:'Your dashboard shows your balance, daily streak, and total earnings at a glance.' },
+  { page:'earn', selector:'.earn-top-bar', msg:'Go to Earn page to watch ads and get paid. Each ad gives $0.05 to $1.00.', voice:'On the Earn page, select an ad, solve the math captcha, and watch the countdown to earn rewards.' },
+  { page:'withdraw', selector:'.wd-methods', msg:'Withdraw your earnings via bKash, Nagad, Binance, PayPal, Wise, Bank, or Crypto.', voice:'Use the Withdraw page to cash out. Choose your method, enter details, and submit. Minimum withdrawal is 5 dollars.' },
+  { page:'plans', selector:'.plan-card', msg:'Buy a plan to boost your earnings. Plans range from $5 Starter to $60 Diamond.', voice:'Plans unlock higher earning potential. Buy a plan with your balance to earn more per ad.' },
+  { page:'referrals', selector:'.ref-hero', msg:'Refer friends and earn $5 bonus each. Share your referral link.', voice:'Share your referral link with friends. You earn 5 dollars for each person who signs up using your link.' }
+];
+
+function startTutorial(skipVoice) {
+  tutorialActive = true;
+  tutorialStep = 0;
+  localStorage.setItem('en_tutorial_done','1');
+  showTutorialStep(skipVoice);
+}
+
+function showTutorialStep(skipVoice) {
+  // Remove old overlay
+  var old = document.getElementById('tutorialOverlay');
+  if (old) old.remove();
+  
+  if (tutorialStep >= TUTORIAL_STEPS.length) {
+    tutorialActive = false;
+    showToast('Tutorial complete! 🎉');
+    return;
+  }
+  
+  var step = TUTORIAL_STEPS[tutorialStep];
+  
+  // Navigate to the right page
+  navigate(step.page);
+  
+  // Create overlay
+  var overlay = document.createElement('div');
+  overlay.id = 'tutorialOverlay';
+  overlay.className = 'tutorial-overlay';
+  
+  // Find the element to highlight
+  var target = document.querySelector(step.selector);
+  var rect = target ? target.getBoundingClientRect() : { top: 100, left: 16, width: 300, height: 100 };
+  
+  overlay.innerHTML = '<div class="tutorial-backdrop"></div>'
+    + '<div class="tutorial-highlight" style="top:' + (rect.top-4) + 'px;left:' + (rect.left-4) + 'px;width:' + (rect.width+8) + 'px;height:' + (rect.height+8) + 'px;"></div>'
+    + '<div class="tutorial-card">'
+    + '<div class="tutorial-step-indicator">Step ' + (tutorialStep+1) + ' of ' + TUTORIAL_STEPS.length + '</div>'
+    + '<div class="tutorial-msg">' + step.msg + '</div>'
+    + '<div class="tutorial-actions">'
+    + '<button class="tutorial-btn tutorial-btn-skip" onclick="skipTutorial()">Skip</button>'
+    + '<button class="tutorial-btn tutorial-btn-voice" onclick="speakTutorialStep()">🔊 Voice</button>'
+    + (tutorialStep < TUTORIAL_STEPS.length - 1
+        ? '<button class="tutorial-btn tutorial-btn-next" onclick="nextTutorialStep()">Next →</button>'
+        : '<button class="tutorial-btn tutorial-btn-done" onclick="finishTutorial()">Done ✓</button>')
+    + '</div></div>';
+  
+  document.body.appendChild(overlay);
+  
+  // Voice narration
+  if (!skipVoice && 'speechSynthesis' in window) {
+    speakTutorialStep();
+  }
+}
+
+function nextTutorialStep() {
+  tutorialStep++;
+  showTutorialStep();
+}
+
+function skipTutorial() {
+  tutorialActive = false;
+  var old = document.getElementById('tutorialOverlay');
+  if (old) old.remove();
+  showToast('Tutorial skipped');
+}
+
+function finishTutorial() {
+  tutorialActive = false;
+  var old = document.getElementById('tutorialOverlay');
+  if (old) old.remove();
+}
+
+function speakTutorialStep() {
+  if (!('speechSynthesis' in window)) {
+    showToast('Voice not supported on this device');
+    return;
+  }
+  var step = TUTORIAL_STEPS[tutorialStep];
+  if (!step) return;
+  window.speechSynthesis.cancel();
+  var utter = new SpeechSynthesisUtterance(step.voice);
+  utter.lang = 'en-US';
+  utter.rate = 0.9;
+  utter.pitch = 1.0;
+  utter.volume = 1.0;
+  window.speechSynthesis.speak(utter);
+}
+
+// ===== HELP BUTTONS =====
+document.addEventListener('DOMContentLoaded', function() {
+  var authHelp = document.getElementById('authHelpBtn');
+  if (authHelp) authHelp.addEventListener('click', function(e) {
+    e.preventDefault();
+    startTutorial(true);
+  });
+  var topHelp = document.getElementById('topHelpBtn');
+  if (topHelp) topHelp.addEventListener('click', function() {
+    if (document.getElementById('tutorialOverlay')) {
+      document.getElementById('tutorialOverlay').remove();
+      tutorialActive = false;
+      window.speechSynthesis.cancel();
+    } else {
+      startTutorial(true);
+    }
+  });
+});
 
 // ===== AD SCRIPTS =====
 function initAds() {
