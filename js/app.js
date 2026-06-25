@@ -23,6 +23,13 @@ function locSet(key,val) { try{localStorage.setItem('en_'+key,String(val))}catch
 function locAdd(key,amt) { const v=loc(key,0)+amt; locSet(key,v); return v; }
 
 // ===== AUTH =====
+// MUST call getRedirectResult() BEFORE onAuthStateChanged for redirect-based sign-in
+var _pendingRedirect = auth.getRedirectResult().catch(function(err) {
+  if (err.code && err.code !== 'auth/unauthorized-domain') {
+    console.warn('Redirect result:', err.code, err.message);
+  }
+});
+
 auth.onAuthStateChanged(async user => {
   if (user) {
     currentUser = user;
@@ -103,13 +110,6 @@ function initApp() {
   const clk = () => { const d=new Date(); document.getElementById('statusTime').textContent=d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); };
   clk(); setInterval(clk,10000);
   if (!localStorage.getItem('en_welcomed')) { localStorage.setItem('en_welcomed','1'); setTimeout(()=>showNotif('💰 Welcome!','Watch ads, earn rewards','🎉'),2000); }
-  
-  // Handle Google redirect result (mobile-friendly)
-  auth.getRedirectResult().catch(function(err) {
-    if (err.code && err.code !== 'auth/unauthorized-domain') {
-      showToast('Google sign-in: ' + (err.message||'Failed'), 'error');
-    }
-  });
   
   // Show tutorial on first visit
 }

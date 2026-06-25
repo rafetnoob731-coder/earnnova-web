@@ -104,23 +104,46 @@ document.getElementById('registerForm').addEventListener('submit', async e => {
   }
 });
 
-// ===== GOOGLE (mobile-friendly with redirect fallback) =====
+// ===== GOOGLE SIGN-IN (mobile-first — redirect is more reliable) =====
 function googleSignIn() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  // Try popup first (fast), fallback to redirect if popup blocked
-  auth.signInWithPopup(provider).catch(function(err) {
-    if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
-      // Use redirect instead — more reliable on mobile
-      return auth.signInWithRedirect(provider);
-    }
-    var msg = getAuthError(err);
-    if (err.code === 'auth/unauthorized-domain') {
-      msg = 'Domain not authorized. Contact support or try Email login.';
-    } else if (err.code === 'auth/operation-not-allowed') {
-      msg = 'Google Sign-In not enabled in Firebase Console.';
-    }
-    showAlert(msg);
-  });
+  var btn = document.getElementById('googleBtn');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Connecting...';
+  
+  var provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  
+  // Use redirect on mobile (more reliable), popup on desktop
+  var isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  if (isMobile) {
+    // Redirect is the only reliable method on mobile
+    auth.signInWithRedirect(provider).catch(function(err) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fab fa-google"></i> Continue with Google';
+      var msg = getAuthError(err);
+      if (err.code === 'auth/unauthorized-domain') {
+        msg = 'Domain not authorized. Contact support.';
+      } else if (err.code === 'auth/operation-not-allowed') {
+        msg = 'Google Sign-In not enabled in Firebase Console.';
+      }
+      showAlert(msg);
+    });
+  } else {
+    // Desktop: try popup, fallback to redirect
+    auth.signInWithPopup(provider).catch(function(err) {
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+        return auth.signInWithRedirect(provider);
+      }
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fab fa-google"></i> Continue with Google';
+      var msg = getAuthError(err);
+      if (err.code === 'auth/unauthorized-domain') {
+        msg = 'Domain not authorized. Contact support.';
+      }
+      showAlert(msg);
+    });
+  }
 }
 document.getElementById('googleBtn').addEventListener('click', googleSignIn);
 
