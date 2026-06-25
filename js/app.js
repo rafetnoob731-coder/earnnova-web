@@ -270,8 +270,8 @@ function speakElevenLabs(text) {
   });
 }
 
-// ===== HELP BUTTONS =====
-document.addEventListener('DOMContentLoaded', function() {
+// ===== HELP BUTTONS (no DOMContentLoaded — app.js runs after DOM is ready) =====
+(function initHelpButtons() {
   var authHelp = document.getElementById('authHelpBtn');
   if (authHelp) authHelp.addEventListener('click', function(e) {
     e.preventDefault();
@@ -287,49 +287,49 @@ document.addEventListener('DOMContentLoaded', function() {
       startTutorial(true);
     }
   });
-});
+})();
 
 // ===== VIDEO MUTE/UNMUTE TOGGLE =====
-document.addEventListener('DOMContentLoaded', function() {
+(function initMuteToggle() {
   var muteBtn = document.getElementById('unmuteBtn');
   var video = document.querySelector('.auth-video');
-  if (muteBtn && video) {
-    // Video starts muted — button shows volume-mute icon
-    muteBtn.addEventListener('click', function() {
-      video.muted = !video.muted;
-      var icon = muteBtn.querySelector('i');
-      if (icon) {
-        icon.className = video.muted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
-      }
-      muteBtn.title = video.muted ? 'Unmute video' : 'Mute video';
-      // Flash feedback
-      muteBtn.style.transform = 'scale(1.2)';
-      setTimeout(function() { muteBtn.style.transform = ''; }, 200);
-    });
-    // Show button once video is ready
-    video.addEventListener('canplay', function() {
-      muteBtn.style.display = 'flex';
-    });
-    // Fallback: show button after 3s regardless
-    setTimeout(function() { muteBtn.style.display = 'flex'; }, 3000);
-    
-    // Keyboard shortcut: M key toggles mute
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'm' || e.key === 'M') {
-        if (video) { muteBtn.click(); }
-      }
-    });
-  }
-});
+  if (!muteBtn || !video) return;
+  
+  // Ensure button visible
+  muteBtn.style.display = 'flex';
+  
+  muteBtn.addEventListener('click', function() {
+    video.muted = !video.muted;
+    var icon = muteBtn.querySelector('i');
+    if (icon) {
+      icon.className = video.muted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
+    }
+    muteBtn.title = video.muted ? 'Unmute video sound' : 'Mute video sound';
+    // Flash feedback
+    muteBtn.style.transform = 'scale(1.2)';
+    setTimeout(function() { muteBtn.style.transform = ''; }, 200);
+    // Toast feedback
+    showToast(video.muted ? '🔇 Muted' : '🔊 Sound on');
+  });
+  
+  // Keyboard shortcut: M toggles mute
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'm' || e.key === 'M') {
+      muteBtn.click();
+    }
+  });
+})();
 
 // ===== ElevenLabs keyboard shortcut: V to replay voice =====
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'v' || e.key === 'V') {
-    if (document.getElementById('tutorialOverlay')) {
-      speakTutorialStep();
+(function initVoiceShortcut() {
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'v' || e.key === 'V') {
+      if (document.getElementById('tutorialOverlay')) {
+        speakTutorialStep();
+      }
     }
-  }
-});
+  });
+})();
 
 // ===== AD SCRIPTS =====
 function initAds() {
