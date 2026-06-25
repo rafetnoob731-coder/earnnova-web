@@ -104,46 +104,35 @@ document.getElementById('registerForm').addEventListener('submit', async e => {
   }
 });
 
-// ===== GOOGLE SIGN-IN (mobile-first — redirect is more reliable) =====
+// ===== GOOGLE SIGN-IN (popup first → redirect fallback) =====
+// Must call signInWithPopup synchronously within click handler for mobile popup allowance
 function googleSignIn() {
-  var btn = document.getElementById('googleBtn');
-  btn.disabled = true;
-  btn.innerHTML = '⏳ Connecting...';
-  
   var provider = new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
   
-  // Use redirect on mobile (more reliable), popup on desktop
-  var isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  
-  if (isMobile) {
-    // Redirect is the only reliable method on mobile
-    auth.signInWithRedirect(provider).catch(function(err) {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fab fa-google"></i> Continue with Google';
-      var msg = getAuthError(err);
-      if (err.code === 'auth/unauthorized-domain') {
-        msg = 'Domain not authorized. Contact support.';
-      } else if (err.code === 'auth/operation-not-allowed') {
-        msg = 'Google Sign-In not enabled in Firebase Console.';
-      }
-      showAlert(msg);
-    });
-  } else {
-    // Desktop: try popup, fallback to redirect
-    auth.signInWithPopup(provider).catch(function(err) {
-      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
-        return auth.signInWithRedirect(provider);
-      }
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fab fa-google"></i> Continue with Google';
-      var msg = getAuthError(err);
-      if (err.code === 'auth/unauthorized-domain') {
-        msg = 'Domain not authorized. Contact support.';
-      }
-      showAlert(msg);
-    });
-  }
+  // Try popup first (works on most mobile browsers when called synchronously)
+  auth.signInWithPopup(provider).then(function() {
+    // Success — auth state will be handled by onAuthStateChanged in app.js
+  }).catch(function(err) {
+    if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+      // Popup blocked — fall back to redirect
+      return auth.signInWithRedirect(provider).catch(function(redirectErr) {
+        var msg = getAuthError(redirectErr);
+        if (redirectErr.code === 'auth/unauthorized-domain') {
+          msg = 'Domain not authorized. Contact support or try Email.';
+        } else if (redirectErr.code === 'auth/operation-not-allowed') {
+          msg = 'Google Sign-In not enabled in Firebase Console.';
+        }
+        showAlert(msg);
+      });
+    }
+    // Show error for non-popup errors
+    var msg = getAuthError(err);
+    if (err.code === 'auth/unauthorized-domain') {
+      msg = 'Domain not authorized. Contact support or try Email.';
+    }
+    showAlert(msg);
+  });
 }
 document.getElementById('googleBtn').addEventListener('click', googleSignIn);
 

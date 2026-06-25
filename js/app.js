@@ -23,22 +23,38 @@ function locSet(key,val) { try{localStorage.setItem('en_'+key,String(val))}catch
 function locAdd(key,amt) { const v=loc(key,0)+amt; locSet(key,v); return v; }
 
 // ===== AUTH =====
-// MUST call getRedirectResult() BEFORE onAuthStateChanged for redirect-based sign-in
-var _pendingRedirect = auth.getRedirectResult().catch(function(err) {
+var _initStarted = false;
+
+// === HANDLE REDIRECT SIGN-IN FIRST (before onAuthStateChanged) ===
+// getRedirectResult() must run before onAuthStateChanged on some mobile browsers
+// because onAuthStateChanged may not fire after redirect otherwise.
+auth.getRedirectResult().then(function(result) {
+  if (result && result.user && !_initStarted) {
+    _initStarted = true;
+    currentUser = result.user;
+    loadUserData(result.user.uid);
+  }
+}).catch(function(err) {
   if (err.code && err.code !== 'auth/unauthorized-domain') {
-    console.warn('Redirect result:', err.code, err.message);
+    console.warn('Redirect result error:', err.code, err.message);
   }
 });
 
+// === NORMAL AUTH STATE OBSERVER ===
 auth.onAuthStateChanged(async user => {
+  if (_initStarted) return; // already handled by getRedirectResult
   if (user) {
+    _initStarted = true;
     currentUser = user;
     try { await usersRef.doc(user.uid).update({lastLogin:firebase.firestore.FieldValue.serverTimestamp()}); } catch(e) {}
     loadUserData(user.uid);
   } else {
     currentUser = null; currentUserData = null;
-    document.getElementById('splash')?.classList.add('hide');
-    showView('authPage');
+    // Delay hiding splash slightly to allow getRedirectResult to complete
+    setTimeout(function() {
+      document.getElementById('splash')?.classList.add('hide');
+      showView('authPage');
+    }, 500);
   }
 });
 
@@ -89,29 +105,38 @@ document.querySelectorAll('.nav-item').forEach(i => i.addEventListener('click', 
 
 // ===== INIT APP =====
 function initApp() {
-  // Check block
   try {
-    const b = JSON.parse(localStorage.getItem('en_block')||'{}');
-    if (b.until && Date.now() < b.until) {
-      showView('blockPage');
-      document.getElementById('blockReason').textContent = b.reason||'Policy violation';
-      const ut = () => { const r = b.until-Date.now(); document.getElementById('blockTimer').textContent = Math.floor(r/86400000)+'d '+Math.floor((r%86400000)/3600000)+'h '+Math.floor((r%3600000)/60000)+'m'; };
-      ut(); setInterval(() => { try{const bb=JSON.parse(localStorage.getItem('en_block')||'{}'); if(!bb.until||Date.now()>=bb.until){localStorage.removeItem('en_block');location.reload()} ut(); }catch(e){}},10000);
-      return;
+    // Check block
+    try {
+      const b = JSON.parse(localStorage.getItem('en_block')||'{}');
+      if (b.until && Date.now() < b.until) {
+        showView('blockPage');
+        document.getElementById('blockReason').textContent = b.reason||'Policy violation';
+        const ut = () => { const r = b.until-Date.now(); document.getElementById('blockTimer').textContent = Math.floor(r/86400000)+'d '+Math.floor((r%86400000)/3600000)+'h '+Math.floor((r%3600000)/60000)+'m'; };
+        ut(); setInterval(() => { try{const bb=JSON.parse(localStorage.getItem('en_block')||'{}'); if(!bb.until||Date.now()>=bb.until){localStorage.removeItem('en_block');location.reload()} ut(); }catch(e){}},10000);
+        return;
+      }
+    } catch(e) {}
+    
+    // Clear any pending auth page timeout from onAuthStateChanged
+    if (_showAuthTimeout) { clearTimeout(_showAuthTimeout); _showAuthTimeout = null; }
+    document.getElementById('splash').classList.add('hide');
+    showView('appPage');
+    checkIsAdmin(); updateUserID(); updateUI();
+    navigate('home');
+    initAds();
+    // Clock
+    const clk = () => { const d=new Date(); document.getElementById('statusTime').textContent=d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); };
+    clk(); setInterval(clk,10000);
+    if (!localStorage.getItem('en_welcomed')) { localStorage.setItem('en_welcomed','1'); setTimeout(()=>showNotif('💰 Welcome!','Watch ads, earn rewards','🎉'),2000); }
+  } catch(e) {
+    // If initApp fails, show a visible error instead of blank screen
+    var splash = document.getElementById('splash');
+    if (splash) {
+      splash.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;background:#0F172A;color:#FCA5A5;padding:24px;text-align:center"><h2 style="margin:0 0 8px">⚠️ Init Error</h2><p style="margin:12px 0;font-size:14px;color:#94A3B8">' + (e.message || 'Unknown') + '</p><button onclick="location.reload()" style="padding:12px 32px;border-radius:12px;background:#10B981;color:#fff;border:none;font-size:15px;cursor:pointer">↻ Reload</button></div>';
+      splash.classList.remove('hide');
     }
-  } catch(e) {}
-  
-  document.getElementById('splash').classList.add('hide');
-  showView('appPage');
-  checkIsAdmin(); updateUserID(); updateUI();
-  navigate('home');
-  initAds();
-  // Clock
-  const clk = () => { const d=new Date(); document.getElementById('statusTime').textContent=d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); };
-  clk(); setInterval(clk,10000);
-  if (!localStorage.getItem('en_welcomed')) { localStorage.setItem('en_welcomed','1'); setTimeout(()=>showNotif('💰 Welcome!','Watch ads, earn rewards','🎉'),2000); }
-  
-  // Show tutorial on first visit
+  }
 }
 
 // ===== AD BLOCKER DETECTION =====
