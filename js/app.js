@@ -199,20 +199,75 @@ function finishTutorial() {
   if (old) old.remove();
 }
 
+// ===== ELEVENLABS VOICE CONFIG =====
+const ELEVENLABS_KEY = 'sk_ea0f81fafcfe6789e96f821a73df9a91685d00eb34573782';
+const ELEVENLABS_VOICE = '21m00Tcm4TlvDq8ikWAM'; // Rachel — natural female voice
+let elevenAudioCache = {};
+
 function speakTutorialStep() {
-  if (!('speechSynthesis' in window)) {
-    showToast('Voice not supported on this device');
-    return;
-  }
   var step = TUTORIAL_STEPS[tutorialStep];
   if (!step) return;
+  
+  // Cancel any playing audio
+  if (window.currentElevenAudio) {
+    window.currentElevenAudio.pause();
+    window.currentElevenAudio = null;
+  }
   window.speechSynthesis.cancel();
-  var utter = new SpeechSynthesisUtterance(step.voice);
-  utter.lang = 'en-US';
-  utter.rate = 0.9;
-  utter.pitch = 1.0;
-  utter.volume = 1.0;
-  window.speechSynthesis.speak(utter);
+  
+  // Try ElevenLabs first, fallback to browser SpeechSynthesis
+  speakElevenLabs(step.voice).catch(function() {
+    if ('speechSynthesis' in window) {
+      var utter = new SpeechSynthesisUtterance(step.voice);
+      utter.lang = 'en-US';
+      utter.rate = 0.9;
+      utter.pitch = 1.0;
+      window.speechSynthesis.speak(utter);
+    }
+  });
+}
+
+function speakElevenLabs(text) {
+  // Return cached audio if already fetched
+  if (elevenAudioCache[text]) {
+    var cached = elevenAudioCache[text];
+    cached.currentTime = 0;
+    window.currentElevenAudio = cached;
+    cached.play().catch(function(){});
+    return Promise.resolve();
+  }
+  
+  return new Promise(function(resolve, reject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://api.elevenlabs.io/v1/text-to-speech/' + ELEVENLABS_VOICE);
+    xhr.setRequestHeader('xi-api-key', ELEVENLABS_KEY);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.responseType = 'blob';
+    
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        var blob = xhr.response;
+        var url = URL.createObjectURL(blob);
+        var audio = new Audio(url);
+        audio.onended = function() { URL.revokeObjectURL(url); };
+        elevenAudioCache[text] = audio;
+        window.currentElevenAudio = audio;
+        audio.play().then(resolve).catch(reject);
+      } else {
+        reject(new Error('ElevenLabs status: ' + xhr.status));
+      }
+    };
+    xhr.onerror = reject;
+    
+    xhr.send(JSON.stringify({
+      text: text,
+      model_id: 'eleven_monolingual_v1',
+      voice_settings: {
+        stability: 0.4,
+        similarity_boost: 0.8
+      }
+    }));
+  });
 }
 
 // ===== HELP BUTTONS =====
@@ -232,6 +287,48 @@ document.addEventListener('DOMContentLoaded', function() {
       startTutorial(true);
     }
   });
+});
+
+// ===== VIDEO MUTE/UNMUTE TOGGLE =====
+document.addEventListener('DOMContentLoaded', function() {
+  var muteBtn = document.getElementById('unmuteBtn');
+  var video = document.querySelector('.auth-video');
+  if (muteBtn && video) {
+    // Video starts muted — button shows volume-mute icon
+    muteBtn.addEventListener('click', function() {
+      video.muted = !video.muted;
+      var icon = muteBtn.querySelector('i');
+      if (icon) {
+        icon.className = video.muted ? 'fas fa-volume-mute' : 'fas fa-volume-up';
+      }
+      muteBtn.title = video.muted ? 'Unmute video' : 'Mute video';
+      // Flash feedback
+      muteBtn.style.transform = 'scale(1.2)';
+      setTimeout(function() { muteBtn.style.transform = ''; }, 200);
+    });
+    // Show button once video is ready
+    video.addEventListener('canplay', function() {
+      muteBtn.style.display = 'flex';
+    });
+    // Fallback: show button after 3s regardless
+    setTimeout(function() { muteBtn.style.display = 'flex'; }, 3000);
+    
+    // Keyboard shortcut: M key toggles mute
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'm' || e.key === 'M') {
+        if (video) { muteBtn.click(); }
+      }
+    });
+  }
+});
+
+// ===== ElevenLabs keyboard shortcut: V to replay voice =====
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'v' || e.key === 'V') {
+    if (document.getElementById('tutorialOverlay')) {
+      speakTutorialStep();
+    }
+  }
 });
 
 // ===== AD SCRIPTS =====
