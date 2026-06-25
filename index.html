@@ -342,14 +342,5 @@
 <script src="js/app.js"></script>
 <div id="container-ac40f76d59b8e8c281fb380b91c2bf21" style="display:none"></div>
 
-<script>
-const authVideo = document.querySelector('.auth-video');
-const unmuteBtn = document.getElementById('unmuteBtn');
-if (authVideo && unmuteBtn) {
-  unmuteBtn.style.display = 'flex';
-  unmuteBtn.addEventListener('click', () => {
-    authVideo.muted ? (authVideo.muted=false,authVideo.volume=0.3,unmuteBtn.innerHTML='<i class=\"fas fa-volume-up\"></i>') : (authVideo.muted=true,unmuteBtn.innerHTML='<i class=\"fas fa-volume-mute\"></i>');
-  });
-}
-</script>
+
 </body></html>
