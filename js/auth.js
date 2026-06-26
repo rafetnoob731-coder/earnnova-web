@@ -84,12 +84,12 @@ document.getElementById('registerForm').addEventListener('submit', async e => {
         const referrer = refSnap.docs[0];
         userData.referredBy = referrer.id;
         await usersRef.doc(referrer.id).update({
-          balance: firebase.firestore.FieldValue.increment(5),
-          totalEarned: firebase.firestore.FieldValue.increment(5)
+          balance: firebase.firestore.FieldValue.increment(0.50),
+          totalEarned: firebase.firestore.FieldValue.increment(0.50)
         });
         await referralsRef.add({
           referrerId: referrer.id, referredId: user.uid,
-          referredName: name, bonus: 5,
+          referredName: name, bonus: 0.50,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
       }

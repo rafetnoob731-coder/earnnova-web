@@ -171,7 +171,7 @@ let sliderInterval = null;
 const SLIDES = [
   { title:'🎯 Earn Daily', desc:'Watch ads and earn up to $1 each', amount:'+$0.05–$1.00', bg:'linear-gradient(135deg,#0F2027,#203A43)' },
   { title:'📦 Batch Watch', desc:'Watch 3 ads in a row for bonus rewards', amount:'+$0.15–$3.00', bg:'linear-gradient(135deg,#1A1B2F,#16222A)' },
-  { title:'👥 Refer & Earn', desc:'Get $5 for every friend who joins', amount:'+$5/referral', bg:'linear-gradient(135deg,#1E3C2C,#2A3A2C)' },
+  { title:'👥 Refer & Earn', desc:'Get $0.50 for every friend who joins', amount:'+$0.50/referral', bg:'linear-gradient(135deg,#1E3C2C,#2A3A2C)' },
   { title:'🏆 Buy Plans', desc:'Boost your earnings with premium plans', amount:'Up to $10/day', bg:'linear-gradient(135deg,#2D1B3A,#1A1B2F)' }
 ];
 
