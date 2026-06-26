@@ -70,7 +70,7 @@ document.getElementById('registerForm').addEventListener('submit', async e => {
       uid: user.uid, email, name, photo: '', phone: '',
       balance: 0, totalEarned: 0, totalWithdrawn: 0,
       adsWatched: 0, todayAds: 0, lastAdDate: '',
-      referralCode: generateRefCode(), referredBy: '',
+      referralCode: Math.random().toString(36).substring(2,10).toUpperCase(), referredBy: '',
       streak: 0, lastActive: '',
       isActive: true, isAdmin: email === ADMIN_EMAIL,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
