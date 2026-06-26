@@ -216,7 +216,7 @@
         <button class="btn btn-amber btn-sm btn-block" onclick="startBatchWatch(5)">🔥 5x Batch</button>
       </div>
       
-      <div class="section-title">Available Ads</div>
+      <div class="section-title">📺 Available Ads</div>
       <div class="ads-grid" id="adsGrid">
         <div class="skeleton"></div><div class="skeleton mt-1"></div>
       </div>
@@ -330,17 +330,33 @@
   </div>
 </div>
 
-<!-- AD MODAL -->
+<!-- AD WATCH MODAL (Premium Glassmorphism) -->
 <div id="adModal" class="modal-overlay">
-  <div class="modal-full">
-    <div class="modal-top-bar"><button class="icon-btn-sm" onclick="closeAdModal()">✕</button><span>Watch & Earn</span></div>
-    <div class="modal-ad-content" id="modalAdContent"></div>
-    <div class="modal-ad-footer" id="modalAdFooter">
-      <div class="ad-reward-info">
-        <span>💰 Reward: <strong id="adRewardLabel">+$0.00</strong></span>
-        <span>⏱️ <span id="timeLeft">0s</span></span>
+  <div class="ad-modal-glass">
+    <div class="ad-modal-header">
+      <span class="ad-modal-title">🎬 Watch & Earn</span>
+      <button class="ad-modal-close" onclick="closeAdModal()">✕</button>
+    </div>
+    <div class="ad-modal-body" id="modalAdContent">
+      <div class="ad-modal-adzone" id="adPlayerZone">
+        <div class="ad-modal-placeholder">
+          <div class="ad-placeholder-icon">📺</div>
+          <p class="ad-placeholder-text">Ad will appear here</p>
+        </div>
       </div>
-      <button id="adActionBtn" class="btn btn-primary btn-block" disabled>⏳ Loading...</button>
+    </div>
+    <div class="ad-modal-footer" id="modalAdFooter">
+      <div class="ad-modal-stats">
+        <div class="ad-modal-stat">
+          <span class="ams-label">Reward</span>
+          <span class="ams-value ams-reward" id="adRewardLabel">+$0.00</span>
+        </div>
+        <div class="ad-modal-stat">
+          <span class="ams-label">Time</span>
+          <span class="ams-value" id="timeLeft">0s</span>
+        </div>
+      </div>
+      <button id="adActionBtn" class="btn-claim" disabled>⏳ Loading...</button>
     </div>
   </div>
 </div>

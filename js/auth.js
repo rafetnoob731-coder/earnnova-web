@@ -104,32 +104,26 @@ document.getElementById('registerForm').addEventListener('submit', async e => {
   }
 });
 
-// ===== GOOGLE SIGN-IN (popup first → redirect fallback) =====
-// Must call signInWithPopup synchronously within click handler for mobile popup allowance
+// ===== GOOGLE SIGN-IN (redirect-only — most reliable on all devices) =====
+// Redirect is the only method that works consistently on mobile, iOS, and desktop.
+// No popup issues, no user-gesture timing issues.
 function googleSignIn() {
   var provider = new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
   
-  // Try popup first (works on most mobile browsers when called synchronously)
-  auth.signInWithPopup(provider).then(function() {
-    // Success — auth state will be handled by onAuthStateChanged in app.js
-  }).catch(function(err) {
-    if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
-      // Popup blocked — fall back to redirect
-      return auth.signInWithRedirect(provider).catch(function(redirectErr) {
-        var msg = getAuthError(redirectErr);
-        if (redirectErr.code === 'auth/unauthorized-domain') {
-          msg = 'Domain not authorized. Contact support or try Email.';
-        } else if (redirectErr.code === 'auth/operation-not-allowed') {
-          msg = 'Google Sign-In not enabled in Firebase Console.';
-        }
-        showAlert(msg);
-      });
-    }
-    // Show error for non-popup errors
+  // Show loading state
+  var btn = document.getElementById('googleBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Redirecting...'; }
+  
+  auth.signInWithRedirect(provider).catch(function(err) {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fab fa-google"></i> Continue with Google'; }
     var msg = getAuthError(err);
     if (err.code === 'auth/unauthorized-domain') {
-      msg = 'Domain not authorized. Contact support or try Email.';
+      msg = 'Domain not authorized in Firebase Console. Contact support.';
+    } else if (err.code === 'auth/operation-not-allowed') {
+      msg = 'Google Sign-In not enabled in Firebase Console.';
+    } else if (err.code === 'auth/web-context-not-started') {
+      msg = 'Auth context not ready. Please try again.';
     }
     showAlert(msg);
   });

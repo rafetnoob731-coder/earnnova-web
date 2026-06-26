@@ -24,37 +24,40 @@ function locAdd(key,amt) { const v=loc(key,0)+amt; locSet(key,v); return v; }
 
 // ===== AUTH =====
 var _initStarted = false;
+var _authTimer = null; // clearable timeout for auth page
 
-// === HANDLE REDIRECT SIGN-IN FIRST (before onAuthStateChanged) ===
-// getRedirectResult() must run before onAuthStateChanged on some mobile browsers
-// because onAuthStateChanged may not fire after redirect otherwise.
+// === HANDLE REDIRECT SIGN-IN FIRST ===
+// getRedirectResult() MUST run before onAuthStateChanged on some browsers.
+// It completes the redirect flow and returns the signed-in user.
 auth.getRedirectResult().then(function(result) {
   if (result && result.user && !_initStarted) {
     _initStarted = true;
     currentUser = result.user;
+    if (_authTimer) { clearTimeout(_authTimer); _authTimer = null; }
     loadUserData(result.user.uid);
   }
 }).catch(function(err) {
   if (err.code && err.code !== 'auth/unauthorized-domain') {
-    console.warn('Redirect result error:', err.code, err.message);
+    console.warn('Redirect result:', err.code, err.message);
   }
 });
 
 // === NORMAL AUTH STATE OBSERVER ===
-auth.onAuthStateChanged(async user => {
-  if (_initStarted) return; // already handled by getRedirectResult
+auth.onAuthStateChanged(async function(user) {
+  if (_initStarted) { return; }
   if (user) {
     _initStarted = true;
     currentUser = user;
+    if (_authTimer) { clearTimeout(_authTimer); _authTimer = null; }
     try { await usersRef.doc(user.uid).update({lastLogin:firebase.firestore.FieldValue.serverTimestamp()}); } catch(e) {}
     loadUserData(user.uid);
   } else {
     currentUser = null; currentUserData = null;
-    // Delay hiding splash slightly to allow getRedirectResult to complete
-    setTimeout(function() {
+    if (_authTimer) clearTimeout(_authTimer);
+    _authTimer = setTimeout(function() {
       document.getElementById('splash')?.classList.add('hide');
       showView('authPage');
-    }, 500);
+    }, 800);
   }
 });
 
@@ -119,7 +122,7 @@ function initApp() {
     } catch(e) {}
     
     // Clear any pending auth page timeout from onAuthStateChanged
-    if (_showAuthTimeout) { clearTimeout(_showAuthTimeout); _showAuthTimeout = null; }
+    if (_authTimer) { clearTimeout(_authTimer); _authTimer = null; }
     document.getElementById('splash').classList.add('hide');
     showView('appPage');
     checkIsAdmin(); updateUserID(); updateUI();
@@ -379,11 +382,11 @@ function processNextBatch() {
 
 // ===== FALLBACK ADS =====
 const FALLBACK_ADS = [
-  {id:'fb_001',title:'Premium Wireless Earbuds',description:'Studio sound, 24hr battery.',cta:'Shop',image:'https://placehold.co/600x400/4F46E5/FFFFFF?text=Earbuds',bgColor:'#4F46E5',reward:0.10,duration:30},
-  {id:'fb_002',title:'Daily Skincare Routine',description:'Natural, cruelty-free. 20% off.',cta:'Learn',image:'https://placehold.co/600x400/0EA5E9/FFFFFF?text=Skincare',bgColor:'#0EA5E9',reward:0.05,duration:15},
-  {id:'fb_003',title:'Home Workout Gear',description:'Comfort meets performance.',cta:'Offer',image:'https://placehold.co/600x400/22C55E/FFFFFF?text=Workout',bgColor:'#22C55E',reward:0.03,duration:10},
-  {id:'fb_004',title:'Learn a New Skill',description:'Thousands of courses.',cta:'Start',image:'https://placehold.co/600x400/F59E0B/FFFFFF?text=Courses',bgColor:'#F59E0B',reward:0.15,duration:45},
-  {id:'fb_005',title:'Eco-Friendly Bottle',description:'BPA-free, keeps cold 24h.',cta:'Shop',image:'https://placehold.co/600x400/8B5CF6/FFFFFF?text=Bottle',bgColor:'#8B5CF6',reward:0.08,duration:20}
+  {id:'fb_001',title:'Premium Wireless Earbuds',description:'Studio sound, 24hr battery.',cta:'Shop',category:'Audio',bgColor:'#1E293B',reward:0.10,duration:30},
+  {id:'fb_002',title:'Daily Skincare Routine',description:'Natural, cruelty-free. 20% off.',cta:'Learn',category:'Beauty',bgColor:'#1E293B',reward:0.05,duration:15},
+  {id:'fb_003',title:'Home Workout Gear',description:'Comfort meets performance.',cta:'Offer',category:'Fitness',bgColor:'#1E293B',reward:0.03,duration:10},
+  {id:'fb_004',title:'Learn a New Skill',description:'Thousands of courses available.',cta:'Start',category:'Education',bgColor:'#1E293B',reward:0.15,duration:45},
+  {id:'fb_005',title:'Eco-Friendly Bottle',description:'BPA-free, keeps cold 24h.',cta:'Shop',category:'Eco',bgColor:'#1E293B',reward:0.08,duration:20}
 ];
 const FALLBACK_PLANS = [
   {id:'starter',name:'Starter',price:5,dailyEarnings:0.50,duration:30},
@@ -403,13 +406,12 @@ class AdMgr {
     this.fails++; this.state='failed';
     const c=document.getElementById('modalAdContent'),f=document.getElementById('modalAdFooter');
     if (!c||!f) return;
-    const id=localStorage.getItem('en_lang')==='id';
     if (this.fails>=2) {
-      c.innerHTML='<div class="ad-error-wrap"><div class="ad-error-icon">😅</div><h3 class="ad-error-title">'+(id?'Yah error':'Ad not loading?')+'</h3><p class="ad-error-body">'+(id?'Reward tetap dapat':'You\'ll still earn')+'</p><div class="ad-error-attempt">Attempt '+this.fails+' of '+this.maxFails+'</div></div>';
-      f.innerHTML='<div class="ad-error-actions"><button class="auth-glass-btn" onclick="window._retryAd()" style="flex:1;padding:10px">🔄 '+(id?'Coba':'Try Again')+'</button><button class="ad-error-skip" onclick="window._skipAd()">⏭ '+(id?'Lewati':'Skip')+'</button></div>';
+      c.innerHTML='<div class="ad-error-wrap"><div class="ad-error-icon">😅</div><h3 class="ad-error-title">Ad not loading?</h3><p class="ad-error-body">You\'ll still earn the reward</p><div class="ad-error-attempt">Attempt '+this.fails+' of '+this.maxFails+'</div></div>';
+      f.innerHTML='<div class="ad-error-actions"><button class="btn-claim" onclick="window._retryAd()" style="padding:10px 0">🔄 Try Again</button><button class="ad-error-skip" onclick="window._skipAd()" style="margin-top:6px">⏭ Skip</button></div>';
     } else {
-      c.innerHTML='<div class="ad-error-wrap"><div class="ad-error-icon">☁️</div><h3 class="ad-error-title">'+(id?'Iklan sibuk':'Ad is taking a moment')+'</h3><p class="ad-error-body">'+(id?'Tenang, reward tetap dapat':'Don\'t worry, you\'ll still earn')+'</p></div>';
-      f.innerHTML='<div class="ad-error-actions"><button class="auth-glass-btn" onclick="window._retryAd()" style="flex:1;padding:10px">🔄 '+(id?'Coba':'Try Again')+'</button><button class="ad-error-skip" onclick="window._skipAd()">⏭ '+(id?'Lewati':'Skip')+'</button></div>';
+      c.innerHTML='<div class="ad-error-wrap"><div class="ad-error-icon">☁️</div><h3 class="ad-error-title">Ad is taking a moment</h3><p class="ad-error-body">Don\'t worry, you\'ll still earn</p></div>';
+      f.innerHTML='<div class="ad-error-actions"><button class="btn-claim" onclick="window._retryAd()" style="padding:10px 0">🔄 Try Again</button><button class="ad-error-skip" onclick="window._skipAd()">⏭ Skip</button></div>';
     }
   }
   async play(id,reward,title,dur) {
@@ -434,7 +436,7 @@ class AdMgr {
   }
   renderLoad() {
     document.getElementById('modalAdContent').innerHTML='<div class="ad-player-box"><div class="ad-player-screen"><div class="ad-player-icon">📺</div><div class="ad-player-label">Initializing...</div></div><div class="ad-progress-steps" id="adSteps"><div class="ad-step active"></div><div class="ad-step"></div><div class="ad-step"></div></div><div class="ad-ring-wrap"><svg viewBox="0 0 100 100" width="80" height="80"><circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"/><circle cx="50" cy="50" r="42" fill="none" stroke="url(#ag)" stroke-width="6" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round" transform="rotate(-90,50,50)" id="adRing"/><defs><linearGradient id="ag" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#10B981"/><stop offset="1" stop-color="#059669"/></linearGradient></defs></svg><div class="ad-ring-text" id="adTimerDisplay">'+this.dur+'</div></div><div class="ad-reward-big">💰 +$'+this.reward.toFixed(2)+'</div></div>';
-    document.getElementById('modalAdFooter').innerHTML='<div class="ad-reward-info"><span>💰 Reward: <strong>+$'+this.reward.toFixed(2)+'</strong></span><span>⏱️ <span id="timeLeft">0s</span></span></div><button id="adActionBtn" class="btn btn-primary btn-block" disabled>⏳ Loading...</button>';
+    document.getElementById('modalAdFooter').innerHTML='<div class="ad-modal-stats"><div class="ad-modal-stat"><span class="ams-label">Reward</span><span class="ams-value ams-reward" id="adRewardLabel">+$'+this.reward.toFixed(2)+'</span></div><div class="ad-modal-stat"><span class="ams-label">Time</span><span class="ams-value" id="timeLeft">0s</span></div></div><button id="adActionBtn" class="btn-claim" disabled>⏳ Loading...</button>';
   }
   adv(idx) {
     const s=document.querySelectorAll('.ad-step'),l=['Loading SDK...','Fetching ad...','Starting...'];
@@ -565,8 +567,23 @@ function earnCDUI() {
   upd(); _ecdInt=setInterval(upd,1000);
 }
 function renderAds(ads) {
-  const g=document.getElementById('adsGrid'); if (!g) return; g.innerHTML='';
-  ads.forEach(a=>{const t=(a.title||'Ad').replace(/'/g,"\\'"); const img=a.image||''; const d=a.description||(a.duration||30)+'s'; g.innerHTML+='<div class="ad-tile" onclick="openAd(\''+a.id+'\','+(a.reward||0.02)+',\''+t+'\','+(a.duration||30)+')" style="background:'+(a.bgColor||'#1E293B')+'">'+(img?'<div class="ad-tile-img" style="background-image:url(\''+img+'\')"></div>':'<span class="ad-tile-icon">🎬</span>')+'<div class="ad-tile-info"><h4>'+t+'</h4><p>'+d+'</p><div class="ad-tile-cta">'+(a.cta||'Watch')+' · <strong>+$'+(a.reward||0.02).toFixed(2)+'</strong></div></div>'+(!img?'<span class="ad-tile-reward">+$'+(a.reward||0.02).toFixed(2)+'</span>':'')+'</div>';});
+  var g=document.getElementById('adsGrid'); if (!g) return; g.innerHTML='';
+  ads.forEach(function(a){
+    var t=(a.title||'Ad').replace(/'/g,"\\'");
+    var d=(a.description||(a.duration||30)+'s').replace(/'/g,"\\'");
+    var r=(a.reward||0.02);
+    var tag = a.category ? '<span class="ad-tag">'+a.category+'</span>' : '<span class="ad-tag">Earn</span>';
+    g.innerHTML+='<div class="ad-tile" onclick="openAd(\''+a.id+'\','+r+',\''+t+'\','+(a.duration||30)+')" style="background:'+(a.bgColor||'linear-gradient(145deg,#1E293B,#0F172A)')+'">'
+      +'<div class="ad-tile-body"><h4>'+t+'</h4>'
+      +'<p>'+tag+' <span>'+d+'</span></p>'
+      +'<div class="ad-tile-cta">'+(a.cta||'▶ Watch')+' · <strong>+$'+r.toFixed(2)+'</strong></div>'
+      +'</div>'
+      +'<div class="ad-tile-reward-area">'
+      +'<div class="ad-tile-reward-number"><span class="dollar">$</span>'+r.toFixed(2)+'</div>'
+      +'<div class="ad-tile-reward-label">Reward</div>'
+      +'</div>'
+      +'</div>';
+  });
 }
 async function loadFbAds() { try { const s=await fbTimeout(adsRef.where('isActive','==',true).get()); const ads=[]; s.forEach(d=>ads.push({id:d.id,...d.data()})); if (ads.length>0) renderAds(ads); } catch(e){} }
 
@@ -757,4 +774,10 @@ function closeNotif() { document.getElementById('notifModal').classList.remove('
 })();
 
 // ===== SAFETY =====
-setTimeout(()=>{const s=document.getElementById('splash');if(s)s.classList.add('hide');if(!currentUser)showView('authPage');else if(document.getElementById('appPage')?.classList.contains('hidden'))showView('appPage');},5000);
+// Fallback: if nothing worked within 3s, show app page or auth page
+setTimeout(function(){
+  var s=document.getElementById('splash');
+  if(s) s.classList.add('hide');
+  if(!currentUser) showView('authPage');
+  else if(document.getElementById('appPage')?.classList.contains('hidden')) showView('appPage');
+}, 3000);
