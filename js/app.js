@@ -73,8 +73,11 @@ async function loadUserData(uid) {
 }
 
 async function createUserDoc(user) {
+  var uname = 'User';
+  if (user.displayName) uname = user.displayName;
+  else if (user.email) uname = user.email.split('@')[0];
   await fbTimeout(usersRef.doc(user.uid).set({
-    uid:user.uid, email:user.email, name:user.displayName||user.email.split('@')[0],
+    uid:user.uid, email:user.email||'', name:uname,
     balance:0, totalEarned:0, totalWithdrawn:0, adsWatched:0,
     todayAds:0, lastAdDate:'', isActive:true, isAdmin:false,
     planId:null, planExpiry:null, phone:'',
@@ -85,8 +88,12 @@ async function createUserDoc(user) {
 
 // ===== VIEW =====
 function showView(id) {
-  document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
-  const el = document.getElementById(id);
+  // GUARD: If trying to show auth page but user is already signed in, show app instead
+  if (id === 'authPage' && currentUser) {
+    id = 'appPage';
+  }
+  document.querySelectorAll('.page-view').forEach(function(p) { p.classList.add('hidden'); });
+  var el = document.getElementById(id);
   if (el) el.classList.remove('hidden');
 }
 
@@ -121,7 +128,7 @@ function initApp() {
       }
     } catch(e) {}
     
-    // Clear any pending auth page timeout from onAuthStateChanged
+    // Clear any pending auth page timeout
     if (_authTimer) { clearTimeout(_authTimer); _authTimer = null; }
     document.getElementById('splash').classList.add('hide');
     showView('appPage');
@@ -774,10 +781,28 @@ function closeNotif() { document.getElementById('notifModal').classList.remove('
 })();
 
 // ===== SAFETY =====
-// Fallback: if nothing worked within 3s, show app page or auth page
+// Fast safety (1.5s): force show app or auth page if splash still visible
+setTimeout(function(){
+  var s=document.getElementById('splash');
+  if(!s || s.classList.contains('hide')) return;
+  s.classList.add('hide');
+  if(currentUser) {
+    showView('appPage');
+    // Ensure user data is loaded and navigate home
+    if(!currentUserData && currentUser) {
+      loadUserData(currentUser.uid);
+    } else {
+      navigate('home');
+    }
+  } else {
+    showView('authPage');
+  }
+}, 1500);
+
+// Slow safety (4s): fallback if fast safety didn't work for some reason
 setTimeout(function(){
   var s=document.getElementById('splash');
   if(s) s.classList.add('hide');
   if(!currentUser) showView('authPage');
   else if(document.getElementById('appPage')?.classList.contains('hidden')) showView('appPage');
-}, 3000);
+}, 4000);
