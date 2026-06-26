@@ -104,26 +104,59 @@ document.getElementById('registerForm').addEventListener('submit', async e => {
   }
 });
 
-// ===== GOOGLE SIGN-IN (redirect-only — most reliable on all devices) =====
-// Redirect is the only method that works consistently on mobile, iOS, and desktop.
-// No popup issues, no user-gesture timing issues.
+// ===== GOOGLE SIGN-IN (popup-based — no redirect, no page reload issues) =====
+// Popup keeps user on same page. Redirect causes a 2nd page load that loses auth
+// state on some mobile browsers (IndexedDB persistence unavailable after redirect).
+var _googleBusy = false;
+var _googleProvider = null;
+
 function googleSignIn() {
-  var provider = new firebase.auth.GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
+  if (_googleBusy) return;
+  _googleBusy = true;
+  _googleProvider = new firebase.auth.GoogleAuthProvider();
+  _googleProvider.setCustomParameters({ prompt: 'select_account', login_hint: '' });
   
-  // Show loading state
-  var btn = document.getElementById('googleBtn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Redirecting...'; }
-  
-  auth.signInWithRedirect(provider).catch(function(err) {
+  // Call signInWithPopup IMMEDIATELY (synchronously within click handler)
+  // DO NOT modify DOM before this call or some browsers won't allow the popup
+  auth.signInWithPopup(_googleProvider).then(function() {
+    _googleBusy = false;
+    _googleProvider = null;
+    var btn = document.getElementById('googleBtn');
     if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fab fa-google"></i> Continue with Google'; }
+  }).catch(function(err) {
+    _googleBusy = false;
+    var btn = document.getElementById('googleBtn');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fab fa-google"></i> Continue with Google'; }
+    
     var msg = getAuthError(err);
+    
+    if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+      // Show a fallback redirect button
+      var fb = document.getElementById('googleFallbackBtn');
+      if (!fb && btn && btn.parentNode) {
+        fb = document.createElement('button');
+        fb.id = 'googleFallbackBtn';
+        fb.className = 'auth-glass-btn auth-glass-btn-outline';
+        fb.style.cssText = 'margin-top:8px;font-size:13px;padding:9px;background:rgba(255,255,255,0.03);color:var(--slate-400)';
+        fb.innerHTML = '↪ Open Google in new tab';
+        fb.onclick = function() {
+          fb.disabled = true; fb.innerHTML = '⏳ Opening...';
+          auth.signInWithRedirect(_googleProvider).catch(function(e2) {
+            fb.disabled = false; fb.innerHTML = '↪ Open Google in new tab';
+            showAlert('Redirect: ' + (getAuthError(e2) || e2.message));
+          });
+        };
+        btn.parentNode.insertBefore(fb, btn.nextSibling);
+      }
+      msg = 'Popup blocked. Tap the button below to use redirect instead.';
+      showAlert(msg);
+      return;
+    }
+    
     if (err.code === 'auth/unauthorized-domain') {
-      msg = 'Domain not authorized in Firebase Console. Contact support.';
+      msg = 'Domain not authorized. Add ' + window.location.hostname + ' to Firebase Console.';
     } else if (err.code === 'auth/operation-not-allowed') {
       msg = 'Google Sign-In not enabled in Firebase Console.';
-    } else if (err.code === 'auth/web-context-not-started') {
-      msg = 'Auth context not ready. Please try again.';
     }
     showAlert(msg);
   });
