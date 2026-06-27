@@ -3,7 +3,7 @@
 // =============================================
 
 // ===== MOCK OBJECTS (used when Firebase fails) =====
-var ADMIN_EMAIL = 'rafetnoob731@gmail.com';
+var ADMIN_EMAIL = 'owner@nova.com';
 var emptySnap = { exists:false, data:function(){return null}, size:0, empty:true, forEach:function(){}, docs:[] };
 var emptyDoc = { get:function(){return Promise.resolve(emptySnap)}, set:function(){return Promise.resolve()}, update:function(){return Promise.resolve()}, delete:function(){return Promise.resolve()} };
 var emptyCol = { doc:function(){return emptyDoc}, where:function(){return emptyCol}, orderBy:function(){return emptyCol}, limit:function(){return emptyCol}, get:function(){return Promise.resolve(emptySnap)}, add:function(){return Promise.resolve({id:'mock'})} };

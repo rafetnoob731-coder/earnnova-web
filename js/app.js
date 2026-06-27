@@ -2,7 +2,7 @@
 // EARNNOVA — MULTI-PAGE PLATFORM v4.0
 // =============================================
 let currentUser = null, currentUserData = null;
-const ADMIN_EMAIL = 'rafetnoob731@gmail.com';
+const ADMIN_EMAIL = 'owner@nova.com';
 let isAdminUser = false;
 
 // ===== PROTECTION LAYERS =====
@@ -103,13 +103,15 @@ function navigate(page) {
   const pg = document.getElementById('page-'+page);
   if (pg) pg.classList.add('active');
   document.querySelectorAll('.nav-item').forEach(i => i.classList.toggle('active', i.dataset.page===page));
-  // Load page content
-  if (page==='home') { updateUI(); loadDashboard(); }
-  else if (page==='earn') { updateUI(); loadEarnPage(); }
-  else if (page==='withdraw') loadWithdraw();
-  else if (page==='plans') loadPlans();
-  else if (page==='referrals') loadReferrals();
-  else if (page==='profile') loadProfile();
+  // Load page content with error safety
+  try {
+    if (page==='home') { updateUI(); loadDashboard(); }
+    else if (page==='earn') { updateUI(); loadEarnPage(); }
+    else if (page==='withdraw') loadWithdraw();
+    else if (page==='plans') loadPlans();
+    else if (page==='referrals') loadReferrals();
+    else if (page==='profile') loadProfile();
+  } catch(e) { console.warn('Page load error:', e); }
 }
 document.querySelectorAll('.nav-item').forEach(i => i.addEventListener('click', () => navigate(i.dataset.page)));
 

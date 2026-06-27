@@ -82,6 +82,10 @@ function getAuthError(err){
   return m[err.code]||err.message||'An error occurred';
 }
 
+// ===== DISPOSABLE EMAIL BLOCKLIST =====
+var DISPOSABLE_DOMAINS=['mailinator.com','guerrillamail.com','tempmail.com','10minutemail.com','throwaway.email','trashmail.com','yopmail.com','sharklasers.com','spam4.me','grr.la','mailnator.com','mailexpire.com','maildrop.cc','mintemail.com','getnada.com','temp-mail.org','tempemail.net','tempmail.net','mail.tm','guerrillamail.org','guerrillamail.net','throwawaymail.com','trashmail.net','yopmail.fr','yopmail.net','spambob.com','spambog.com','spamcowboy.com','spamday.com','spamdecoy.net','spameater.com','spamgourmet.com','spamhereplease.com','spamhole.com','spamify.com','spaminator.de','spamkill.info','spaml.com','spamserver.de','spamspot.com','spamthis.co.uk','spamtrail.com','spamwins.com','tempalias.com','tempmail.xyz','tmpmail.net','trash2009.com','trash360.com','trashdevil.de','trashmail.org','trashymail.com','wegwerfmail.de','wegwerfmail.net','wegwerfmail.org','wh4f.org','whyspam.me','willselfdestruct.com','xagloo.com','xemaps.com','xents.com','xmaily.com','xoxy.net','yep.it','yogamaven.com','zehnminutenmail.de','zippymail.info','zoaxe.com','zoemail.com','zoemail.net','zoemail.org','getairmail.com','getonemail.com','mailcatch.com','maileater.com','mailmetrash.com','mailzilla.com','mohmal.com','mytrashmail.com','nowmymail.com','receiveee.com','sofort-mail.de','spambox.info','spambox.me','tittbit.in','tmail.ws','tmpeml.com','tmpjr.me','trbvm.com','trbvn.com','turual.com','tyldd.com','upliftnow.com','veryrealemail.com','winemaven.info','wronghead.com','wuzup.net','zehnminutenmail.de'];
+function isDisposableEmail(email){var domain=email.split('@')[1].toLowerCase();return DISPOSABLE_DOMAINS.includes(domain);}
+
 document.getElementById('registerForm').addEventListener('submit',async function(e){
   e.preventDefault();
   var name=document.getElementById('regName').value.trim();
@@ -90,6 +94,7 @@ document.getElementById('registerForm').addEventListener('submit',async function
   var ref=document.getElementById('regReferral').value.trim();
   var btn=document.getElementById('registerBtn');
   if(password.length<6){showAlert('Password must be 6+ characters');return;}
+  if(isDisposableEmail(email)){showAlert('Temporary emails are not allowed. Please use a permanent email address.');return;}
   btn.disabled=true;btn.innerHTML='⏳ Creating account...';
   try{
     var cred=await auth.createUserWithEmailAndPassword(email,password);
