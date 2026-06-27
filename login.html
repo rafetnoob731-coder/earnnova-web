@@ -118,8 +118,14 @@ function goHome() {
   window.location.href = 'home.html';
 }
 
+// Loading timeout: show auth forms even if Firebase never fires
+setTimeout(function() {
+  if (!_authCheckDone) showPage();
+}, 8000);
+
 // SINGLE source of truth: onAuthStateChanged handles ALL redirects
 auth.onAuthStateChanged(function(user) {
+  _authCheckDone = true;
   if (user) {
     goHome(); // Redirect to dashboard immediately
   } else {
@@ -127,12 +133,15 @@ auth.onAuthStateChanged(function(user) {
   }
 });
 
-// Handle Google redirect result (backup)
+// Handle Google redirect result (backup — for signInWithRedirect flow)
 auth.getRedirectResult().then(function(result) {
   if (result && result.user) {
+    _authCheckDone = true;
     goHome();
   }
-}).catch(function() {});
+}).catch(function() {
+  // getRedirectResult can throw if no redirect happened — ignore
+});
 </script>
 </body>
 </html>

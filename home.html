@@ -351,8 +351,10 @@
 // HOME PAGE AUTH GUARD: redirect to login if not authenticated
 // Single source of truth — onAuthStateChanged handles this
 var _loadingEl = document.getElementById('authLoading');
+var _authResolved = false;
 
 auth.onAuthStateChanged(function(user) {
+  _authResolved = true;
   if (!user) {
     // Not logged in → redirect to login
     window.location.href = 'login.html';
@@ -362,9 +364,9 @@ auth.onAuthStateChanged(function(user) {
   }
 });
 
-// Safety: if app.js doesn't load or auth never resolves, show the login redirect
+// Safety: if Firebase never resolves (CDN failure), redirect to login
 setTimeout(function() {
-  if (_loadingEl && !_loadingEl.classList.contains('hide')) {
+  if (!_authResolved) {
     window.location.href = 'login.html';
   }
 }, 8000);
