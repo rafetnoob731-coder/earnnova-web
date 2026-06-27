@@ -96,7 +96,7 @@ document.getElementById('registerForm').addEventListener('submit', async e => {
     }
     
     await usersRef.doc(user.uid).set(userData);
-    showToast('Account created! 🎉');
+    showAlert('Account created! 🎉 Redirecting...', 'success');
   } catch(err) {
     showAlert(getAuthError(err));
     btn.disabled = false;
