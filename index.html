@@ -24,8 +24,8 @@
   <div class="splash-title">EARNNOVA</div>
   <div class="splash-dot"></div>
 </div>
-<!-- ===== Inline boot: hide splash if auth page needed ===== -->
-<script>setTimeout(function(){var s=document.getElementById('splash');if(s)s.classList.add('hide');},8000);</script>
+<!-- ===== SAFETY: Ultra failsafe (10s) if app.js fails to load ===== -->
+<script>setTimeout(function(){if(typeof _authReady==='undefined'){var s=document.getElementById('splash');if(s)s.classList.add('hide');var a=document.getElementById('authPage');if(a)a.classList.remove('hidden');}},10000);</script>
 
 
 <!-- TOAST -->
