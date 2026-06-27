@@ -28,6 +28,8 @@ function locAdd(key,amt) { const v=loc(key,0)+amt; locSet(key,v); return v; }
 // 2. Only if no redirect result, register onAuthStateChanged listener
 // 3. No race conditions — sequential, clean flow
 
+var _authReady = false; // becomes true after onAuthStateChanged fires
+
 (async function() {
   try {
     var result = await auth.getRedirectResult();
@@ -46,6 +48,7 @@ function locAdd(key,amt) { const v=loc(key,0)+amt; locSet(key,v); return v; }
   
   // No redirect result — listen for auth state changes (persisted session or fresh login)
   auth.onAuthStateChanged(async function(user) {
+    _authReady = true;
     if (user) {
       currentUser = user;
       try { await usersRef.doc(user.uid).update({lastLogin:firebase.firestore.FieldValue.serverTimestamp()}); } catch(e) {}
@@ -897,14 +900,16 @@ function closeNotif() { document.getElementById('notifModal').classList.remove('
 })();
 
 // ===== SAFETY =====
-// Fast safety (1.5s): force show app or auth page if splash still visible
+// Safety (3s): only fires if splash still visible AND auth hasn't resolved yet.
+// The _authReady flag prevents this from firing BEFORE onAuthStateChanged has run.
+// This avoids the loading-state bug where auth page flashes before session registers.
 setTimeout(function(){
+  if (!_authReady) return; // onAuthStateChanged hasn't fired yet — wait for it
   var s=document.getElementById('splash');
   if(!s || s.classList.contains('hide')) return;
   s.classList.add('hide');
   if(currentUser) {
     showView('appPage');
-    // Ensure user data is loaded and navigate home
     if(!currentUserData && currentUser) {
       loadUserData(currentUser.uid);
     } else {
@@ -913,12 +918,12 @@ setTimeout(function(){
   } else {
     showView('authPage');
   }
-}, 1500);
+}, 3000);
 
-// Slow safety (4s): fallback if fast safety didn't work for some reason
+// Hard failsafe (8s): force show auth page even if Firebase never initialized
 setTimeout(function(){
   var s=document.getElementById('splash');
-  if(s) s.classList.add('hide');
-  if(!currentUser) showView('authPage');
-  else if(document.getElementById('appPage')?.classList.contains('hidden')) showView('appPage');
-}, 4000);
+  if(!s || s.classList.contains('hide')) return;
+  s.classList.add('hide');
+  showView('authPage');
+}, 8000);
