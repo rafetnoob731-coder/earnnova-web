@@ -22,44 +22,41 @@ function loc(key,def) { try{return parseFloat(localStorage.getItem('en_'+key)||S
 function locSet(key,val) { try{localStorage.setItem('en_'+key,String(val))}catch(e){} }
 function locAdd(key,amt) { const v=loc(key,0)+amt; locSet(key,v); return v; }
 
-// ===== AUTH =====
-var _initStarted = false;
-var _authTimer = null; // clearable timeout for auth page
+// ===== AUTH (proper redirect handling) =====
+// Per Firebase best practices:
+// 1. AWAIT getRedirectResult() FIRST to handle redirect sign-in
+// 2. Only if no redirect result, register onAuthStateChanged listener
+// 3. No race conditions — sequential, clean flow
 
-// === HANDLE REDIRECT SIGN-IN FIRST ===
-// getRedirectResult() MUST run before onAuthStateChanged on some browsers.
-// It completes the redirect flow and returns the signed-in user.
-auth.getRedirectResult().then(function(result) {
-  if (result && result.user && !_initStarted) {
-    _initStarted = true;
-    currentUser = result.user;
-    if (_authTimer) { clearTimeout(_authTimer); _authTimer = null; }
-    loadUserData(result.user.uid);
+(async function() {
+  try {
+    var result = await auth.getRedirectResult();
+    if (result && result.user) {
+      // Redirect sign-in succeeded
+      currentUser = result.user;
+      try { await usersRef.doc(result.user.uid).update({lastLogin:firebase.firestore.FieldValue.serverTimestamp()}); } catch(e) {}
+      loadUserData(result.user.uid);
+      return; // Done — onAuthStateChanged not needed
+    }
+  } catch(err) {
+    if (err.code && err.code !== 'auth/unauthorized-domain') {
+      console.warn('Redirect result:', err.code, err.message);
+    }
   }
-}).catch(function(err) {
-  if (err.code && err.code !== 'auth/unauthorized-domain') {
-    console.warn('Redirect result:', err.code, err.message);
-  }
-});
-
-// === NORMAL AUTH STATE OBSERVER ===
-auth.onAuthStateChanged(async function(user) {
-  if (_initStarted) { return; }
-  if (user) {
-    _initStarted = true;
-    currentUser = user;
-    if (_authTimer) { clearTimeout(_authTimer); _authTimer = null; }
-    try { await usersRef.doc(user.uid).update({lastLogin:firebase.firestore.FieldValue.serverTimestamp()}); } catch(e) {}
-    loadUserData(user.uid);
-  } else {
-    currentUser = null; currentUserData = null;
-    if (_authTimer) clearTimeout(_authTimer);
-    _authTimer = setTimeout(function() {
+  
+  // No redirect result — listen for auth state changes (persisted session or fresh login)
+  auth.onAuthStateChanged(async function(user) {
+    if (user) {
+      currentUser = user;
+      try { await usersRef.doc(user.uid).update({lastLogin:firebase.firestore.FieldValue.serverTimestamp()}); } catch(e) {}
+      loadUserData(user.uid);
+    } else {
+      currentUser = null; currentUserData = null;
       document.getElementById('splash')?.classList.add('hide');
       showView('authPage');
-    }, 800);
-  }
-});
+    }
+  });
+})();
 
 async function loadUserData(uid) {
   try {
@@ -128,8 +125,6 @@ function initApp() {
       }
     } catch(e) {}
     
-    // Clear any pending auth page timeout
-    if (_authTimer) { clearTimeout(_authTimer); _authTimer = null; }
     document.getElementById('splash').classList.add('hide');
     showView('appPage');
     checkIsAdmin(); updateUserID(); updateUI();
