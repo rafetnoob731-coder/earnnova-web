@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>EARNNOVA — Sign In</title>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+<style>
+/* LOGIN PAGE — standalone, no dashboard */
+body { margin:0; background:#0F172A; min-height:100vh; display:flex; align-items:center; justify-content:center; }
+.login-page { width:100%; max-width:420px; padding:20px; box-sizing:border-box; }
+#loginSplash { display:none; text-align:center; padding:60px 20px; }
+#loginSplash .spinner { width:40px;height:40px;border:3px solid rgba(255,255,255,0.06);border-top-color:var(--emerald);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px; }
+@keyframes spin { to{transform:rotate(360deg)} }
+#loginSplash p { color:var(--slate-400); font-size:14px; }
+</style>
+</head>
+<body>
+<div class="login-page">
+  <!-- Loading Spinner (shown while checking auth) -->
+  <div id="loginSplash">
+    <div class="spinner"></div>
+    <p>Checking authentication...</p>
+  </div>
+  
+  <!-- Auth Forms -->
+  <div id="authPage" class="page-view" style="position:relative;min-height:auto;height:auto;overflow:visible">
+    <div class="auth-glass-card">
+      <div class="auth-glass-logo">🎯<span>EARNNOVA</span></div>
+      <div class="auth-tagline">Sign in to start earning</div>
+      
+      <!-- Alert Box -->
+      <div id="alertBox" class="auth-glass-alert"></div>
+      
+      <!-- LOGIN FORM -->
+      <form id="loginForm">
+        <div class="auth-glass-input"><i class="fas fa-envelope"></i><input type="email" id="loginEmail" placeholder="Email" required></div>
+        <div class="auth-glass-input"><i class="fas fa-lock"></i><input type="password" id="loginPassword" placeholder="Password" required></div>
+        <button type="submit" id="loginBtn" class="auth-glass-btn">Sign In</button>
+        <p class="auth-glass-forgot"><a href="#" id="forgotLink" class="auth-glass-link">Forgot password?</a></p>
+      </form>
+      
+      <!-- REGISTER FORM -->
+      <form id="registerForm" class="hidden">
+        <div class="auth-glass-input"><i class="fas fa-user"></i><input type="text" id="regName" placeholder="Full Name" required></div>
+        <div class="auth-glass-input"><i class="fas fa-envelope"></i><input type="email" id="regEmail" placeholder="Email" required></div>
+        <div class="auth-glass-input"><i class="fas fa-lock"></i><input type="password" id="regPassword" placeholder="Password (6+ chars)" required></div>
+        <div class="auth-glass-input"><i class="fas fa-gift"></i><input type="text" id="regReferral" placeholder="Referral Code (optional)"></div>
+        <button type="submit" id="registerBtn" class="auth-glass-btn">Create Account</button>
+      </form>
+      
+      <!-- FORGOT PASSWORD FORM -->
+      <form id="forgotForm" class="hidden">
+        <p class="auth-glass-desc">Enter your email for a reset link.</p>
+        <div class="auth-glass-input"><i class="fas fa-envelope"></i><input type="email" id="forgotEmail" placeholder="Email" required></div>
+        <button type="submit" id="forgotBtn" class="auth-glass-btn">Send Reset Link</button>
+        <p class="auth-glass-back"><a href="#" id="backToLogin" class="auth-glass-link">← Back to Sign In</a></p>
+      </form>
+      
+      <div class="auth-glass-divider"><span>or</span></div>
+      <button id="googleBtn" class="auth-glass-btn auth-glass-btn-outline"><i class="fab fa-google"></i> Continue with Google</button>
+      
+      <div class="auth-glass-footer">
+        <span id="toggleText" class="auth-glass-muted">No account?</span>
+        <a href="#" id="toggleLink" class="auth-glass-link">Sign Up</a>
+      </div>
+      <div class="auth-glass-policy">
+        <a href="privacy.html" target="_blank" class="auth-glass-link">Privacy</a>
+        <span class="auth-glass-dot">•</span>
+        <a href="terms.html" target="_blank" class="auth-glass-link">Terms</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+// ===== LOGIN PAGE BOOT =====
+var splash = document.getElementById('loginSplash');
+var _loginRedirectTimer = null;
+
+function goToHome() {
+  // Small delay to let any pending Firestore writes (like user doc creation) complete
+  if (_loginRedirectTimer) clearTimeout(_loginRedirectTimer);
+  _loginRedirectTimer = setTimeout(function() {
+    window.location.href = 'home.html';
+  }, 300);
+}
+
+auth.onAuthStateChanged(function(user) {
+  if (user) {
+    splash.style.display = 'none';
+    goToHome();
+  } else {
+    splash.style.display = 'none';
+    document.getElementById('authPage').style.display = 'block';
+  }
+});
+
+// Handle redirect sign-in result
+auth.getRedirectResult().then(function(result) {
+  if (result && result.user) {
+    goToHome();
+  }
+}).catch(function(err) {
+  // Ignore — onAuthStateChanged handles it
+});
+</script>
+</body>
+</html>
