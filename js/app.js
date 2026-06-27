@@ -479,22 +479,143 @@ function openAd(id,reward,title,dur) {
   showVerification();
 }
 
-// ===== VERIFICATION =====
+// ===== OTP VERIFICATION (replaces math captcha) =====
+var _otpCode = '';
+var _otpTimer = null;
+var _otpCountdown = 30;
+
 function showVerification() {
-  const m=document.getElementById('verifyModal'); if (!m) return;
-  m.classList.add('show'); const a=Math.floor(Math.random()*10)+1,b=Math.floor(Math.random()*10)+1;
-  window._vAns=a+b; document.getElementById('verifyQuestion').textContent='What is '+a+' + '+b+'?';
-  document.getElementById('verifyInput').value=''; document.getElementById('verifyInput').focus();
-  document.getElementById('verifyError').style.display='none';
+  var m = document.getElementById('verifyModal'); if (!m) return;
+  
+  // Generate random 6-digit OTP code
+  _otpCode = String(Math.floor(100000 + Math.random() * 900000));
+  // For demo: OTP code shown in console (remove in production)
+  console.log('📧 OTP code:', _otpCode);
+  
+  // Show email in the modal
+  var emailEl = document.getElementById('otpEmail');
+  if (emailEl) emailEl.textContent = currentUser?.email || 'your registered email';
+  
+  // Reset OTP inputs
+  for (var i = 0; i < 6; i++) {
+    var inp = document.getElementById('otp' + i);
+    if (inp) { inp.value = ''; inp.className = 'otp-box'; }
+  }
+  
+  // Reset error
+  var errEl = document.getElementById('otpError');
+  if (errEl) errEl.style.display = 'none';
+  
+  // Start countdown
+  startOTPTimer();
+  
+  m.classList.add('show');
+  var first = document.getElementById('otp0');
+  if (first) setTimeout(function() { first.focus(); }, 100);
 }
-function submitVerification() {
-  if (parseInt(document.getElementById('verifyInput').value)===window._vAns) {
+
+function startOTPTimer() {
+  if (_otpTimer) clearInterval(_otpTimer);
+  _otpCountdown = 30;
+  var cd = document.getElementById('otpCountdown');
+  var refBtn = document.getElementById('otpRefreshBtn');
+  var timerText = document.getElementById('otpTimerText');
+  if (refBtn) refBtn.style.display = 'none';
+  if (timerText) timerText.style.display = 'inline';
+  
+  _otpTimer = setInterval(function() {
+    _otpCountdown--;
+    if (cd) cd.textContent = _otpCountdown;
+    if (_otpCountdown <= 0) {
+      clearInterval(_otpTimer);
+      if (refBtn) refBtn.style.display = 'inline';
+      if (timerText) timerText.style.display = 'none';
+    }
+  }, 1000);
+}
+
+function resendOTP() {
+  showVerification(); // Re-open resets everything
+}
+
+// Auto-advance OTP inputs
+function setupOTPInputs() {
+  for (var i = 0; i < 6; i++) {
+    (function(idx) {
+      var inp = document.getElementById('otp' + idx);
+      if (!inp) return;
+      
+      inp.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '').substring(0, 1);
+        if (this.value) {
+          this.className = 'otp-box filled glowing';
+          // Auto-advance to next box
+          if (idx < 5) {
+            var next = document.getElementById('otp' + (idx + 1));
+            if (next) next.focus();
+          } else {
+            // Last box filled, auto-submit
+            document.getElementById('otpVerifyBtn')?.focus();
+          }
+        } else {
+          this.className = 'otp-box';
+        }
+      });
+      
+      inp.addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' && !this.value && idx > 0) {
+          var prev = document.getElementById('otp' + (idx - 1));
+          if (prev) { prev.focus(); prev.value = ''; prev.className = 'otp-box'; }
+        }
+        if (e.key === 'Enter') { submitOTP(); }
+      });
+      
+      inp.addEventListener('focus', function() {
+        this.select();
+      });
+    })(i);
+  }
+}
+
+function submitOTP() {
+  var code = '';
+  for (var i = 0; i < 6; i++) {
+    var inp = document.getElementById('otp' + i);
+    if (inp) code += inp.value || '';
+  }
+  
+  if (code.length < 6) {
+    var errEl = document.getElementById('otpError');
+    if (errEl) { errEl.textContent = '⚠️ Enter all 6 digits'; errEl.style.display = 'block'; }
+    return;
+  }
+  
+  if (code === _otpCode) {
+    // Correct OTP!
+    if (_otpTimer) clearInterval(_otpTimer);
     document.getElementById('verifyModal').classList.remove('show');
-    const a=window._pendingAd; if (a) adm.play(a.id,a.reward,a.title,a.dur).catch(()=>{});
-  } else { document.getElementById('verifyError').style.display='block'; document.getElementById('verifyInput').value=''; document.getElementById('verifyInput').focus(); }
+    var a = window._pendingAd;
+    if (a) adm.play(a.id, a.reward, a.title, a.dur).catch(function() {});
+  } else {
+    var errEl = document.getElementById('otpError');
+    if (errEl) { errEl.textContent = '❌ Invalid code. Try again.'; errEl.style.display = 'block'; }
+    // Clear inputs
+    for (var i = 0; i < 6; i++) {
+      var inp = document.getElementById('otp' + i);
+      if (inp) { inp.value = ''; inp.className = 'otp-box'; }
+    }
+    document.getElementById('otp0')?.focus();
+  }
 }
-function closeVerification() { document.getElementById('verifyModal').classList.remove('show'); window._pendingAd=null; }
-document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('verifyModal')?.classList.contains('show')){e.preventDefault();submitVerification()}});
+
+function closeVerification() {
+  if (_otpTimer) clearInterval(_otpTimer);
+  document.getElementById('verifyModal').classList.remove('show');
+  window._pendingAd = null;
+}
+
+// Initialize OTP input listeners on DOM ready
+setupOTPInputs();
 function closeAdModal() { adm.close(); }
 document.getElementById('adActionBtn')?.addEventListener('click',()=>{if(adm.state==='completed')adm.claim()});
 

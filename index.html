@@ -68,7 +68,7 @@
       <p class="auth-glass-back"><a href="#" id="backToLogin" class="auth-glass-link">← Back to Sign In</a></p>
     </form>
     <div class="auth-glass-divider"><span>or</span></div>
-    <button id="googleBtn" class="auth-glass-btn auth-glass-btn-outline" style="display:none"><i class="fab fa-google"></i> Continue with Google</button>
+    <button id="googleBtn" class="auth-glass-btn auth-glass-btn-outline"><i class="fab fa-google"></i> Continue with Google</button>
     <div class="auth-glass-footer">
       <span id="toggleText" class="auth-glass-muted">No account?</span>
       <a href="#" id="toggleLink" class="auth-glass-link">Sign Up</a>
@@ -316,17 +316,40 @@
   </nav>
 </div>
 
-<!-- VERIFICATION MODAL -->
-<div id="verifyModal" class="modal-overlay">
-  <div class="verify-card">
-    <div class="verify-icon">🤖</div>
-    <h3 class="verify-title">Human Verification</h3>
-    <p class="verify-desc">Solve to watch ad</p>
-    <div class="verify-question" id="verifyQuestion">3 + 4 = ?</div>
-    <div class="verify-input-wrap"><input type="number" id="verifyInput" class="verify-input" placeholder="Answer" autofocus></div>
-    <p class="verify-error" id="verifyError" style="display:none">❌ Wrong answer</p>
-    <button class="auth-glass-btn" onclick="submitVerification()" style="margin-top:8px">✅ Verify & Watch</button>
-    <button class="verify-skip" onclick="closeVerification()">Cancel</button>
+<!-- OTP VERIFICATION MODAL (Email-focused Material Design) -->
+<div id="verifyModal" class="modal-overlay otp-overlay">
+  <div class="otp-card">
+    <!-- Email Icon with checkmark -->
+    <div class="otp-icon-wrap">
+      <div class="otp-envelope">✉️</div>
+      <div class="otp-checkmark">✓</div>
+    </div>
+    <!-- Title & Subtitle -->
+    <h2 class="otp-title">Check Your Email</h2>
+    <p class="otp-desc">We've sent a 6-digit verification code to</p>
+    <p class="otp-email" id="otpEmail">user@example.com</p>
+    <p class="otp-spam-note">📩 Check your spam folder if you don't see it</p>
+    <!-- OTP Inputs (material underline style) -->
+    <div class="otp-inputs" id="otpInputs">
+      <input class="otp-box" id="otp0" maxlength="1" inputmode="numeric" pattern="[0-9]" autofocus>
+      <input class="otp-box" id="otp1" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="otp2" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="otp3" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="otp4" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="otp5" maxlength="1" inputmode="numeric" pattern="[0-9]">
+    </div>
+    <!-- Verify Button (Gradient Blue) -->
+    <button class="otp-verify-btn" id="otpVerifyBtn" onclick="submitOTP()">Verify</button>
+    <!-- Resend -->
+    <div class="otp-resend" id="otpResend">
+      <span class="otp-resend-label">Didn't receive the email?</span>
+      <span id="otpTimerText" class="otp-timer-text">Resend in <strong id="otpCountdown">30</strong>s</span>
+      <button class="otp-refresh" id="otpRefreshBtn" onclick="resendOTP()" style="display:none">📧 Resend Code</button>
+    </div>
+    <!-- Firebase Badge -->
+    <div class="otp-firebase-badge">🔒 Secured by Firebase</div>
+    <!-- Error -->
+    <p class="otp-error" id="otpError" style="display:none">❌ Invalid code. Try again.</p>
   </div>
 </div>
 
