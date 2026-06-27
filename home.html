@@ -123,25 +123,70 @@
         </div>
       </div>
 
-      <!-- Admin Panel -->
+      <!-- Admin Panel (Full Tabbed Interface) -->
       <div id="adminPanel" class="admin-panel hidden">
-        <div class="admin-panel-header"><h3>🛡️ Admin Control</h3><button class="btn-close-panel" onclick="toggleAdminPanel()">✕</button></div>
+        <div class="admin-panel-header"><h3>🛡️ Admin Panel</h3><button class="btn-close-panel" onclick="toggleAdminPanel()">✕</button></div>
         
+        <!-- Stats Overview -->
+        <div class="admin-stats-row">
+          <div class="admin-mini-stat"><span class="ams-num" id="adminUsers">0</span><span class="ams-lbl">Users</span></div>
+          <div class="admin-mini-stat"><span class="ams-num" id="adminWD">0</span><span class="ams-lbl">Pending WD</span></div>
+          <div class="admin-mini-stat"><span class="ams-num" id="adminBalance">$0</span><span class="ams-lbl">Total Bal</span></div>
+        </div>
+
         <!-- Ad Price Settings -->
         <div class="admin-section-title">💰 Ad Pricing</div>
         <div class="admin-price-row">
-          <span>Min Reward:</span>
+          <span>Min:</span>
           <input type="number" id="adminPriceMin" step="0.01" min="0.01" value="0.05" class="admin-price-input">
-          <span>Max Reward:</span>
+          <span>Max:</span>
           <input type="number" id="adminPriceMax" step="0.01" min="0.01" value="0.50" class="admin-price-input">
           <button class="btn btn-amber btn-sm" onclick="saveAdPrices()">💾 Save</button>
         </div>
-        
-        <div class="admin-search">
-          <input type="text" id="adminSearchInput" placeholder="Search by ID, email, or name..." onkeydown="if(event.key==='Enter')adminSearch()">
-          <button class="btn btn-primary btn-sm" onclick="adminSearch()">🔍 Search</button>
+
+        <!-- Tabs -->
+        <div class="admin-tabs">
+          <button class="admin-tab active" data-atab="stats">📊 Overview</button>
+          <button class="admin-tab" data-atab="users">👥 Users</button>
+          <button class="admin-tab" data-atab="plans">📋 Plans</button>
+          <button class="admin-tab" data-atab="withdrawals">💳 WD</button>
+          <button class="admin-tab" data-atab="notifications">📨 Notif</button>
         </div>
-        <div id="adminSearchResults" class="admin-results"><div class="admin-empty">Search for a user to manage</div></div>
+
+        <!-- Tab Content: Overview -->
+        <div id="adminSectionStats" class="admin-section active">
+          <div class="admin-search">
+            <input type="text" id="adminSearchInput" placeholder="Search by ID, email, or name..." onkeydown="if(event.key==='Enter')adminSearch()">
+            <button class="btn btn-primary btn-sm" onclick="adminSearch()">🔍 Search</button>
+          </div>
+          <div id="adminSearchResults" class="admin-results"><div class="admin-empty">Search for a user to manage</div></div>
+        </div>
+        
+        <!-- Tab Content: Users -->
+        <div id="adminSectionUsers" class="admin-section">
+          <div class="admin-section-title" style="margin-top:0">All Users <button class="btn btn-sm btn-outline" onclick="adminLoadUsers()" style="float:right">🔄 Refresh</button></div>
+          <div id="adminUsersList"><div class="admin-empty">Loading...</div></div>
+        </div>
+        
+        <!-- Tab Content: Plans -->
+        <div id="adminSectionPlans" class="admin-section">
+          <div class="admin-section-title" style="margin-top:0">Plans <button class="btn btn-sm btn-primary" onclick="adminAddPlan()" style="float:right">+ Add</button></div>
+          <div id="adminPlansList"><div class="admin-empty">Loading...</div></div>
+        </div>
+        
+        <!-- Tab Content: Withdrawals -->
+        <div id="adminSectionWithdrawals" class="admin-section">
+          <div class="admin-section-title" style="margin-top:0">Withdrawals <button class="btn btn-sm btn-outline" onclick="adminLoadWithdrawals()" style="float:right">🔄 Refresh</button></div>
+          <div id="adminWDList"><div class="admin-empty">Loading...</div></div>
+        </div>
+        
+        <!-- Tab Content: Notifications -->
+        <div id="adminSectionNotifications" class="admin-section">
+          <div class="admin-section-title" style="margin-top:0">Send Notification</div>
+          <input type="text" id="adminNotifTitle" placeholder="Notification title" style="width:100%;padding:10px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;margin-bottom:8px">
+          <textarea id="adminNotifMsg" placeholder="Notification message" rows="3" style="width:100%;padding:10px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;margin-bottom:8px;resize:vertical"></textarea>
+          <button class="btn btn-primary btn-sm btn-block" onclick="adminSendNotif()">📨 Send to All</button>
+        </div>
       </div>
 
       <!-- Recent Activity -->
@@ -347,6 +392,7 @@
 
 <script src="js/supabase-config.js"></script>
 <script src="js/app.js"></script>
+<script src="js/admin.js"></script>
 <script>
 // HOME PAGE AUTH GUARD: redirect to login if not authenticated
 // Single source of truth — onAuthStateChanged handles this

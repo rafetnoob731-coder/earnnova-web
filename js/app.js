@@ -243,7 +243,7 @@ function updateUserID() {
 function toggleAdminPanel() {
   const p = document.getElementById('adminPanel'); if (!p) return;
   p.classList.toggle('hidden');
-  if (!p.classList.contains('hidden')) adminSearch();
+  if (!p.classList.contains('hidden')) { adminSearch(); if(typeof adminLoadStats==='function') adminLoadStats(); }
 }
 document.getElementById('adminToggleBtn')?.addEventListener('click', toggleAdminPanel);
 
