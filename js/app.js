@@ -130,6 +130,9 @@ function initApp() {
       }
     } catch(e) {}
     
+    // Hide loading overlay (dashboard is about to render — no blank gap)
+    var _loading = document.getElementById('authLoading');
+    if (_loading) _loading.classList.add('hide');
     document.getElementById('splash').classList.add('hide');
     showView('appPage');
     checkIsAdmin(); updateUserID(); updateUI();
@@ -140,11 +143,17 @@ function initApp() {
     clk(); setInterval(clk,10000);
     if (!localStorage.getItem('en_welcomed')) { localStorage.setItem('en_welcomed','1'); setTimeout(()=>showNotif('💰 Welcome!','Watch ads, earn rewards','🎉'),2000); }
   } catch(e) {
-    // If initApp fails, show a visible error instead of blank screen
+    // If initApp fails, show a visible error — don't leave user on blank screen
+    console.error('initApp error:', e);
+    // Hide loading overlay if still showing
+    var _loading = document.getElementById('authLoading');
+    if (_loading) _loading.classList.add('hide');
+    // Show error on splash (override inline display:none)
     var splash = document.getElementById('splash');
     if (splash) {
-      splash.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;background:#0F172A;color:#FCA5A5;padding:24px;text-align:center"><h2 style="margin:0 0 8px">⚠️ Init Error</h2><p style="margin:12px 0;font-size:14px;color:#94A3B8">' + (e.message || 'Unknown') + '</p><button onclick="location.reload()" style="padding:12px 32px;border-radius:12px;background:#10B981;color:#fff;border:none;font-size:15px;cursor:pointer">↻ Reload</button></div>';
-      splash.classList.remove('hide');
+      splash.style.display = 'flex';
+      splash.style.cssText = 'display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;background:#0F172A;color:#FCA5A5;padding:24px;text-align:center';
+      splash.innerHTML = '<h2 style="margin:0 0 8px;font-size:24px">⚠️ Init Error</h2><p style="margin:12px 0;font-size:14px;color:#94A3B8">' + (e.message || 'Unknown error') + '</p><button onclick="location.reload()" style="padding:12px 32px;border-radius:12px;background:#10B981;color:#fff;border:none;font-size:15px;cursor:pointer">↻ Reload</button>';
     }
   }
 }

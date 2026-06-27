@@ -404,18 +404,30 @@ auth.onAuthStateChanged(function(user) {
   if (!user) {
     // Not logged in → redirect to login
     window.location.href = 'login.html';
-  } else {
-    // Logged in → hide loading, splash+app takes over from app.js
-    if (_loadingEl) _loadingEl.classList.add('hide');
   }
+  // If logged in: app.js will hide loading overlay when dashboard is ready (initApp)
+  // This prevents a blank gap where loading is hidden but dashboard hasn't rendered yet
 });
 
-// Safety: if Firebase never resolves (CDN failure), redirect to login
+// Safety #1: if Firebase never resolves (CDN failure), redirect to login
 setTimeout(function() {
   if (!_authResolved) {
     window.location.href = 'login.html';
   }
 }, 8000);
+
+// Safety #2: if auth resolved but dashboard never rendered, reload page
+setTimeout(function() {
+  if (_authResolved) {
+    var _sp = document.getElementById('splash');
+    var _ap = document.getElementById('appPage');
+    // If splash is still hidden and appPage is still hidden after 15s, something is wrong
+    if (_ap && _ap.classList.contains('hidden') && _sp && _sp.style.display === 'none') {
+      console.warn('Dashboard never rendered — reloading');
+      window.location.href = window.location.href;
+    }
+  }
+}, 15000);
 </script>
 <div id="container-ac40f76d59b8e8c281fb380b91c2bf21" style="display:none"></div>
 </body></html>
