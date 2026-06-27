@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>EARNNOVA</title>
-<meta http-equiv="refresh" content="2;url=login.html">
 <style>
 body{margin:0;background:#0F172A;min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-family:-apple-system,sans-serif}
 .spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,0.06);border-top-color:#10B981;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
@@ -14,20 +13,24 @@ p{font-size:14px;color:#64748B;margin:0}
 </head>
 <body>
 <div class="spinner"></div>
-<p>Redirecting to login...</p>
+<p>Checking authentication...</p>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script src="js/supabase-config.js"></script>
 <script>
+var _redirected = false;
+function safeRedirect(url) {
+  if (!_redirected) { _redirected = true; window.location.href = url; }
+}
 // Check auth: if logged in go to home.html, otherwise login.html
 auth.onAuthStateChanged(function(user) {
-  window.location.href = user ? 'home.html' : 'login.html';
+  safeRedirect(user ? 'home.html' : 'login.html');
 });
-// Fallback: if Firebase doesn't load, go to login.html after 3s
+// Fallback: if Firebase CDN fails or doesn't fire, redirect to login.html
 setTimeout(function() {
-  if (document.visibilityState !== 'hidden') window.location.href = 'login.html';
-}, 3000);
+  safeRedirect('login.html');
+}, 5000);
 </script>
 </body>
 </html>

@@ -152,9 +152,9 @@ function showAuthForm(form) {
   lf.classList.toggle('hidden', form !== 'login');
   rf.classList.toggle('hidden', form !== 'register');
   ff.classList.toggle('hidden', form !== 'forgot');
-  const tagline = document.querySelector('.auth-tagline');
-  if (form === 'login') tagline.textContent = 'Welcome back';
-  else if (form === 'register') tagline.textContent = 'Join us and start earning';
+  const tagline = document.querySelector('.auth-glass-subtitle');
+  if (form === 'login') tagline.textContent = 'Sign in & start earning';
+  else if (form === 'register') tagline.textContent = 'Join and start earning';
   else tagline.textContent = 'Reset your password';
 }
 
