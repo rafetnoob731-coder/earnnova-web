@@ -90,7 +90,7 @@ document.getElementById('registerForm').addEventListener('submit',async function
   var ref=document.getElementById('regReferral').value.trim();
   var btn=document.getElementById('registerBtn');
   if(password.length<6){showAlert('Password must be 6+ characters');return;}
-  btn.disabled=true;btn.textContent='⏳ Creating...';
+  btn.disabled=true;btn.innerHTML='⏳ Creating account...';
   try{
     var cred=await auth.createUserWithEmailAndPassword(email,password);
     var user=cred.user;
@@ -114,15 +114,15 @@ document.getElementById('registerForm').addEventListener('submit',async function
       }catch(er){}
     }
     await usersRef.doc(user.uid).set(userData);
-    showAlert('Account created! 🎉 Redirecting...','success');
-    setTimeout(function(){window.location.href='home.html'},500);
+    // Don't redirect manually! onAuthStateChanged listener below handles it
+    btn.innerHTML='✅ Created! Redirecting...';
   }catch(err){
     showAlert(getAuthError(err));
     btn.disabled=false;btn.textContent='Create Account';
   }
 });
 
-// If already logged in → go to home
+// SINGLE source of truth: onAuthStateChanged handles ALL redirects
 auth.onAuthStateChanged(function(user){if(user)window.location.href='home.html'});
 </script>
 </body>

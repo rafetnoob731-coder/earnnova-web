@@ -19,10 +19,12 @@ p{font-size:14px;color:#64748B;margin:0}
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script src="js/supabase-config.js"></script>
 <script>
-var _redir=false;
-function go(u){if(!_redir){_redir=true;window.location.href=u;}}
-auth.onAuthStateChanged(function(user){go(user?'home.html':'login.html');});
-setTimeout(function(){go('login.html');},5000);
+var _r=false;
+function rd(u){if(!_r){_r=true;window.location.href=u;}}
+// Auth listener is SINGLE source of truth for redirects
+auth.onAuthStateChanged(function(user){rd(user?'home.html':'login.html');});
+// Fallback if Firebase never loads
+setTimeout(function(){rd('login.html');},5000);
 </script>
 </body>
 </html>
