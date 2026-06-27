@@ -103,7 +103,7 @@ ct.addEventListener('touchend',function(){ct.style.transform='perspective(600px)
 ct.addEventListener('mousemove',function(e){var r=ct.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=(e.clientX-cx)/(r.width/2),dy=(e.clientY-cy)/(r.height/2),rx=Math.max(-4,Math.min(4,-dy*3)),ry=Math.max(-4,Math.min(4,dx*3));ct.style.transform='perspective(600px) rotateX('+rx+'deg) rotateY('+ry+'deg) scale3d(1.01,1.01,1.01)';ct.style.transition='transform 0.15s ease-out'});
 ct.addEventListener('mouseleave',function(){ct.style.transform='perspective(600px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)';ct.style.transition='transform 0.5s cubic-bezier(0.23,1,0.32,1)';setTimeout(function(){if(ct)ct.style.transition=''},500)});})();
 
-// ===== AUTH BOOT =====
+// ===== AUTH BOOT (Correct Firebase Pattern) =====
 var _authCheckDone = false;
 var _loadingEl = document.getElementById('authLoading');
 var _pageEl = document.getElementById('authPageWrap');
@@ -123,25 +123,29 @@ setTimeout(function() {
   if (!_authCheckDone) showPage();
 }, 8000);
 
-// SINGLE source of truth: onAuthStateChanged handles ALL redirects
-auth.onAuthStateChanged(function(user) {
-  _authCheckDone = true;
-  if (user) {
-    goHome(); // Redirect to dashboard immediately
-  } else {
-    showPage(); // Not logged in → show auth forms
+// CORRECT ORDER: 1) Check redirect result FIRST, 2) Then fallback to onAuthStateChanged
+(async function() {
+  try {
+    var result = await auth.getRedirectResult();
+    if (result && result.user) {
+      _authCheckDone = true;
+      goHome(); // Google sign-in succeeded → go to dashboard
+      return;
+    }
+  } catch(err) {
+    // getRedirectResult can throw if no redirect — ignore
   }
-});
-
-// Handle Google redirect result (backup — for signInWithRedirect flow)
-auth.getRedirectResult().then(function(result) {
-  if (result && result.user) {
+  
+  // No redirect result — check persisted session
+  auth.onAuthStateChanged(function(user) {
     _authCheckDone = true;
-    goHome();
-  }
-}).catch(function() {
-  // getRedirectResult can throw if no redirect happened — ignore
-});
+    if (user) {
+      goHome(); // Already logged in → go to dashboard
+    } else {
+      showPage(); // Not logged in → show auth forms
+    }
+  });
+})();
 </script>
 </body>
 </html>
