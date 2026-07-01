@@ -162,7 +162,7 @@ export default function DashboardLayout({
                   </Link>
                 ))}
               </nav>
-            </motion.div>
+            </motion.aside>
           </>
         )}
       </AnimatePresence>
