@@ -379,8 +379,8 @@ async function watchAd() {
   if (dailyAdCount >= MAX_DAILY_ADS) { showToast('⚠️', 'Daily Limit Reached', 'You\'ve watched ' + MAX_DAILY_ADS + ' ads today. Come back tomorrow!', 'warning'); return; }
   
   // Show interstitial ad from network before starting timer
-  if (typeof AdNetwork !== 'undefined' && AdNetwork.showInterstitial) {
-    AdNetwork.showInterstitial(function() {
+  if (typeof SafeAdNetwork !== 'undefined' && SafeAdNetwork.showInterstitial) {
+    SafeAdNetwork.showInterstitial(function() {
       startAdTimer();
     });
   } else {
