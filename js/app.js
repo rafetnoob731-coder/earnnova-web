@@ -378,6 +378,17 @@ async function watchAd() {
   if (adCooldown) { showToast('⏳', 'Cooldown Active', 'Please wait 10 seconds between ads.', 'warning'); return; }
   if (dailyAdCount >= MAX_DAILY_ADS) { showToast('⚠️', 'Daily Limit Reached', 'You\'ve watched ' + MAX_DAILY_ADS + ' ads today. Come back tomorrow!', 'warning'); return; }
   
+  // Show interstitial ad from network before starting timer
+  if (typeof AdNetwork !== 'undefined' && AdNetwork.showInterstitial) {
+    AdNetwork.showInterstitial(function() {
+      startAdTimer();
+    });
+  } else {
+    startAdTimer();
+  }
+}
+
+function startAdTimer() {
   var modal = $('adModal');
   if (!modal) return;
   
