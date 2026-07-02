@@ -5,6 +5,16 @@
 // SAFE PLACEMENT — Dashboard only, compliant
 // =============================================
 
+// ===== 0. GOOGLE ADSENSE =====
+(function() {
+  var s = document.createElement('script');
+  s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9307459733796967';
+  s.async = true;
+  s.crossOrigin = 'anonymous';
+  s.onerror = function() { console.warn('[ADS] AdSense failed'); };
+  document.head.appendChild(s);
+})();
+
 // ===== 1. ADSTERRA — Popunder =====
 (function() {
   var s = document.createElement('script');
@@ -151,6 +161,42 @@ var SafeAdNetwork = {
     bottomSlot.id = 'adBottomSafe';
     bottomSlot.style.cssText = 'width:100%;min-height:60px;margin:16px 0 4px;display:flex;flex-direction:column;align-items:center;padding:4px 0';
     if (!document.getElementById('adBottomSafe')) main.appendChild(bottomSlot);
+    
+    // Render AdSense in slots after a delay
+    setTimeout(function() {
+      if (typeof adsbygoogle !== 'undefined') {
+        SafeAdNetwork._renderAdsense(topSlot, bottomSlot);
+      }
+    }, 2000);
+  },
+
+  // Render AdSense ad units
+  _renderAdsense: function(top, bottom) {
+    try {
+      // Top banner
+      var ins1 = document.createElement('ins');
+      ins1.className = 'adsbygoogle';
+      ins1.style.cssText = 'display:inline-block;width:320px;height:50px';
+      ins1.dataset.adClient = 'ca-pub-9307459733796967';
+      ins1.dataset.adSlot = '1234567890';
+      top.innerHTML = '';
+      top.appendChild(ins1);
+      (adsbygoogle = window.adsbygoogle || []).push({});
+      
+      // Bottom banner
+      var ins2 = document.createElement('ins');
+      ins2.className = 'adsbygoogle';
+      ins2.style.cssText = 'display:inline-block;width:320px;height:50px';
+      ins2.dataset.adClient = 'ca-pub-9307459733796967';
+      ins2.dataset.adSlot = '1234567891';
+      bottom.innerHTML = '';
+      bottom.appendChild(ins2);
+      (adsbygoogle = window.adsbygoogle || []).push({});
+      
+      console.log('[ADS] ✅ AdSense rendered');
+    } catch(e) {
+      console.warn('[ADS] AdSense render error:', e.message);
+    }
   },
 
   _showComplianceNotice: function() {
