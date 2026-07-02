@@ -1,29 +1,48 @@
 // =============================================
-// EARNNOVA — Main Application
+// EARNNOVA — Main Application v3.0
+// Professional Earning Platform
 // =============================================
 
 var currentUser = null;
 var currentUserData = null;
 var isAdminUser = false;
 var _authResolved = false;
+var _balanceInterval = null;
 
-// ===== AUTH FLOW =====
+// ===== UTILITY FUNCTIONS =====
+function $(id) { return document.getElementById(id); }
+function qs(sel) { return document.querySelector(sel); }
+function qsa(sel) { return document.querySelectorAll(sel); }
+
+function formatCurrency(n) {
+  return '$' + (n || 0).toFixed(2);
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  if (d.toDate) d = d.toDate();
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+
+// ===== AUTH INIT =====
 (function initAuth() {
   if (!auth) {
-    console.error('Firebase Auth not available');
-    setTimeout(function() { window.location.href = 'login.html'; }, 2000);
+    showToast('⚠️', 'Connection Error', 'Firebase not available. Check your connection.', 'error');
+    setTimeout(function() { window.location.href = 'login.html'; }, 2500);
     return;
   }
 
-  // Timeout: redirect to login if auth takes > 10s
   var authTimeout = setTimeout(function() {
-    if (!_authResolved) window.location.href = 'login.html';
+    if (!_authResolved) {
+      showToast('⏳', 'Taking too long', 'Redirecting to login...', 'warning');
+      setTimeout(function() { window.location.href = 'login.html'; }, 1000);
+    }
   }, 10000);
 
   auth.onAuthStateChanged(function(user) {
     _authResolved = true;
     clearTimeout(authTimeout);
-
     if (user) {
       currentUser = user;
       loadUserData(user.uid);
@@ -35,131 +54,208 @@ var _authResolved = false;
 
 // ===== LOAD USER DATA =====
 async function loadUserData(uid) {
-  var loading = document.getElementById('authLoading');
-  if (loading) loading.classList.add('hide');
-  var splash = document.getElementById('splash');
-  if (splash) splash.classList.add('hide');
-
-  if (!db) {
-    // Offline mode: use local data
-    currentUserData = {
-      id: uid,
-      name: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
-      email: currentUser.email || '',
-      balance: parseFloat(localStorage.getItem('en_bal') || '0'),
-      totalEarned: parseFloat(localStorage.getItem('en_earned') || '0'),
-      adsWatched: parseInt(localStorage.getItem('en_watched') || '0')
-    };
-    initApp();
-    return;
-  }
+  hideSplash();
+  if (!db) { loadOffline(uid); return; }
 
   try {
     var doc = await fbTimeout(usersRef.doc(uid).get());
     if (doc.exists) {
       currentUserData = { id: uid, ...doc.data() };
+      localStorage.setItem('en_bal', String(currentUserData.balance || 0));
+      localStorage.setItem('en_earned', String(currentUserData.totalEarned || 0));
+      localStorage.setItem('en_watched', String(currentUserData.adsWatched || 0));
     } else {
-      // Create user doc
       await createUserDoc(currentUser);
       var newDoc = await fbTimeout(usersRef.doc(uid).get());
       currentUserData = { id: uid, ...(newDoc.exists ? newDoc.data() : {}) };
     }
   } catch(e) {
-    console.warn('Firestore error, using local cache:', e.message);
-    currentUserData = {
-      id: uid,
-      name: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
-      email: currentUser.email || '',
-      balance: parseFloat(localStorage.getItem('en_bal') || '0'),
-      totalEarned: parseFloat(localStorage.getItem('en_earned') || '0'),
-      adsWatched: parseInt(localStorage.getItem('en_watched') || '0')
-    };
+    console.warn('Firestore error:', e.message);
+    loadOffline(uid);
   }
   initApp();
+}
+
+function loadOffline(uid) {
+  currentUserData = {
+    id: uid, name: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
+    email: currentUser.email || '',
+    balance: parseFloat(localStorage.getItem('en_bal') || '0'),
+    totalEarned: parseFloat(localStorage.getItem('en_earned') || '0'),
+    adsWatched: parseInt(localStorage.getItem('en_watched') || '0')
+  };
+  initApp();
+}
+
+function hideSplash() {
+  var s = $('splash');
+  if (s) { s.classList.add('hide'); setTimeout(function() { s.style.display = 'none'; }, 500); }
+  var l = $('authLoading');
+  if (l) l.classList.add('hide');
 }
 
 async function createUserDoc(user) {
   if (!db) return;
   var name = user.displayName || user.email?.split('@')[0] || 'User';
   var refCode = Math.random().toString(36).substring(2, 10).toUpperCase();
-  
-  var userData = {
-    uid: user.uid,
-    email: user.email || '',
-    name: name,
-    photo: '',
-    phone: '',
-    balance: 0,
-    totalEarned: 0,
-    totalWithdrawn: 0,
-    adsWatched: 0,
-    todayAds: 0,
-    lastAdDate: '',
-    referralCode: refCode,
-    referredBy: '',
-    isActive: true,
-    isAdmin: user.email === ADMIN_EMAIL,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-  };
-  
   try {
-    await fbTimeout(usersRef.doc(user.uid).set(userData));
-  } catch(e) {
-    console.warn('Create user doc error:', e.message);
-  }
+    await fbTimeout(usersRef.doc(user.uid).set({
+      uid: user.uid, email: user.email || '', name: name, photo: '', phone: '',
+      balance: 0, totalEarned: 0, totalWithdrawn: 0, adsWatched: 0,
+      todayAds: 0, lastAdDate: '', isActive: true, isAdmin: user.email === ADMIN_EMAIL,
+      referralCode: refCode, referredBy: '', referralCount: 0, referralEarnings: 0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+    }));
+  } catch(e) { console.warn('Create doc error:', e.message); }
 }
 
 // ===== INIT APP =====
 function initApp() {
   try {
-    var appPage = document.getElementById('appPage');
-    if (appPage) appPage.classList.remove('hidden');
-
+    $('appPage')?.classList.remove('hidden');
     updateUI();
+    animateBalance();
     checkAdmin();
-    initNavigation();
+    initNav();
     initAdSystem();
     initClock();
+    initThemeToggle();
     loadTransactions();
+    loadWithdrawals();
 
-    // Welcome notification
-    if (!localStorage.getItem('en_welcomed_v2')) {
-      localStorage.setItem('en_welcomed_v2', '1');
+    // Welcome
+    if (!localStorage.getItem('en_welcomed_v3')) {
+      localStorage.setItem('en_welcomed_v3', '1');
       setTimeout(function() {
-        showNotification('💰 Welcome to EARNNOVA!', 'Watch ads, earn rewards, withdraw anytime.', '🎉');
-      }, 1500);
+        showToast('🎉', 'Welcome to EARNNOVA!', 'Start watching ads to earn rewards.', 'success');
+      }, 2000);
     }
   } catch(e) {
-    console.error('initApp error:', e.message);
-    var appPage = document.getElementById('appPage');
-    if (appPage) {
-      appPage.classList.remove('hidden');
-      appPage.innerHTML = '<div class="glass-card p-6 text-center" style="margin-top:80px"><h2>⚠️ Something went wrong</h2><p class="text-sm mt-2 opacity-50">' + e.message + '</p><button onclick="location.reload()" class="btn-primary mt-4">Reload</button></div>';
-    }
+    console.error('initApp:', e.message);
+    $('appPage')?.classList.remove('hidden');
+    showToast('⚠️', 'Something went wrong', e.message, 'error');
   }
 }
 
 // ===== UPDATE UI =====
 function updateUI() {
-  var data = currentUserData || {};
-  document.querySelectorAll('[data-balance]').forEach(function(el) {
-    el.textContent = '$' + (data.balance || 0).toFixed(2);
-  });
-  document.querySelectorAll('[data-name]').forEach(function(el) {
-    el.textContent = data.name || 'User';
-  });
-  document.querySelectorAll('[data-email]').forEach(function(el) {
-    el.textContent = data.email || '';
-  });
-  document.querySelectorAll('[data-total-earned]').forEach(function(el) {
-    el.textContent = '$' + (data.totalEarned || 0).toFixed(2);
-  });
-  document.querySelectorAll('[data-ads-watched]').forEach(function(el) {
-    el.textContent = data.adsWatched || 0;
-  });
-  document.querySelectorAll('[data-ref-code]').forEach(function(el) {
-    el.textContent = data.referralCode || 'N/A';
+  var d = currentUserData || {};
+  var bal = d.balance || 0;
+  
+  qsa('[data-balance]').forEach(function(el) { el.textContent = formatCurrency(bal); });
+  qsa('[data-name]').forEach(function(el) { el.textContent = d.name || 'User'; });
+  qsa('[data-email]').forEach(function(el) { el.textContent = d.email || ''; });
+  qsa('[data-earned]').forEach(function(el) { el.textContent = formatCurrency(d.totalEarned || 0); });
+  qsa('[data-watched]').forEach(function(el) { el.textContent = d.adsWatched || 0; });
+  qsa('[data-ref]').forEach(function(el) { el.textContent = d.referralCode || 'N/A'; });
+  qsa('[data-referrals]').forEach(function(el) { el.textContent = d.referralCount || 0; });
+  qsa('[data-refearned]').forEach(function(el) { el.textContent = formatCurrency(d.referralEarnings || 0); });
+  qsa('[data-balance-num]').forEach(function(el) { el.textContent = bal.toFixed(2); });
+  
+  // Avatar
+  var avatar = $('profileAvatar');
+  if (avatar) avatar.textContent = (d.name || 'U').charAt(0).toUpperCase();
+  
+  // Today earnings
+  var todayEarned = parseFloat(localStorage.getItem('en_today') || '0');
+  var te = $('todayEarnings');
+  if (te) te.textContent = formatCurrency(todayEarned);
+  
+  // Nav active state for badges
+  var adCount = dailyAdCount || 0;
+  qsa('[data-ad-count]').forEach(function(el) { el.textContent = adCount + '/' + MAX_DAILY_ADS; });
+}
+
+// ===== ANIMATE BALANCE =====
+function animateBalance() {
+  var el = $('balanceDisplay');
+  if (!el) return;
+  
+  var target = currentUserData?.balance || 0;
+  var current = 0;
+  var duration = 1500;
+  var steps = 60;
+  var increment = target / steps;
+  var stepTime = duration / steps;
+  var count = 0;
+  
+  if (_balanceInterval) clearInterval(_balanceInterval);
+  
+  _balanceInterval = setInterval(function() {
+    count++;
+    current = Math.min(current + increment, target);
+    el.textContent = formatCurrency(current);
+    if (count >= steps) {
+      clearInterval(_balanceInterval);
+      el.textContent = formatCurrency(target);
+    }
+  }, stepTime);
+}
+
+// ===== TOAST NOTIFICATION =====
+function showToast(icon, title, message, type) {
+  var container = $('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
+    container.id = 'toastContainer';
+    document.body.appendChild(container);
+  }
+  
+  var toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = '<div class="toast-icon">' + (icon || '📢') + '</div><div class="toast-body"><div class="toast-title">' + title + '</div><div class="toast-msg">' + (message || '') + '</div></div>';
+  container.appendChild(toast);
+  
+  requestAnimationFrame(function() { toast.classList.add('show'); });
+  
+  setTimeout(function() {
+    toast.classList.remove('show');
+    setTimeout(function() { toast.remove(); }, 400);
+  }, 4000);
+}
+
+// ===== CONFETTI =====
+function showConfetti() {
+  var colors = ['#D4AF37', '#10B981', '#F59E0B', '#3B82F6', '#EF4444', '#8B5CF6'];
+  for (var i = 0; i < 30; i++) {
+    var piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = (Math.random() * 100) + '%';
+    piece.style.top = (40 + Math.random() * 40) + '%';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.width = (4 + Math.random() * 6) + 'px';
+    piece.style.height = (4 + Math.random() * 6) + 'px';
+    piece.style.animationDuration = (0.8 + Math.random() * 0.6) + 's';
+    piece.style.animationDelay = (Math.random() * 0.3) + 's';
+    document.body.appendChild(piece);
+    setTimeout(function() { piece.remove(); }, 2000);
+  }
+}
+
+// ===== CLOCK =====
+function initClock() {
+  function update() {
+    var el = $('statusTime');
+    if (el) { var d = new Date(); el.textContent = d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0'); }
+  }
+  update();
+  setInterval(update, 10000);
+}
+
+// ===== THEME TOGGLE =====
+function initThemeToggle() {
+  var toggle = $('themeToggle');
+  if (!toggle) return;
+  
+  var theme = localStorage.getItem('en_theme') || 'dark';
+  if (theme === 'light') document.body.classList.add('light-mode');
+  
+  toggle.addEventListener('click', function() {
+    document.body.classList.toggle('light-mode');
+    var isLight = document.body.classList.contains('light-mode');
+    localStorage.setItem('en_theme', isLight ? 'light' : 'dark');
   });
 }
 
@@ -167,13 +263,13 @@ function updateUI() {
 function checkAdmin() {
   if (!currentUser || !currentUserData) return;
   isAdminUser = currentUserData.isAdmin === true || currentUser.email === ADMIN_EMAIL;
-  var adminBtn = document.getElementById('adminToggleBtn');
-  if (adminBtn) adminBtn.style.display = isAdminUser ? 'flex' : 'none';
+  var btn = $('adminToggleBtn');
+  if (btn) btn.style.display = isAdminUser ? 'flex' : 'none';
 }
 
 // ===== NAVIGATION =====
-function initNavigation() {
-  document.querySelectorAll('.nav-item').forEach(function(item) {
+function initNav() {
+  qsa('.nav-item').forEach(function(item) {
     item.addEventListener('click', function() {
       var page = this.dataset.page;
       navigate(page);
@@ -182,84 +278,65 @@ function initNavigation() {
 }
 
 function navigate(page) {
-  document.querySelectorAll('.page-view').forEach(function(p) { p.classList.add('hidden'); });
-  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  qsa('.page-view').forEach(function(p) { p.classList.remove('active'); p.style.display = 'none'; });
+  qsa('.nav-item').forEach(function(n) { n.classList.remove('active'); });
   
-  var target = document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1));
-  if (target) target.classList.remove('hidden');
+  var target = $('page' + page.charAt(0).toUpperCase() + page.slice(1));
+  if (target) {
+    target.style.display = 'block';
+    setTimeout(function() { target.classList.add('active'); }, 10);
+  }
   
-  var navItem = document.querySelector('.nav-item[data-page="' + page + '"]');
+  var navItem = qs('.nav-item[data-page="' + page + '"]');
   if (navItem) navItem.classList.add('active');
-}
-
-// ===== CLOCK =====
-function initClock() {
-  function update() {
-    var el = document.getElementById('statusTime');
-    if (el) {
-      var d = new Date();
-      el.textContent = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
-    }
-  }
-  update();
-  setInterval(update, 10000);
-}
-
-// ===== NOTIFICATIONS =====
-function showNotification(title, message, icon) {
-  var container = document.getElementById('notificationContainer');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'notificationContainer';
-    container.style.cssText = 'position:fixed;top:60px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:320px';
-    document.body.appendChild(container);
-  }
   
-  var notif = document.createElement('div');
-  notif.style.cssText = 'background:rgba(16,24,40,0.95);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;transform:translateX(120%);transition:transform 0.4s cubic-bezier(0.23,1,0.32,1);box-shadow:0 8px 40px rgba(0,0,0,0.3)';
-  notif.innerHTML = '<span style="font-size:24px">' + (icon || '📢') + '</span><div><div style="font-size:13px;font-weight:600">' + title + '</div><div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px">' + message + '</div></div>';
-  container.appendChild(notif);
-  
-  requestAnimationFrame(function() { notif.style.transform = 'translateX(0)'; });
-  
-  setTimeout(function() {
-    notif.style.transform = 'translateX(120%)';
-    setTimeout(function() { notif.remove(); }, 400);
-  }, 4000);
+  // Load page-specific data
+  if (page === 'withdraw') loadWithdrawals();
+  if (page === 'home') loadTransactions();
 }
 
 // ===== TRANSACTIONS =====
 async function loadTransactions() {
-  var container = document.getElementById('transactionsList');
-  if (!container || !db) return;
+  var container = $('transactionsList');
+  if (!container) return;
+  
+  // Show skeleton
+  container.innerHTML = '<div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div>';
+  
+  if (!db || !currentUser) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">No transactions yet</div><div class="empty-desc">Start watching ads to see your activity</div></div>';
+    return;
+  }
   
   try {
-    var snapshot = await fbTimeout(
+    var snap = await fbTimeout(
       transactionsRef.where('userId', '==', currentUser.uid)
-        .orderBy('createdAt', 'desc')
-        .limit(20)
-        .get()
+        .orderBy('createdAt', 'desc').limit(20).get()
     );
     
     container.innerHTML = '';
-    if (snapshot.empty) {
-      container.innerHTML = '<div class="text-center py-8 opacity-40" style="font-size:14px">No transactions yet</div>';
+    if (snap.empty) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">No transactions yet</div><div class="empty-desc">Your earnings and withdrawals will appear here</div></div>';
       return;
     }
     
-    snapshot.forEach(function(doc) {
-      var data = doc.data();
-      var isPositive = data.amount > 0;
-      var date = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
+    snap.forEach(function(doc) {
+      var d = doc.data();
+      var isPos = d.amount > 0;
+      var date = d.createdAt?.toDate ? d.createdAt.toDate() : new Date();
+      
+      var icons = { 'ad_reward': '📺', 'referral_bonus': '👥', 'withdrawal': '💳', 'deposit': '💰', 'admin_credit': '🛡️' };
+      var icon = icons[d.type] || (isPos ? '📈' : '📤');
+      
       container.innerHTML +=
         '<div class="tx-item">' +
-          '<div class="tx-icon">' + (isPositive ? '📈' : '📤') + '</div>' +
-          '<div class="tx-info"><div class="tx-desc">' + (data.description || data.type || 'Transaction') + '</div><div class="tx-date">' + date.toLocaleDateString() + '</div></div>' +
-          '<div class="tx-amount ' + (isPositive ? 'tx-pos' : 'tx-neg') + '">' + (isPositive ? '+' : '') + '$' + Math.abs(data.amount).toFixed(2) + '</div>' +
+          '<div class="tx-icon">' + icon + '</div>' +
+          '<div class="tx-info"><div class="tx-desc">' + (d.description || d.type || 'Transaction') + '</div><div class="tx-date">' + formatDate(date) + '</div></div>' +
+          '<div class="tx-amount ' + (isPos ? 'tx-pos' : 'tx-neg') + '">' + (isPos ? '+' : '') + formatCurrency(Math.abs(d.amount)) + '</div>' +
         '</div>';
     });
   } catch(e) {
-    console.warn('Load transactions error:', e.message);
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-desc">Could not load transactions</div></div>';
   }
 }
 
@@ -280,60 +357,58 @@ function resetDailyAds() {
   if (stored !== today) {
     localStorage.setItem('en_ad_date', today);
     localStorage.setItem('en_ad_count', '0');
+    localStorage.setItem('en_today', '0');
     dailyAdCount = 0;
   } else {
     dailyAdCount = parseInt(localStorage.getItem('en_ad_count') || '0');
   }
+  updateAdUI();
 }
 
 function updateAdUI() {
-  document.querySelectorAll('[data-ad-count]').forEach(function(el) {
-    el.textContent = dailyAdCount + '/' + MAX_DAILY_ADS;
-  });
-  var progress = document.getElementById('adProgress');
-  if (progress) {
-    var pct = Math.min(100, (dailyAdCount / MAX_DAILY_ADS) * 100);
-    progress.style.width = pct + '%';
-  }
+  qsa('[data-ad-count]').forEach(function(el) { el.textContent = dailyAdCount + '/' + MAX_DAILY_ADS; });
+  var progress = $('adProgress');
+  if (progress) progress.style.width = Math.min(100, (dailyAdCount / MAX_DAILY_ADS) * 100) + '%';
+  
+  var countdownEl = $('adCountdown');
+  if (countdownEl) countdownEl.textContent = (MAX_DAILY_ADS - dailyAdCount) + ' remaining';
 }
 
 async function watchAd() {
-  if (adCooldown) { showNotification('⏳ Cooldown', 'Please wait before watching another ad', '⏳'); return; }
-  if (dailyAdCount >= MAX_DAILY_ADS) { showNotification('⚠️ Daily Limit', 'You\'ve reached the daily ad limit', '⚠️'); return; }
+  if (adCooldown) { showToast('⏳', 'Cooldown Active', 'Please wait 10 seconds between ads.', 'warning'); return; }
+  if (dailyAdCount >= MAX_DAILY_ADS) { showToast('⚠️', 'Daily Limit Reached', 'You\'ve watched ' + MAX_DAILY_ADS + ' ads today. Come back tomorrow!', 'warning'); return; }
   
-  // Show ad modal
-  var modal = document.getElementById('adModal');
+  var modal = $('adModal');
   if (!modal) return;
-  modal.classList.add('show');
-  
-  var timer = document.getElementById('adTimer');
-  var progress = document.getElementById('adProgressBar');
-  var countdown = 30;
   
   modal.innerHTML =
     '<div class="ad-modal-content">' +
-      '<div class="ad-modal-header">📺 Watch Ad</div>' +
-      '<div class="ad-timer-circle" id="adTimerCircle">' +
-        '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" class="ad-timer-bg"/><circle cx="50" cy="50" r="42" class="ad-timer-progress" id="adTimerProgress"/></svg>' +
+      '<div style="font-size:18px;font-weight:700;margin-bottom:4px">📺 Watch Ad</div>' +
+      '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">Earn ' + formatCurrency(AD_REWARD) + '</div>' +
+      '<div class="ad-timer-circle">' +
+        '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" class="ad-timer-bg"/><circle cx="50" cy="50" r="42" class="ad-timer-progress" id="adTimerProgress" stroke-dasharray="264" stroke-dashoffset="0"/></svg>' +
         '<div class="ad-timer-text" id="adTimerText">30</div>' +
       '</div>' +
-      '<div class="ad-reward">+$' + AD_REWARD.toFixed(2) + '</div>' +
-      '<div class="ad-status" id="adStatus">Watching...</div>' +
+      '<div class="ad-status" id="adStatus">Watching... stay focused</div>' +
     '</div>';
   
+  modal.classList.add('show');
   adCooldown = true;
-  var timerProgress = document.getElementById('adTimerProgress');
-  var timerText = document.getElementById('adTimerText');
-  var adStatus = document.getElementById('adStatus');
+  
+  var countdown = 30;
+  var timerProgress = $('adTimerProgress');
+  var timerText = $('adTimerText');
+  var adStatus = $('adStatus');
+  var circumference = 2 * Math.PI * 42;
   
   var interval = setInterval(function() {
     countdown--;
     if (timerText) timerText.textContent = countdown;
     if (timerProgress) {
-      var circumference = 2 * Math.PI * 42;
-      timerProgress.style.strokeDasharray = circumference;
       timerProgress.style.strokeDashoffset = circumference * (1 - countdown / 30);
     }
+    if (adStatus) adStatus.textContent = countdown > 0 ? 'Watching... ' + countdown + 's remaining' : 'Completing...';
+    
     if (countdown <= 0) {
       clearInterval(interval);
       completeAd();
@@ -346,8 +421,6 @@ async function completeAd() {
   localStorage.setItem('en_ad_count', String(dailyAdCount));
   
   var earnings = AD_REWARD;
-  
-  // Update local balance
   var bal = parseFloat(localStorage.getItem('en_bal') || '0');
   bal += earnings;
   localStorage.setItem('en_bal', String(bal));
@@ -355,6 +428,10 @@ async function completeAd() {
   var earned = parseFloat(localStorage.getItem('en_earned') || '0');
   earned += earnings;
   localStorage.setItem('en_earned', String(earned));
+  
+  var today = parseFloat(localStorage.getItem('en_today') || '0');
+  today += earnings;
+  localStorage.setItem('en_today', String(today));
   
   var watched = parseInt(localStorage.getItem('en_watched') || '0');
   watched++;
@@ -370,125 +447,277 @@ async function completeAd() {
         todayAds: firebase.firestore.FieldValue.increment(1),
         lastAdDate: new Date().toDateString()
       });
-      
       await transactionsRef.add({
-        userId: currentUser.uid,
-        type: 'ad_reward',
-        amount: earnings,
-        status: 'completed',
-        description: 'Ad reward #' + watched,
+        userId: currentUser.uid, type: 'ad_reward', amount: earnings,
+        status: 'completed', description: 'Ad reward #' + watched,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-    } catch(e) {
-      console.warn('Firestore update error:', e.message);
-    }
+    } catch(e) { console.warn('FS error:', e.message); }
   }
   
   // Update UI
-  var timerText = document.getElementById('adTimerText');
-  var adStatus = document.getElementById('adStatus');
+  var timerText = $('adTimerText');
+  var adStatus = $('adStatus');
   if (timerText) timerText.textContent = '✓';
   if (adStatus) {
-    adStatus.textContent = '+$' + earnings.toFixed(2) + ' Earned!';
-    adStatus.style.color = '#10B981';
+    adStatus.textContent = '+' + formatCurrency(earnings) + ' Earned!';
+    adStatus.style.color = 'var(--gold)';
   }
   
-  showNotification('💰 +$' + earnings.toFixed(2), 'Ad reward added to your balance', '💰');
+  // Update local data
+  if (currentUserData) {
+    currentUserData.balance = (currentUserData.balance || 0) + earnings;
+    currentUserData.totalEarned = (currentUserData.totalEarned || 0) + earnings;
+    currentUserData.adsWatched = (currentUserData.adsWatched || 0) + 1;
+  }
+  
+  updateUI();
+  showToast('💰', '+' + formatCurrency(earnings) + ' Earned!', 'Keep going! ' + (MAX_DAILY_ADS - dailyAdCount) + ' ads left today.', 'money');
+  showConfetti();
   
   setTimeout(function() {
-    var modal = document.getElementById('adModal');
+    var modal = $('adModal');
     if (modal) modal.classList.remove('show');
     adCooldown = false;
     updateAdUI();
-    updateUI();
     loadTransactions();
-  }, 1500);
+  }, 1800);
 }
 
-// ===== AD COOLDOWN CHECK =====
-setInterval(function() {
-  if (adCooldown) {
-    var status = document.getElementById('adStatus');
-    if (status && status.textContent !== 'Watching...') {
-      // Already processed
-    }
-  }
-}, 500);
-
 // ===== WITHDRAWAL =====
+var selectedWDMethod = null;
+var wdFields = {
+  bkash: ['bKash Number'], nagad: ['Nagad Number'],
+  binance: ['Binance ID', 'Email'], paypal: ['PayPal Email'],
+  wise: ['Account Number', 'Routing Number'],
+  bank: ['Account Name', 'Account Number', 'Bank Name', 'Routing Number'],
+  crypto: ['Wallet Address', 'Network (BTC/ETH/USDT)'], stripe: ['Stripe Account ID']
+};
+
+function selectWDMethod(method) {
+  selectedWDMethod = method;
+  qsa('.wd-item').forEach(function(el) { el.classList.remove('active'); });
+  var idx = ['bkash','nagad','binance','paypal','wise','bank','crypto','stripe'].indexOf(method) + 1;
+  var target = qs('.wd-item:nth-child(' + idx + ')');
+  if (target) target.classList.add('active');
+  
+  var form = $('wdForm');
+  if (form) form.style.display = 'block';
+  
+  var fields = $('wdFields');
+  if (!fields) return;
+  fields.innerHTML = '';
+  (wdFields[method] || ['Account details']).forEach(function(f) {
+    var input = document.createElement('input');
+    input.className = 'wd-input';
+    input.setAttribute('data-wd-field', f);
+    input.placeholder = f;
+    input.required = true;
+    fields.appendChild(input);
+  });
+}
+
 async function requestWithdrawal() {
-  if (!db || !currentUser) {
-    showNotification('⚠️ Offline', 'Withdrawals require an internet connection', '⚠️');
-    return;
-  }
+  if (!db || !currentUser) { showToast('⚠️', 'Offline', 'Withdrawals require internet.', 'error'); return; }
+  if (!selectedWDMethod) { showToast('⚠️', 'Select Method', 'Choose a payment method first.', 'warning'); return; }
   
-  var method = document.getElementById('wdMethod')?.value;
-  var amount = parseFloat(document.getElementById('wdAmount')?.value);
-  
-  if (!method) { showNotification('⚠️ Error', 'Please select a withdrawal method', '⚠️'); return; }
-  if (!amount || amount < 5) { showNotification('⚠️ Error', 'Minimum withdrawal: $5.00', '⚠️'); return; }
+  var amount = parseFloat($('wdAmount')?.value);
+  if (!amount || amount < 5) { showToast('⚠️', 'Minimum $5.00', 'Withdrawals must be at least $5.00.', 'warning'); return; }
   
   var bal = currentUserData?.balance || parseFloat(localStorage.getItem('en_bal') || '0');
-  if (amount > bal) { showNotification('⚠️ Error', 'Insufficient balance', '⚠️'); return; }
+  if (amount > bal) { showToast('⚠️', 'Insufficient Balance', 'You don\'t have enough funds.', 'error'); return; }
+  
+  var accountDetails = {};
+  qsa('[data-wd-field]').forEach(function(el) { accountDetails[el.dataset.wdField] = el.value; });
+  
+  var hasEmpty = Object.values(accountDetails).some(function(v) { return !v || !v.trim(); });
+  if (hasEmpty) { showToast('⚠️', 'Fill All Fields', 'Please complete all account details.', 'warning'); return; }
   
   try {
-    var accountDetails = {};
-    document.querySelectorAll('[data-wd-field]').forEach(function(el) {
-      accountDetails[el.dataset.wdField] = el.value;
-    });
-    
     await fbTimeout(withdrawalsRef.add({
-      userId: currentUser.uid,
-      method: method,
-      amount: amount,
-      fee: amount * 0.05,
-      accountDetails: accountDetails,
-      status: 'pending',
-      adminNote: '',
+      userId: currentUser.uid, method: selectedWDMethod, amount: amount,
+      fee: amount * 0.05, accountDetails: accountDetails, status: 'pending', adminNote: '',
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }));
-    
     await fbTimeout(usersRef.doc(currentUser.uid).update({
       balance: firebase.firestore.FieldValue.increment(-amount)
     }));
-    
     await fbTimeout(transactionsRef.add({
-      userId: currentUser.uid,
-      type: 'withdrawal',
-      amount: -amount,
-      status: 'pending',
-      description: 'Withdrawal via ' + method,
+      userId: currentUser.uid, type: 'withdrawal', amount: -amount,
+      status: 'pending', description: 'Withdrawal via ' + selectedWDMethod,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }));
     
-    showNotification('✅ Withdrawal Requested', '$' + amount.toFixed(2) + ' via ' + method, '✅');
+    // Update local
+    if (currentUserData) currentUserData.balance = (currentUserData.balance || 0) - amount;
+    localStorage.setItem('en_bal', String(parseFloat(localStorage.getItem('en_bal') || '0') - amount));
     
-    // Clear form
-    document.getElementById('wdAmount').value = '';
+    showToast('✅', 'Withdrawal Requested!', formatCurrency(amount) + ' via ' + selectedWDMethod + '. Pending approval.', 'success');
+    $('wdAmount').value = '';
+    qsa('[data-wd-field]').forEach(function(el) { el.value = ''; });
     updateUI();
+    animateBalance();
     loadTransactions();
+    loadWithdrawals();
   } catch(e) {
-    showNotification('❌ Error', e.message || 'Withdrawal failed', '❌');
+    showToast('❌', 'Error', e.message || 'Withdrawal failed. Try again.', 'error');
+  }
+}
+
+async function loadWithdrawals() {
+  var container = $('wdHistory');
+  if (!container) return;
+  
+  if (!db || !currentUser) return;
+  
+  try {
+    var snap = await fbTimeout(
+      withdrawalsRef.where('userId', '==', currentUser.uid)
+        .orderBy('createdAt', 'desc').limit(10).get()
+    );
+    
+    container.innerHTML = '';
+    if (snap.empty) {
+      container.innerHTML = '<div class="empty-state" style="padding:24px"><div class="empty-icon" style="font-size:32px">💳</div><div class="empty-desc">No withdrawals yet</div></div>';
+      return;
+    }
+    
+    snap.forEach(function(doc) {
+      var d = doc.data();
+      var date = d.createdAt?.toDate ? d.createdAt.toDate() : new Date();
+      var color = d.status === 'approved' ? 'var(--emerald)' : d.status === 'rejected' ? 'var(--red)' : 'var(--gold)';
+      var icons = { 'pending': '⏳', 'approved': '✅', 'rejected': '❌', 'refunded': '🔄' };
+      
+      container.innerHTML +=
+        '<div class="tx-item">' +
+          '<div class="tx-icon">' + (icons[d.status] || '💳') + '</div>' +
+          '<div class="tx-info"><div class="tx-desc">' + formatCurrency(d.amount) + ' via ' + (d.method || '?') + '</div><div class="tx-date">' + formatDate(date) + '</div></div>' +
+          '<span style="font-size:11px;font-weight:600;color:' + color + '">' + (d.status || 'pending').toUpperCase() + '</span>' +
+        '</div>';
+    });
+  } catch(e) {
+    // Silent fail
   }
 }
 
 // ===== REFERRAL =====
 function copyReferral() {
   var code = currentUserData?.referralCode || 'N/A';
-  var text = 'Join EARNNOVA and start earning! Use my referral code: ' + code + '\nhttps://earnnova-web.vercel.app/register.html';
+  var text = '💰 Join EARNNOVA and start earning real money!\n\nUse my referral code: ' + code + '\n\nSign up: https://earnnova-web.vercel.app/register.html';
   
   if (navigator.clipboard) {
     navigator.clipboard.writeText(text).then(function() {
-      showNotification('📋 Copied!', 'Referral link copied to clipboard', '📋');
+      showToast('📋', 'Copied!', 'Referral link copied to clipboard. Share it with friends!', 'success');
     });
   } else {
-    // Fallback
     var ta = document.createElement('textarea');
     ta.value = text;
     document.body.appendChild(ta);
     ta.select();
     document.execCommand('copy');
     ta.remove();
-    showNotification('📋 Copied!', 'Referral link copied to clipboard', '📋');
+    showToast('📋', 'Copied!', 'Referral link copied!', 'success');
   }
 }
+
+// ===== ADMIN =====
+function toggleAdmin() {
+  $('adminOverlay')?.classList.toggle('show');
+  if ($('adminOverlay')?.classList.contains('show')) {
+    adminLoadStats();
+  }
+}
+
+function adminSwitchTab(tab) {
+  qsa('.admin-tab').forEach(function(t) { t.classList.remove('active'); });
+  var tabEl = qs('.admin-tab[data-tab="' + tab + '"]');
+  if (tabEl) tabEl.classList.add('active');
+  
+  qsa('.admin-section').forEach(function(s) { s.classList.remove('active'); });
+  var section = $('adminSection' + tab.charAt(0).toUpperCase() + tab.slice(1));
+  if (section) section.classList.add('active');
+  
+  // Load data
+  if (tab === 'users') adminLoadUsers();
+  if (tab === 'withdrawals') adminLoadWD();
+}
+
+async function adminLoadStats() {
+  if (!db) return;
+  try {
+    var uSnap = await fbTimeout(usersRef.get());
+    var wSnap = await fbTimeout(withdrawalsRef.where('status', '==', 'pending').get());
+    var total = 0;
+    uSnap.forEach(function(d) { total += d.data().balance || 0; });
+    if ($('adminUsers')) $('adminUsers').textContent = uSnap.size;
+    if ($('adminWD')) $('adminWD').textContent = wSnap.size;
+    if ($('adminBalance')) $('adminBalance').textContent = formatCurrency(total);
+  } catch(e) {}
+}
+
+async function adminLoadUsers() {
+  var container = $('adminUsersList');
+  if (!container || !db) return;
+  container.innerHTML = '<div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div>';
+  
+  try {
+    var snap = await fbTimeout(usersRef.orderBy('createdAt', 'desc').limit(50).get());
+    container.innerHTML = '';
+    snap.forEach(function(doc) {
+      var d = doc.data();
+      container.innerHTML +=
+        '<div class="glass-card-sm flex justify-between items-center" style="margin-bottom:8px">' +
+          '<div><div style="font-size:13px;font-weight:600">' + (d.name || '?') + '</div>' +
+          '<div style="font-size:11px;color:var(--text-muted)">' + (d.email || '') + ' • ' + formatCurrency(d.balance || 0) + '</div></div>' +
+          '<div class="flex gap-1 items-center">' +
+            (d.isAdmin ? '<span class="text-gold fw-600 text-xs" style="padding:2px 8px;border-radius:4px;background:rgba(212,175,55,0.1)">ADMIN</span>' : '') +
+            '<span class="text-xs" style="padding:2px 8px;border-radius:4px;background:rgba(255,255,255,0.04);color:var(--text-muted)">' + (d.adsWatched || 0) + '</span>' +
+          '</div>' +
+        '</div>';
+    });
+    if (snap.empty) container.innerHTML = '<div class="empty-state"><div class="empty-desc">No users</div></div>';
+  } catch(e) { container.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-desc">Error loading users</div></div>'; }
+}
+
+async function adminLoadWD() {
+  var container = $('adminWDList');
+  if (!container || !db) return;
+  container.innerHTML = '<div class="skeleton skeleton-card"></div>';
+  
+  try {
+    var snap = await fbTimeout(withdrawalsRef.orderBy('createdAt', 'desc').limit(50).get());
+    container.innerHTML = '';
+    snap.forEach(function(doc) {
+      var d = doc.data();
+      var date = d.createdAt?.toDate ? d.createdAt.toDate() : new Date();
+      var color = d.status === 'approved' ? 'var(--emerald)' : d.status === 'rejected' ? 'var(--red)' : 'var(--gold)';
+      container.innerHTML +=
+        '<div class="glass-card-sm" style="margin-bottom:8px">' +
+          '<div class="flex justify-between items-center">' +
+            '<div><div class="text-sm fw-600">' + formatCurrency(d.amount) + ' via ' + (d.method || '?') + '</div>' +
+            '<div class="text-xs text-muted">' + formatDate(date) + '</div></div>' +
+            '<span class="text-xs fw-600" style="color:' + color + '">' + (d.status || '').toUpperCase() + '</span>' +
+          '</div>' +
+        '</div>';
+    });
+    if (snap.empty) container.innerHTML = '<div class="empty-state"><div class="empty-desc">No withdrawals</div></div>';
+  } catch(e) { container.innerHTML = '<div class="empty-state"><div class="empty-desc">Error</div></div>'; }
+}
+
+// ===== LOGOUT =====
+function logout() {
+  if (auth) {
+    auth.signOut().then(function() {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    });
+  } else {
+    localStorage.clear();
+    window.location.href = 'login.html';
+  }
+}
+
+// ===== DOM READY =====
+document.addEventListener('DOMContentLoaded', function() {
+  navigate('home');
+});
