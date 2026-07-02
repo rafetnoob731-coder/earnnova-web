@@ -10,125 +10,179 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="css/style.css">
 <style>
-body{margin:0;background:#080A12;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:100vh}
-.auth-page-wrap{position:relative;z-index:10;width:100%;max-width:420px;padding:20px;box-sizing:border-box;perspective:1000px}
-#authContainer .auth-glass-container{transform-style:preserve-3d;transition:transform 0.3s cubic-bezier(0.23,1,0.32,1)}
-.ambient-g1,.ambient-g2{position:fixed;width:400px;height:400px;border-radius:50%;filter:blur(100px);pointer-events:none;z-index:0;opacity:0.3}
-.ambient-g1{top:-120px;left:-80px;background:rgba(212,175,55,0.2)}
-.ambient-g2{bottom:-120px;right:-80px;background:rgba(16,185,129,0.15)}
-#particles-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-@keyframes floatParticle{0%{transform:translateY(100vh) scale(0);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateY(-10vh) scale(1);opacity:0}}
-.particle{position:absolute;width:3px;height:3px;background:rgba(212,175,55,0.5);border-radius:50%;box-shadow:0 0 6px rgba(212,175,55,0.3);animation:floatParticle linear infinite}
+body{margin:0;background:#080A12;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px;box-sizing:border-box}
+.auth-wrap{width:100%;max-width:400px}
+.auth-card{background:rgba(255,255,255,0.03);backdrop-filter:blur(24px) saturate(140%);border:1px solid rgba(255,255,255,0.06);border-radius:24px;padding:32px 24px;box-shadow:0 16px 80px rgba(0,0,0,0.3)}
+.auth-logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#10B981,#059669);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;margin:0 auto 16px;box-shadow:0 8px 32px rgba(16,185,129,0.2)}
+.auth-title{font-size:22px;font-weight:800;text-align:center}
+.auth-subtitle{font-size:13px;color:rgba(255,255,255,0.4);text-align:center;margin:4px 0 24px}
+.auth-input-group{margin-bottom:14px}
+.auth-input-group label{font-size:11px;color:rgba(255,255,255,0.4);display:block;margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:1px}
+.auth-input-wrap{display:flex;align-items:center;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);transition:all 0.2s}
+.auth-input-wrap:focus-within{border-color:#10B981;box-shadow:0 0 0 3px rgba(16,185,129,0.1)}
+.auth-input-wrap i{color:rgba(255,255,255,0.2);width:18px;font-size:14px}
+.auth-input-wrap input{background:none;border:none;outline:none;color:#fff;font-size:14px;width:100%;margin-left:10px}
+.auth-input-wrap input::placeholder{color:rgba(255,255,255,0.15)}
+.btn-auth{width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.25s;margin-top:8px}
+.btn-auth:active{transform:scale(0.98)}
+.btn-auth:disabled{opacity:0.5;cursor:not-allowed}
+.auth-footer{text-align:center;margin-top:20px;font-size:13px;color:rgba(255,255,255,0.3)}
+.auth-footer a{color:#10B981;text-decoration:none;font-weight:600}
+.auth-alert{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:16px;display:none}
+.auth-alert.error{display:block;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#FCA5A5}
+.auth-alert.success{display:block;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#6EE7B7}
+.terms-row{display:flex;align-items:flex-start;gap:8px;margin:16px 0;font-size:12px;color:rgba(255,255,255,0.3)}
+.terms-row input{accent-color:#10B981;margin-top:2px}
+.terms-row a{color:#10B981;text-decoration:none}
+.benefits{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+.benefit{padding:10px;border-radius:10px;background:rgba(255,255,255,0.03);text-align:center}
+.benefit-icon{font-size:18px}
+.benefit-text{font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px}
 </style>
 </head>
 <body>
-<div class="ambient-g1"></div><div class="ambient-g2"></div>
-<div id="particles-canvas"></div>
 
-<div class="auth-page-wrap">
-  <div id="authContainer" class="auth-glass-container" style="position:relative">
-    <div class="auth-glass-brand">
-      <div class="auth-glass-logo">✦ EARNNOVA</div>
-      <div class="auth-glass-underline"></div>
-      <div class="auth-glass-subtitle">Join and start earning</div>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">E</div>
+    <div class="auth-title">Create Account</div>
+    <div class="auth-subtitle">Start earning in minutes</div>
+
+    <div class="benefits">
+      <div class="benefit"><div class="benefit-icon">📺</div><div class="benefit-text">Watch Ads</div></div>
+      <div class="benefit"><div class="benefit-icon">💰</div><div class="benefit-text">Earn Rewards</div></div>
+      <div class="benefit"><div class="benefit-icon">💳</div><div class="benefit-text">Withdraw Anytime</div></div>
+      <div class="benefit"><div class="benefit-icon">👥</div><div class="benefit-text">Refer Friends</div></div>
     </div>
-    <div id="alertBox" class="auth-glass-alert"></div>
-    
-    <!-- REGISTER FORM -->
+
+    <div class="auth-alert" id="alertBox"></div>
+
     <form id="registerForm">
-      <div class="auth-glass-input"><i class="fas fa-user"></i><input type="text" id="regName" placeholder="Full Name" required></div>
-      <div class="auth-glass-input"><i class="fas fa-envelope"></i><input type="email" id="regEmail" placeholder="Email" required></div>
-      <div class="auth-glass-input"><i class="fas fa-lock"></i><input type="password" id="regPassword" placeholder="Password (6+ chars)" required minlength="6"></div>
-      <div class="auth-glass-input"><i class="fas fa-gift"></i><input type="text" id="regReferral" placeholder="Referral Code (optional)"></div>
-      <button type="submit" id="registerBtn" class="auth-glass-btn">Create Account</button>
+      <div class="auth-input-group">
+        <label>Full Name</label>
+        <div class="auth-input-wrap">
+          <i class="fas fa-user"></i>
+          <input type="text" id="regName" placeholder="John Doe" required>
+        </div>
+      </div>
+      <div class="auth-input-group">
+        <label>Email</label>
+        <div class="auth-input-wrap">
+          <i class="fas fa-envelope"></i>
+          <input type="email" id="regEmail" placeholder="your@email.com" required>
+        </div>
+      </div>
+      <div class="auth-input-group">
+        <label>Password</label>
+        <div class="auth-input-wrap">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="regPassword" placeholder="Minimum 6 characters" required minlength="6">
+        </div>
+      </div>
+      <div class="auth-input-group">
+        <label>Referral Code (optional)</label>
+        <div class="auth-input-wrap">
+          <i class="fas fa-gift"></i>
+          <input type="text" id="regReferral" placeholder="Enter referral code">
+        </div>
+      </div>
+
+      <label class="terms-row">
+        <input type="checkbox" id="agreeTerms" checked>
+        <span>I agree to the <a href="terms.html" target="_blank">Terms of Service</a> and <a href="privacy.html" target="_blank">Privacy Policy</a></span>
+      </label>
+
+      <button type="submit" id="registerBtn" class="btn-auth">Create Account</button>
     </form>
-    
-    <div class="auth-glass-footer">
-      <span class="auth-glass-muted">Already have an account?</span>
-      <a href="login.html" class="auth-glass-link">Sign In</a>
+
+    <div class="auth-footer">
+      Already have an account? <a href="login.html">Sign In</a>
     </div>
-    <div class="auth-glass-policy">
-      <a href="privacy.html" target="_blank" class="auth-glass-link">Privacy</a>
-      <span class="auth-glass-dot">•</span>
-      <a href="terms.html" target="_blank" class="auth-glass-link">Terms</a>
-    </div>
+  </div>
+  <div style="text-align:center;margin-top:16px;font-size:11px;color:rgba(255,255,255,0.15)">
+    <a href="privacy.html" style="color:rgba(255,255,255,0.15);text-decoration:none">Privacy</a> • 
+    <a href="terms.html" style="color:rgba(255,255,255,0.15);text-decoration:none">Terms</a>
   </div>
 </div>
 
 <script src="js/supabase-config.js"></script>
 <script>
-// ===== PARTICLES =====
-(function(){var c=document.getElementById('particles-canvas');if(!c)return;for(var i=0;i<25;i++){var p=document.createElement('div');p.className='particle';p.style.left=Math.random()*100+'%';p.style.animationDuration=(12+Math.random()*20)+'s';p.style.animationDelay=Math.random()*20+'s';p.style.width=p.style.height=(2+Math.random()*3)+'px';c.appendChild(p)}})();
+var alertBox = document.getElementById('alertBox');
 
-// ===== 3D TILT =====
-(function(){var ct=document.getElementById('authContainer');if(!ct)return;
-ct.addEventListener('touchmove',function(e){var t=e.touches[0];if(!t)return;var r=ct.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=(t.clientX-cx)/(r.width/2),dy=(t.clientY-cy)/(r.height/2),rx=Math.max(-6,Math.min(6,-dy*5)),ry=Math.max(-6,Math.min(6,dx*5));ct.style.transform='perspective(600px) rotateX('+rx+'deg) rotateY('+ry+'deg) scale3d(1.02,1.02,1.02)'},{passive:true});
-ct.addEventListener('touchend',function(){ct.style.transform='perspective(600px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)';ct.style.transition='transform 0.5s cubic-bezier(0.23,1,0.32,1)';setTimeout(function(){if(ct)ct.style.transition=''},500)},{passive:true});
-ct.addEventListener('mousemove',function(e){var r=ct.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=(e.clientX-cx)/(r.width/2),dy=(e.clientY-cy)/(r.height/2),rx=Math.max(-4,Math.min(4,-dy*3)),ry=Math.max(-4,Math.min(4,dx*3));ct.style.transform='perspective(600px) rotateX('+rx+'deg) rotateY('+ry+'deg) scale3d(1.01,1.01,1.01)';ct.style.transition='transform 0.15s ease-out'});
-ct.addEventListener('mouseleave',function(){ct.style.transform='perspective(600px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)';ct.style.transition='transform 0.5s cubic-bezier(0.23,1,0.32,1)';setTimeout(function(){if(ct)ct.style.transition=''},500)});})();
-
-// ===== REGISTER HANDLER =====
-function showAlert(msg,type){
-  var box=document.getElementById('alertBox');
-  if(!box)return;
-  box.textContent=msg;
-  box.className='auth-glass-alert '+(type||'error');
-  box.style.display='block';
-  if(type==='error'){box.classList.add('shake-error');setTimeout(function(){box.classList.remove('shake-error')},600)}
-  setTimeout(function(){box.style.display='none'},5000);
-}
-function getAuthError(err){
-  var m={'auth/user-not-found':'No account with this email','auth/wrong-password':'Invalid password','auth/email-already-in-use':'This email is already registered','auth/weak-password':'Password must be 6+ characters','auth/invalid-email':'Please enter a valid email','auth/too-many-requests':'Too many attempts. Try again later','auth/network-request-failed':'Network error. Check your connection','auth/popup-closed-by-user':'Sign-in cancelled'};
-  return m[err.code]||err.message||'An error occurred';
+function showAlert(msg, type) {
+  alertBox.textContent = msg;
+  alertBox.className = 'auth-alert ' + (type || 'error');
 }
 
-// ===== DISPOSABLE EMAIL BLOCKLIST =====
-var DISPOSABLE_DOMAINS=['mailinator.com','guerrillamail.com','tempmail.com','10minutemail.com','throwaway.email','trashmail.com','yopmail.com','sharklasers.com','spam4.me','grr.la','mailnator.com','mailexpire.com','maildrop.cc','mintemail.com','getnada.com','temp-mail.org','tempemail.net','tempmail.net','mail.tm','guerrillamail.org','guerrillamail.net','throwawaymail.com','trashmail.net','yopmail.fr','yopmail.net','spambob.com','spambog.com','spamcowboy.com','spamday.com','spamdecoy.net','spameater.com','spamgourmet.com','spamhereplease.com','spamhole.com','spamify.com','spaminator.de','spamkill.info','spaml.com','spamserver.de','spamspot.com','spamthis.co.uk','spamtrail.com','spamwins.com','tempalias.com','tempmail.xyz','tmpmail.net','trash2009.com','trash360.com','trashdevil.de','trashmail.org','trashymail.com','wegwerfmail.de','wegwerfmail.net','wegwerfmail.org','wh4f.org','whyspam.me','willselfdestruct.com','xagloo.com','xemaps.com','xents.com','xmaily.com','xoxy.net','yep.it','yogamaven.com','zehnminutenmail.de','zippymail.info','zoaxe.com','zoemail.com','zoemail.net','zoemail.org','getairmail.com','getonemail.com','mailcatch.com','maileater.com','mailmetrash.com','mailzilla.com','mohmal.com','mytrashmail.com','nowmymail.com','receiveee.com','sofort-mail.de','spambox.info','spambox.me','tittbit.in','tmail.ws','tmpeml.com','tmpjr.me','trbvm.com','trbvn.com','turual.com','tyldd.com','upliftnow.com','veryrealemail.com','winemaven.info','wronghead.com','wuzup.net','zehnminutenmail.de'];
-function isDisposableEmail(email){var domain=email.split('@')[1].toLowerCase();return DISPOSABLE_DOMAINS.includes(domain);}
-
-document.getElementById('registerForm').addEventListener('submit',async function(e){
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
   e.preventDefault();
-  var name=document.getElementById('regName').value.trim();
-  var email=document.getElementById('regEmail').value.trim();
-  var password=document.getElementById('regPassword').value;
-  var ref=document.getElementById('regReferral').value.trim();
-  var btn=document.getElementById('registerBtn');
-  if(password.length<6){showAlert('Password must be 6+ characters');return;}
-  if(isDisposableEmail(email)){showAlert('Temporary emails are not allowed. Please use a permanent email address.');return;}
-  btn.disabled=true;btn.innerHTML='⏳ Creating account...';
-  try{
-    var cred=await auth.createUserWithEmailAndPassword(email,password);
-    var user=cred.user;
-    await user.updateProfile({displayName:name});
-    var userData={
-      uid:user.uid,email:email||'',name:name,photo:'',phone:'',
-      balance:0,totalEarned:0,totalWithdrawn:0,adsWatched:0,todayAds:0,lastAdDate:'',
-      referralCode:Math.random().toString(36).substring(2,10).toUpperCase(),referredBy:'',
-      streak:0,lastActive:'',isActive:true,isAdmin:email===ADMIN_EMAIL,
-      createdAt:firebase.firestore.FieldValue.serverTimestamp(),lastLogin:firebase.firestore.FieldValue.serverTimestamp()
+  var name = document.getElementById('regName').value.trim();
+  var email = document.getElementById('regEmail').value.trim();
+  var password = document.getElementById('regPassword').value;
+  var ref = document.getElementById('regReferral').value.trim().toUpperCase();
+  var btn = document.getElementById('registerBtn');
+
+  if (!document.getElementById('agreeTerms').checked) {
+    showAlert('Please agree to the Terms of Service', 'error');
+    return;
+  }
+  if (password.length < 6) { showAlert('Password must be 6+ characters', 'error'); return; }
+  if (isDisposableEmail(email)) { showAlert('Temporary emails are not allowed', 'error'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Creating account...';
+
+  try {
+    var cred = await auth.createUserWithEmailAndPassword(email, password);
+    var user = cred.user;
+    await user.updateProfile({ displayName: name });
+
+    // Create user document
+    var refCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+    var userData = {
+      uid: user.uid, email: email, name: name, photo: '', phone: '',
+      balance: 0, totalEarned: 0, totalWithdrawn: 0, adsWatched: 0,
+      todayAds: 0, lastAdDate: '', referralCode: refCode, referredBy: '',
+      isActive: true, isAdmin: user.email === ADMIN_EMAIL,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      lastLogin: firebase.firestore.FieldValue.serverTimestamp()
     };
-    if(ref){
-      try{
-        var refSnap=await usersRef.where('referralCode','==',ref.toUpperCase()).get();
-        if(!refSnap.empty){
-          var referrer=refSnap.docs[0];
-          userData.referredBy=referrer.id;
-          await usersRef.doc(referrer.id).update({balance:firebase.firestore.FieldValue.increment(0.50),totalEarned:firebase.firestore.FieldValue.increment(0.50)});
-          await referralsRef.add({referrerId:referrer.id,referredId:user.uid,referredName:name,bonus:0.50,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+
+    // Handle referral
+    if (ref && db) {
+      try {
+        var refSnap = await fbTimeout(usersRef.where('referralCode', '==', ref).get());
+        if (!refSnap.empty) {
+          var referrer = refSnap.docs[0];
+          userData.referredBy = referrer.id;
+          await usersRef.doc(referrer.id).update({
+            balance: firebase.firestore.FieldValue.increment(0.50),
+            totalEarned: firebase.firestore.FieldValue.increment(0.50),
+            referralCount: firebase.firestore.FieldValue.increment(1)
+          });
+          await referralsRef.add({
+            referrerId: referrer.id, referredId: user.uid,
+            referredName: name, bonus: 0.50,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
         }
-      }catch(er){}
+      } catch(er) { console.warn('Referral error:', er); }
     }
+
     await usersRef.doc(user.uid).set(userData);
-    // Don't redirect manually! onAuthStateChanged listener below handles it
-    btn.innerHTML='✅ Created! Redirecting...';
-  }catch(err){
-    showAlert(getAuthError(err));
-    btn.disabled=false;btn.textContent='Create Account';
+    btn.textContent = '✅ Account created!';
+
+  } catch(err) {
+    showAlert(getAuthError(err), 'error');
+    btn.disabled = false;
+    btn.textContent = 'Create Account';
   }
 });
 
-// SINGLE source of truth: onAuthStateChanged handles ALL redirects
-auth.onAuthStateChanged(function(user){if(user)window.location.href='home.html'});
+// Auth state redirect
+auth.onAuthStateChanged(function(user) {
+  if (user) window.location.href = 'home.html';
+});
 </script>
 </body>
 </html>

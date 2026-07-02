@@ -3,28 +3,69 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>EARNNOVA</title>
+<title>EARNNOVA — Earn Anywhere, Anytime</title>
+<link rel="stylesheet" href="css/style.css">
 <style>
-body{margin:0;background:#0F172A;min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-family:-apple-system,sans-serif}
-.spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,0.06);border-top-color:#10B981;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
-@keyframes spin{to{transform:rotate(360deg)}}
-p{font-size:14px;color:#64748B;margin:0}
+body{margin:0;background:#080A12;color:#fff;font-family:system-ui,-apple-system,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;text-align:center}
+.landing-logo{width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#10B981,#059669);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;color:#fff;margin-bottom:20px;box-shadow:0 12px 48px rgba(16,185,129,0.2)}
+.landing-title{font-size:36px;font-weight:800;line-height:1.1}
+.landing-sub{font-size:15px;color:rgba(255,255,255,0.4);margin:12px 0 32px;max-width:320px}
+.landing-btns{display:flex;flex-direction:column;gap:12px;width:100%;max-width:280px}
+.landing-btn{padding:16px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.25s;text-decoration:none;text-align:center}
+.landing-btn-primary{background:linear-gradient(135deg,#10B981,#059669);color:#fff}
+.landing-btn-secondary{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#fff}
+.landing-btn:active{transform:scale(0.97)}
+.landing-footer{font-size:11px;color:rgba(255,255,255,0.15);margin-top:48px}
+.landing-features{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:32px 0;max-width:320px}
+.landing-feat{padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04)}
+.landing-feat-icon{font-size:24px;margin-bottom:4px}
+.landing-feat-text{font-size:11px;color:rgba(255,255,255,0.3)}
 </style>
 </head>
 <body>
-<div class="spinner"></div>
-<p>Loading EARNNOVA...</p>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-<script src="js/supabase-config.js"></script>
+<div class="landing-logo">E</div>
+<div class="landing-title">EARNNOVA</div>
+<div class="landing-sub">Watch ads, earn rewards, and withdraw real money. Start earning today.</div>
+
+<div class="landing-features">
+  <div class="landing-feat"><div class="landing-feat-icon">📺</div><div class="landing-feat-text">Watch 30s ads</div></div>
+  <div class="landing-feat"><div class="landing-feat-icon">💰</div><div class="landing-feat-text">Earn $0.02+ each</div></div>
+  <div class="landing-feat"><div class="landing-feat-icon">💳</div><div class="landing-feat-text">7+ payout methods</div></div>
+  <div class="landing-feat"><div class="landing-feat-icon">👥</div><div class="landing-feat-text">Refer & earn $0.50</div></div>
+</div>
+
+<div class="landing-btns">
+  <a href="register.html" class="landing-btn landing-btn-primary">Get Started Free</a>
+  <a href="login.html" class="landing-btn landing-btn-secondary">Sign In</a>
+</div>
+
+<div class="landing-footer">
+  <a href="privacy.html" style="color:rgba(255,255,255,0.15);text-decoration:none">Privacy</a> • 
+  <a href="terms.html" style="color:rgba(255,255,255,0.15);text-decoration:none">Terms</a>
+</div>
+
 <script>
-var _r=false;
-function rd(u){if(!_r){_r=true;window.location.href=u;}}
-// Auth listener is SINGLE source of truth for redirects
-auth.onAuthStateChanged(function(user){rd(user?'home.html':'login.html');});
-// Fallback if Firebase never loads
-setTimeout(function(){rd('login.html');},5000);
+// Check if user is already logged in
+(function() {
+  var s = document.createElement('script');
+  s.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js';
+  s.onload = function() {
+    var s2 = document.createElement('script');
+    s2.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js';
+    s2.onload = function() {
+      firebase.initializeApp({
+        apiKey: "AIzaSyAoo2-X5ILICXR2mFAyUhqJYpvScChlsOc",
+        authDomain: "earnnovabeta.firebaseapp.com",
+        projectId: "earnnovabeta"
+      });
+      firebase.auth().onAuthStateChanged(function(user) {
+        if (user) window.location.href = 'home.html';
+      });
+    };
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s);
+})();
 </script>
 </body>
 </html>
