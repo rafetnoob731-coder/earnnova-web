@@ -343,12 +343,27 @@ async function loadTransactions() {
 // ===== AD SYSTEM =====
 var adCooldown = false;
 var dailyAdCount = 0;
-var AdTypes = ['ads1', 'ads2', 'ads3'];
+var AdTypes = ['ads1','ads2','ads3','ads4','ads5','ads6','ads7','ads8','ads9','ads10'];
 var currentAdType = 'ads1';
 var adProgress = 0;
 var adInterval = null;
 var adCompleted = false;
 var _rewarding = false;
+var _tapCount = 0;
+var _tapTarget = 0;
+var _adStep = 0;
+var _ballCount = 0;
+var _gameScore = 0;
+var _bannerTapped = false;
+var _banner1Done = false;
+var _banner2Done = false;
+var _comboBannerDone = false;
+var _comboBallsDone = false;
+var _comboTapDone = false;
+var _comboGameDone = false;
+var _comboBannerTimer = null;
+var _tapStartTime = 0;
+var _tapTimes = [];
 var AD_TASK_DURATION = 60;
 var AD_INCREMENT = 0.010;
 var MAX_DAILY_ADS = 30;
@@ -377,24 +392,34 @@ function updateAdUI() {
   qsa('[data-ad-count]').forEach(function(el) { el.textContent = dailyAdCount + '/' + MAX_DAILY_ADS; });
   var progress = $('adProgress');
   if (progress) progress.style.width = Math.min(100, (dailyAdCount / MAX_DAILY_ADS) * 100) + '%';
-  
   var countdownEl = $('adCountdown');
   if (countdownEl) countdownEl.textContent = (MAX_DAILY_ADS - dailyAdCount) + ' remaining';
 }
 
 async function watchAd() {
-  if (adCooldown) { showToast('🏳', 'Cooldown Active', 'Please wait 10 seconds between ads.', 'warning'); return; }
-  if (dailyAdCount >= MAX_DAILY_ADS) { showToast('⚠️', 'Daily Limit Reached', 'You\'ve watched ' + MAX_DAILY_ADS + ' ads today. Come back tomorrow!', 'warning'); return; }
+  if (adCooldown) { showToast('\u23f3', 'Cooldown Active', 'Please wait 10 seconds between ads.', 'warning'); return; }
+  if (dailyAdCount >= MAX_DAILY_ADS) { showToast('\u26a0\ufe0f', 'Daily Limit Reached', 'You\'ve watched ' + MAX_DAILY_ADS + ' ads today. Come back tomorrow!', 'warning'); return; }
   
-  // Random ad type
   currentAdType = AdTypes[Math.floor(Math.random() * AdTypes.length)];
   adProgress = 0;
   adCompleted = false;
+  _tapCount = 0;
+  _tapTarget = 0;
+  _adStep = 0;
+  _ballCount = 0;
+  _gameScore = 0;
+  _bannerTapped = false;
+  _banner1Done = false;
+  _banner2Done = false;
+  _comboBannerDone = false;
+  _comboBallsDone = false;
+  _comboTapDone = false;
+  _comboGameDone = false;
+  _comboBannerTimer = null;
+  _tapTimes = [];
   
-  if (typeof SafeAdNetwork !== 'undefined' && SafeAdNetwork.showInterstitial) {
-    SafeAdNetwork.showInterstitial(function() {
-      showAdUI();
-    });
+  if ((currentAdType === 'ads1' || currentAdType === 'ads4' || currentAdType === 'ads9') && typeof SafeAdNetwork !== 'undefined') {
+    SafeAdNetwork.showInterstitial(function() { showAdUI(); });
   } else {
     showAdUI();
   }
@@ -403,204 +428,390 @@ async function watchAd() {
 function showAdUI() {
   var modal = $('adModal');
   if (!modal) return;
-  
+  var config = getAdConfig(currentAdType);
   var adContent = getAdContent(currentAdType);
-  
   var html =
     '<div class="ad-fullscreen">' +
       '<div class="ad-topbar">' +
         '<div class="ad-topbar-left">' +
           '<span class="ad-type-badge">' + currentAdType.toUpperCase() + '</span>' +
-          '<span style="font-size:10px;color:var(--text-muted);margin-left:4px">60s task</span>' +
+          '<span style="font-size:10px;color:var(--text-muted);margin-left:4px">' + config.label + '</span>' +
         '</div>' +
         '<button class="ad-close-btn" id="adCloseBtn" onclick="handleAdClose()">\u2716</button>' +
       '</div>' +
-      '<div class="ad-content-area" id="adContentArea">' +
-        adContent +
-      '</div>' +
+      '<div class="ad-content-area" id="adContentArea">' + adContent + '</div>' +
       '<div class="ad-bottom-bar">' +
         '<div class="ad-progress-container">' +
           '<div class="ad-progress-bar" id="adProgressBar"></div>' +
         '</div>' +
         '<div class="ad-progress-text">' +
-          '<span id="adTimerDisplay">1:00</span>' +
+          '<span id="adTimerDisplay">' + config.timerStart + '</span>' +
           '<span id="adProgressPercent">0%</span>' +
         '</div>' +
-        '<div class="ad-earnings-inline" id="adEarningsInline">+$0.000</div>' +
+        '<div class="ad-earnings-inline" id="adEarningsInline">+$' + config.reward.toFixed(3) + '</div>' +
       '</div>' +
     '</div>';
-  
   modal.innerHTML = html;
   modal.classList.add('show');
   adCooldown = true;
-  
-  startAdProgress();
-}
-function getAdContent(type) {
-  var adImages = {
-    ads1: 'https://via.placeholder.com/320x180/0A0E1A/D4AF37?text=Watch+Ad',
-    ads2: 'https://via.placeholder.com/320x200/0A0E1A/10B981?text=Sponsored',
-    ads3: 'https://via.placeholder.com/320x220/0A0E1A/F59E0B?text=Rewarded'
-  };
-  var adLabels = {
-    ads1: 'Banner Ad \u2014 60s to earn',
-    ads2: 'Sponsored Content \u2014 60s to earn',
-    ads3: 'Rewarded Task \u2014 Complete to earn'
-  };
-  return '<div class="ad-inner">' +
-    '<div class="ad-placeholder">' +
-      '<img src="' + adImages[type] + '" alt="Ad" style="width:100%;max-width:320px;border-radius:12px;display:block;margin:0 auto" />' +
-    '</div>' +
-    '<div class="ad-label">' + adLabels[type] + '</div>' +
-    '<div class="ad-reward-info">' +
-      '<span class="ad-earn-badge">+$' + AD_INCREMENT.toFixed(3) + '</span>' +
-      '<span class="ad-earn-sub">per task</span>' +
-    '</div>' +
-  '</div>';
+  startAdTask(currentAdType);
 }
 
-function startAdProgress() {
-  adProgress = 0;
-  adCompleted = false;
-  var totalSeconds = AD_TASK_DURATION;
+function getAdConfig(type) {
+  var c = {
+    ads1:  { label: 'Monetag ad',     timerStart: '0:30', duration: 30,  reward: 0.020 },
+    ads2:  { label: 'Tap banner 30s', timerStart: '0:30', duration: 30,  reward: 0.025 },
+    ads3:  { label: 'Tap 10 balls',   timerStart: '0:00', duration: 10,  reward: 0.030 },
+    ads4:  { label: 'Monetag x2',     timerStart: '0:00', duration: 5,   reward: 0.035 },
+    ads5:  { label: 'Full 60s ad',    timerStart: '1:00', duration: 60,  reward: 0.040 },
+    ads6:  { label: 'Mini game',      timerStart: '0:00', duration: 15,  reward: 0.050 },
+    ads7:  { label: 'Tap 300x 50s',   timerStart: '0:50', duration: 50,  reward: 0.060 },
+    ads8:  { label: 'Banner x2 30s',  timerStart: '1:00', duration: 60,  reward: 0.070 },
+    ads9:  { label: 'Monetag x3',     timerStart: '0:00', duration: 8,   reward: 0.080 },
+    ads10: { label: 'Combo x4',       timerStart: '0:00', duration: 120, reward: 0.100 }
+  };
+  return c[type] || c.ads1;
+}
+
+function getAdContent(type) {
+  switch(type) {
+    case 'ads1':
+      return '<div class="ad-inner"><div class="ad-placeholder" style="width:100%;height:180px;border-radius:16px;background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(16,185,129,0.1));border:1px solid rgba(212,175,55,0.15);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:12px"><div style="font-size:48px;margin-bottom:8px">\ud83d\udcfa</div><div style="font-size:13px;color:var(--gold);font-weight:600">Monetag Rewarded</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px">Loading ad...</div></div><div class="ad-label">Watch the monetag ad to earn</div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.020</span></div></div>';
+    case 'ads2':
+      return '<div class="ad-inner"><div class="ad-placeholder" id="bannerAdContainer" style="width:100%;height:150px;border-radius:16px;background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:12px;cursor:pointer" onclick="handleBannerTap()"><div style="font-size:40px;margin-bottom:8px">\ud83d\udce1</div><div style="font-size:12px;color:var(--text-secondary)">\ud83d\udc42 Tap banner</div><div id="bannerTapStatus" style="font-size:11px;color:var(--gold);margin-top:4px">Not tapped yet</div></div><div class="ad-label">Tap the banner, wait 30s</div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.025</span></div></div>';
+    case 'ads3':
+      return '<div class="ad-inner"><div style="font-size:14px;font-weight:600;margin-bottom:8px">\ud83c\udfaf Tap 10 Balls!</div><div id="ballGameArea" style="width:100%;min-height:180px;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;padding:8px;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.06);margin-bottom:8px"></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);padding:0 4px"><span id="ballCountText">Tapped: 0/10</span><span id="ballStatusText">Tap balls!</span></div><div class="ad-reward-info" style="margin-top:8px"><span class="ad-earn-badge">+$0.030</span></div></div>';
+    case 'ads4':
+      return '<div class="ad-inner"><div class="ad-placeholder" style="width:100%;height:180px;border-radius:16px;background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(139,92,246,0.1));border:1px solid rgba(59,130,246,0.15);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:12px"><div style="font-size:48px;margin-bottom:8px">\ud83d\udd01</div><div style="font-size:13px;color:#60a5fa;font-weight:600">Monetag x2</div><div id="monetagStepText" style="font-size:11px;color:var(--text-muted);margin-top:4px">Step 1 of 2</div></div><div class="ad-label"><span id="monetagActionText">Watching ad 1...</span></div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.035</span></div></div>';
+    case 'ads5':
+      return '<div class="ad-inner"><div class="ad-placeholder" style="width:100%;height:180px;border-radius:16px;background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(5,150,105,0.1));border:1px solid rgba(16,185,129,0.15);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:12px"><div style="font-size:48px;margin-bottom:8px">\u23f1\ufe0f</div><div style="font-size:13px;color:#34d399;font-weight:600">Full Ad</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px">Watch 60s</div></div><div class="ad-label">Watch the full 60s ad</div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.040</span></div></div>';
+    case 'ads6':
+      return '<div class="ad-inner"><div style="font-size:14px;font-weight:600;margin-bottom:8px">\ud83c\udfae Hit the Target!</div><div id="gameArea" style="width:100%;height:180px;border-radius:16px;background:linear-gradient(135deg,rgba(251,191,36,0.08),rgba(245,158,11,0.08));border:1px solid rgba(251,191,36,0.15);position:relative;margin-bottom:8px"><div id="gameTarget" style="width:44px;height:44px;border-radius:50%;background:var(--gold);position:absolute;left:20px;top:20px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;box-shadow:0 4px 16px rgba(212,175,55,0.4);transition:all 0.15s">\ud83c\udfaf</div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);padding:0 4px;margin-bottom:8px"><span id="gameScoreText">Click target 0/5</span></div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.050</span></div></div>';
+    case 'ads7':
+      return '<div class="ad-inner"><div style="font-size:14px;font-weight:600;margin-bottom:8px">\ud83d\udc46 Tap 300 Times!</div><div id="tapArea" style="width:100%;height:140px;border-radius:16px;background:linear-gradient(135deg,rgba(239,68,68,0.06),rgba(220,38,38,0.06));border:1px solid rgba(239,68,68,0.12);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:8px;user-select:none" onmousedown="handleTap()" ontouchstart="handleTap()"><div style="font-size:48px;margin-bottom:4px">\ud83d\udc46</div><div style="font-size:24px;font-weight:800;color:var(--gold)" id="tapCounter">0</div><div style="font-size:10px;color:var(--text-secondary)">/ 300</div><div style="width:80%;height:6px;border-radius:6px;background:rgba(255,255,255,0.06);margin-top:6px;overflow:hidden"><div id="tapProgressFill" style="height:100%;width:0%;border-radius:6px;background:linear-gradient(90deg,#ef4444,#f59e0b,#10b981)"></div></div></div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);padding:0 4px;margin-bottom:8px"><span id="tapTimerDisplay">50s left</span><span id="tapRateDisplay">0/s</span></div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.060</span></div></div>';
+    case 'ads8':
+      return '<div class="ad-inner"><div style="font-size:12px;color:var(--text-secondary);text-align:center;margin-bottom:6px">Banner 1 of 2 &mdash; tap &amp; wait 30s each</div><div id="banner1Container" style="width:100%;height:70px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:4px" onclick="handleBanner1Tap()"><span style="font-size:18px">\ud83d\udce1</span><span style="font-size:11px;color:var(--text-secondary);margin-left:6px" id="banner1Status">Tap banner 1</span></div><div id="banner2Container" style="width:100%;height:70px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;opacity:0.3;pointer-events:none" onclick="handleBanner2Tap()"><span style="font-size:18px">\ud83d\udce1</span><span style="font-size:11px;color:var(--text-secondary);margin-left:6px" id="banner2Status">\ud83d\udd12 Locked</span></div><div class="ad-reward-info" style="margin-top:8px"><span class="ad-earn-badge">+$0.070</span></div></div>';
+    case 'ads9':
+      return '<div class="ad-inner"><div class="ad-placeholder" style="width:100%;height:180px;border-radius:16px;background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(217,70,239,0.1));border:1px solid rgba(139,92,246,0.15);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:12px"><div style="font-size:48px">\ud83d\udd01\ud83d\udd01\ud83d\udd01</div><div style="font-size:13px;color:#a78bfa;font-weight:600">Monetag x3</div><div id="monetag3StepText" style="font-size:11px;color:var(--text-muted);margin-top:4px">Step 1 of 3</div></div><div class="ad-label"><span id="monetag3ActionText">Ad 1...</span></div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.080</span></div></div>';
+    case 'ads10':
+      return '<div class="ad-inner"><div style="text-align:center;margin-bottom:8px"><div style="font-size:14px;font-weight:700;color:var(--gold)">\ud83c\udfc6 MEGA COMBO!</div><div style="font-size:10px;color:var(--text-secondary)">Complete all 4 tasks for big reward</div></div><div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px"><div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:10px"><span>\u2460</span><span style="flex:1;color:var(--text-secondary)">Banner 30s</span><span id="combo1Status" style="color:var(--text-muted)">\u23f3</span></div><div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:10px"><span>\u2461</span><span style="flex:1;color:var(--text-secondary)">Tap 10 balls</span><span id="combo2Status" style="color:var(--text-muted)">\u23f3</span></div><div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:10px"><span>\u2462</span><span style="flex:1;color:var(--text-secondary)">Tap 100x</span><span id="combo3Status" style="color:var(--text-muted)">\u23f3</span></div><div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:10px"><span>\u2463</span><span style="flex:1;color:var(--text-secondary)">Target 3x</span><span id="combo4Status" style="color:var(--text-muted)">\u23f3</span></div></div><div class="ad-reward-info"><span class="ad-earn-badge" style="font-size:15px;padding:6px 20px">+$0.100</span></div></div>';
+    default: return '<div class="ad-inner">Ad loading...</div>';
+  }
+}
+
+function startAdTask(type) {
+  switch(type) {
+    case 'ads1': startMonetagTask(1); break;
+    case 'ads2': startBannerTask(); break;
+    case 'ads3': startBallGame(); break;
+    case 'ads4': startMonetagTask(2); break;
+    case 'ads5': startTimerTask(60); break;
+    case 'ads6': startGameTask(); break;
+    case 'ads7': startTapTask(); break;
+    case 'ads8': startBanner2Task(); break;
+    case 'ads9': startMonetagTask(3); break;
+    case 'ads10': startComboTask(); break;
+  }
+}
+
+function startMonetagTask(count) {
+  _adStep = 0;
+  function step() {
+    if (_adStep >= count) { adCompleted = true; completeStep(); return; }
+    _adStep++;
+    var st = document.getElementById('monetagStepText') || document.getElementById('monetag3StepText');
+    var at = document.getElementById('monetagActionText') || document.getElementById('monetag3ActionText');
+    if (st) st.textContent = 'Step ' + _adStep + ' of ' + count;
+    if (at) at.textContent = 'Watching ad ' + _adStep + '...';
+    if (typeof SafeAdNetwork !== 'undefined') { SafeAdNetwork.showInterstitial(function() { setTimeout(step, 500); }); }
+    else { setTimeout(step, 2000); }
+  }
+  step();
+}
+
+function handleBannerTap() {
+  if (_bannerTapped) return;
+  _bannerTapped = true;
+  var c = document.getElementById('bannerAdContainer');
+  var s = document.getElementById('bannerTapStatus');
+  if (c) c.style.borderColor = 'var(--gold)';
+  if (s) { s.textContent = '\u2705 Tapped! 30s wait...'; s.style.color = '#34d399'; }
+  startTimerTask(30);
+}
+
+function startBannerTask() {
+  var c = document.getElementById('bannerAdContainer');
+  if (c) c.innerHTML = '<div style="text-align:center;padding:20px"><div style="font-size:36px;margin-bottom:8px">\ud83d\udce1</div><div style="font-size:12px;color:var(--text-secondary)">Tap the banner above</div></div>';
+}
+
+function startBallGame() {
+  _ballCount = 0;
+  spawnBalls();
+}
+
+function spawnBalls() {
+  var area = document.getElementById('ballGameArea');
+  if (!area) return;
+  var count = 10 - _ballCount;
+  area.innerHTML = '';
+  for (var i = 0; i < count; i++) {
+    var b = document.createElement('div');
+    var sz = 28 + Math.floor(Math.random() * 16);
+    var colors = ['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ec4899','#14b8a6','#f97316'];
+    b.style.cssText = 'width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:'+colors[i%colors.length]+';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;cursor:pointer;animation:giftBounce 0.5s ease;transition:transform 0.1s';
+    b.textContent = i+1;
+    b.onclick = function(){ tapBall(this); };
+    area.appendChild(b);
+  }
+}
+
+function tapBall(el) {
+  if (el.style.opacity === '0.3') return;
+  el.style.opacity = '0.3'; el.style.transform = 'scale(0.7)'; el.style.cursor = 'default'; el.onclick = null;
+  _ballCount++;
+  var ct = document.getElementById('ballCountText');
+  var st = document.getElementById('ballStatusText');
+  if (ct) ct.textContent = 'Tapped: '+_ballCount+'/10';
+  if (_ballCount >= 10) {
+    if (st) { st.textContent = '\u2705 All done!'; st.style.color = '#34d399'; }
+    adCompleted = true; completeStep();
+  } else {
+    if (st) st.textContent = _ballCount+'/10 keep going!';
+    spawnBalls();
+  }
+}
+
+function startTimerTask(seconds) {
+  var config = getAdConfig(currentAdType);
+  var dur = seconds || config.duration || 60;
   var elapsed = 0;
-  var progressBar = $('adProgressBar');
-  var timerDisplay = $('adTimerDisplay');
-  var progressPercent = $('adProgressPercent');
-  var earningsDisplay = $('adEarningsInline');
-  
+  var pb = document.getElementById('adProgressBar');
+  var td = document.getElementById('adTimerDisplay');
+  var pp = document.getElementById('adProgressPercent');
+  var ed = document.getElementById('adEarningsInline');
+  if (adInterval) { clearInterval(adInterval); }
   adInterval = setInterval(function() {
     elapsed++;
-    adProgress = (elapsed / totalSeconds) * 100;
-    
-    if (progressBar) progressBar.style.width = Math.min(100, adProgress) + '%';
-    
-    var remaining = Math.max(0, totalSeconds - elapsed);
-    var mins = Math.floor(remaining / 60);
-    var secs = remaining % 60;
-    if (timerDisplay) timerDisplay.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
-    if (progressPercent) progressPercent.textContent = Math.floor(adProgress) + '%';
-    
-    var earnedSoFar = (elapsed / totalSeconds) * AD_REWARD;
-    if (earningsDisplay) earningsDisplay.textContent = '+' + earnedSoFar.toFixed(3);
-    
-    if (elapsed >= totalSeconds) {
-      clearInterval(adInterval);
-      adInterval = null;
-      adCompleted = true;
-      if (progressBar) progressBar.style.width = '100%';
-      if (timerDisplay) timerDisplay.textContent = '0:00';
-      if (progressPercent) progressPercent.textContent = '100%';
-      if (earningsDisplay) {
-        earningsDisplay.textContent = '+' + AD_REWARD.toFixed(3);
-        earningsDisplay.style.color = 'var(--emerald)';
-        earningsDisplay.style.fontWeight = '800';
-      }
-      var closeBtn = $('adCloseBtn');
-      if (closeBtn) {
-        closeBtn.style.background = 'var(--emerald)';
-        closeBtn.style.color = '#fff';
-        closeBtn.innerHTML = '✔';
-      }
+    adProgress = (elapsed/dur)*100;
+    if (pb) pb.style.width = Math.min(100,adProgress)+'%';
+    var r = Math.max(0,dur-elapsed);
+    if (td) td.textContent = Math.floor(r/60)+':'+(r%60<10?'0':'')+(r%60);
+    if (pp) pp.textContent = Math.floor(adProgress)+'%';
+    if (ed) ed.textContent = '+'+((elapsed/dur)*config.reward).toFixed(3);
+    if (elapsed>=dur) {
+      clearInterval(adInterval); adInterval=null;
+      adCompleted=true;
+      if(pb) pb.style.width='100%';
+      if(td) td.textContent='0:00';
+      if(pp) pp.textContent='100%';
+      if(ed){ed.textContent='+'+config.reward.toFixed(3);ed.style.color='var(--emerald)';}
+      completeStep();
     }
   }, 1000);
 }
 
+function startGameTask() {
+  _gameScore = 0;
+  moveTarget();
+}
+
+function moveTarget() {
+  if (_gameScore >= 5) return;
+  var t = document.getElementById('gameTarget');
+  var a = document.getElementById('gameArea');
+  if (!t||!a) return;
+  var aw = Math.max(a.offsetWidth-60,100);
+  var ah = Math.max(a.offsetHeight-60,100);
+  t.style.left = (10+Math.random()*aw)+'px';
+  t.style.top = (10+Math.random()*ah)+'px';
+  t.onclick = function() {
+    _gameScore++;
+    var st = document.getElementById('gameScoreText');
+    if (st) st.textContent = 'Nice! '+_gameScore+'/5';
+    if (_gameScore>=5) { adCompleted=true; completeStep(); }
+    else moveTarget();
+  };
+}
+
+function startTapTask() {
+  _tapCount=0; _tapStartTime=Date.now(); _tapTimes=[];
+  var elapsed=0;
+  if(adInterval){clearInterval(adInterval);}
+  adInterval=setInterval(function(){
+    elapsed++;
+    var td=document.getElementById('tapTimerDisplay');
+    if(td) td.textContent=Math.max(0,50-elapsed)+'s left';
+    if(elapsed>=50){
+      clearInterval(adInterval);adInterval=null;
+      if(_tapCount>=300){adCompleted=true;completeStep();}
+    }
+  },1000);
+}
+
+function handleTap() {
+  if(adCompleted||_rewarding) return;
+  _tapCount++;
+  _tapTimes.push(Date.now());
+  var c=document.getElementById('tapCounter');
+  var f=document.getElementById('tapProgressFill');
+  var r=document.getElementById('tapRateDisplay');
+  if(c) c.textContent=_tapCount;
+  if(f) f.style.width=Math.min(100,(_tapCount/300)*100)+'%';
+  var now=Date.now();
+  var recent=_tapTimes.filter(function(t){return now-t<1000;});
+  if(r) r.textContent=recent.length+'/s';
+  if(_tapCount>=300){
+    adCompleted=true;
+    if(adInterval){clearInterval(adInterval);adInterval=null;}
+    var td=document.getElementById('tapTimerDisplay');
+    if(td) td.textContent='\u2705 Done!';
+    completeStep();
+  }
+}
+
+function startBanner2Task() { _banner1Done=false; _banner2Done=false; }
+
+function handleBanner1Tap() {
+  if(_banner1Done) return;
+  _banner1Done=true;
+  var s=document.getElementById('banner1Status');
+  var c=document.getElementById('banner1Container');
+  if(s){s.textContent='\u2705 30s wait...';s.style.color='#34d399';}
+  if(c) c.style.borderColor='var(--gold)';
+  var b2=document.getElementById('banner2Container');
+  var b2s=document.getElementById('banner2Status');
+  if(b2){b2.style.opacity='1';b2.style.pointerEvents='auto';}
+  if(b2s) b2s.textContent='Tap banner 2';
+  var el=0;
+  var t=setInterval(function(){
+    el++;
+    if(el>=30){clearInterval(t);if(s)s.textContent='\u2705 Complete!';checkBanner2();}
+  },1000);
+}
+
+function handleBanner2Tap() {
+  if(_banner2Done) return;
+  _banner2Done=true;
+  var s=document.getElementById('banner2Status');
+  var c=document.getElementById('banner2Container');
+  if(s){s.textContent='\u2705 30s wait...';s.style.color='#34d399';}
+  if(c) c.style.borderColor='var(--gold)';
+  var el=0;
+  var t=setInterval(function(){
+    el++;
+    if(el>=30){clearInterval(t);if(s)s.textContent='\u2705 Complete!';checkBanner2();}
+  },1000);
+}
+
+function checkBanner2() { if(_banner1Done&&_banner2Done){adCompleted=true;completeStep();} }
+
+function startComboTask() {
+  _comboBannerDone=false;_comboBallsDone=false;_comboTapDone=false;_comboGameDone=false;_tapCount=0;_ballCount=0;_gameScore=0;
+  var el=0;
+  _comboBannerTimer=setInterval(function(){
+    el++;
+    var s=document.getElementById('combo1Status');
+    if(s)s.textContent=el+'s/30s';
+    if(el>=30){clearInterval(_comboBannerTimer);_comboBannerTimer=null;_comboBannerDone=true;if(s){s.textContent='\u2705 Done!';s.style.color='#34d399';}checkCombo();}
+  },1000);
+  setTimeout(function(){
+    var a=document.getElementById('adContentArea');
+    if(a){
+      var d=document.createElement('div');
+      d.id='comboBallArea';
+      d.style.cssText='display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:4px';
+      for(var i=0;i<10;i++){
+        var b=document.createElement('div');
+        b.style.cssText='width:22px;height:22px;border-radius:50%;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-size:9px;color:white;cursor:pointer';
+        b.textContent=i+1;
+        b.onclick=function(){comboBallTap(this);};
+        d.appendChild(b);
+      }
+      a.appendChild(d);
+    }
+  },500);
+}
+
+function comboTapHandler(e) {
+  if(currentAdType!=='ads10'||_comboTapDone) return;
+  _tapCount++;
+  var s=document.getElementById('combo3Status');
+  if(s)s.textContent=_tapCount+'/100';
+  if(_tapCount>=100){_comboTapDone=true;if(s){s.textContent='\u2705 Done!';s.style.color='#34d399';}checkCombo();}
+}
+
+function comboBallTap(el) {
+  if(el.style.opacity==='0.3') return;
+  el.style.opacity='0.3';
+  _ballCount++;
+  var s=document.getElementById('combo2Status');
+  if(s)s.textContent=_ballCount+'/10';
+  if(_ballCount>=10){_comboBallsDone=true;if(s){s.textContent='\u2705 Done!';s.style.color='#34d399';}checkCombo();}
+}
+
+function comboGameClick() {
+  _gameScore++;
+  var s=document.getElementById('combo4Status');
+  if(s)s.textContent=_gameScore+'/3';
+  if(_gameScore>=3){_comboGameDone=true;if(s){s.textContent='\u2705 Done!';s.style.color='#34d399';}checkCombo();}
+}
+
+function checkCombo() {
+  if(_comboBannerDone&&_comboBallsDone&&_comboTapDone&&_comboGameDone){adCompleted=true;completeStep();}
+}
+
+function completeStep() {
+  var cb=document.getElementById('adCloseBtn');
+  if(cb){cb.style.background='var(--emerald)';cb.style.color='#fff';cb.innerHTML='\u2714';}
+  var pb=document.getElementById('adProgressBar');
+  if(pb) pb.style.background='linear-gradient(90deg,var(--gold),var(--emerald))';
+  var ed=document.getElementById('adEarningsInline');
+  if(ed){ed.style.color='var(--emerald)';ed.style.fontWeight='800';}
+  var el=document.getElementById('adStatusLabel');
+  if(!el){
+    var d=document.createElement('div');
+    d.id='adStatusLabel';
+    d.style.cssText='text-align:center;font-size:11px;color:var(--emerald);font-weight:600;margin-top:6px';
+    d.textContent='\u2705 Complete! Tap \u2714 for reward';
+    var bb=document.querySelector('.ad-bottom-bar');
+    if(bb) bb.appendChild(d);
+  }
+}
+
 function handleAdClose() {
-  if (adCompleted) {
-    showGiftBoxAnimation();
+  if(_rewarding) return;
+  if(adCompleted){
+    _rewarding=true;
+    completeAd().then(function(){_showGiftOverlay();}).catch(function(){_showGiftOverlay();});
     return;
   }
-  
-  if ($('adCloseConfirmOverlay')) return;
-  
-  var overlay = document.createElement('div');
-  overlay.id = 'adCloseConfirmOverlay';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;animation:fadeIn 0.3s ease';
-  overlay.innerHTML =
-    '<div style="background:rgba(16,24,40,0.96);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:28px 24px;text-align:center;max-width:300px;width:90%">' +
-      '<div style="font-size:42px;margin-bottom:12px">⚠️</div>' +
-      '<div style="font-size:16px;font-weight:700;margin-bottom:8px;color:#f59e0b">Task not completed</div>' +
-      '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">Download and play to earn rewards</div>' +
-      '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px;margin-bottom:16px">' +
-        '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Task progress</div>' +
-        '<div style="width:100%;height:6px;border-radius:6px;background:rgba(255,255,255,0.06);overflow:hidden">' +
-          '<div style="height:100%;width:' + adProgress + '%;border-radius:6px;background:linear-gradient(90deg,var(--gold),var(--emerald));transition:width 0.3s"></div>' +
-        '</div>' +
-        '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">' + Math.floor(adProgress) + '% complete</div>' +
-      '</div>' +
-      '<div style="display:flex;gap:8px">' +
-        '<button onclick="this.parentElement.parentElement.parentElement.remove()" style="flex:1;padding:10px;border-radius:10px;background:var(--gold);color:#0A0E1A;border:none;font-size:13px;font-weight:700;cursor:pointer">Continue task</button>' +
-        '<button onclick="this.parentElement.parentElement.parentElement.remove();closeAdUI()" style="flex:1;padding:10px;border-radius:10px;background:rgba(255,255,255,0.06);color:var(--text-secondary);border:1px solid rgba(255,255,255,0.08);font-size:13px;font-weight:600;cursor:pointer">Give up</button>' +
-      '</div>' +
-    '</div>';
-  document.body.appendChild(overlay);
+  if(document.getElementById('adCloseConfirmOverlay')) return;
+  var ov=document.createElement('div');
+  ov.id='adCloseConfirmOverlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;animation:fadeIn 0.3s ease';
+  ov.innerHTML='<div style="background:rgba(16,24,40,0.96);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:28px 24px;text-align:center;max-width:300px;width:90%"><div style="font-size:42px;margin-bottom:12px">\u26a0\ufe0f</div><div style="font-size:16px;font-weight:700;margin-bottom:8px;color:#f59e0b">Task not completed</div><div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">Complete the task to earn</div><div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px;margin-bottom:16px"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Progress</div><div style="width:100%;height:6px;border-radius:6px;background:rgba(255,255,255,0.06);overflow:hidden"><div style="height:100%;width:'+adProgress+'%;border-radius:6px;background:linear-gradient(90deg,var(--gold),var(--emerald))"></div></div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">'+Math.floor(adProgress)+'%</div></div><div style="display:flex;gap:8px"><button onclick="this.parentElement.parentElement.parentElement.remove()" style="flex:1;padding:10px;border-radius:10px;background:var(--gold);color:#0A0E1A;border:none;font-size:13px;font-weight:700;cursor:pointer">Continue</button><button onclick="this.parentElement.parentElement.parentElement.remove();closeAdUI()" style="flex:1;padding:10px;border-radius:10px;background:rgba(255,255,255,0.06);color:var(--text-secondary);border:1px solid rgba(255,255,255,0.08);font-size:13px;font-weight:600;cursor:pointer">Give up</button></div></div>';
+  document.body.appendChild(ov);
 }
 
 function closeAdUI() {
-  if (adInterval) { clearInterval(adInterval); adInterval = null; }
-  var modal = $('adModal');
-  if (modal) { modal.classList.remove('show'); modal.innerHTML = ''; }
-  adCooldown = false;
-  adCompleted = false;
-}
-
-function showGiftBoxAnimation() {
-  if (_rewarding) return;
-  _rewarding = true;
-  
-  if (adCompleted) {
-    completeAd().then(function() {
-      _showGiftOverlay();
-    }).catch(function() {
-      _showGiftOverlay();
-    });
-    return;
-  }
-  closeAdUI();
-  _showGiftOverlay();
+  if(adInterval){clearInterval(adInterval);adInterval=null;}
+  if(_comboBannerTimer){clearInterval(_comboBannerTimer);_comboBannerTimer=null;}
+  var m=$('adModal');
+  if(m){m.classList.remove('show');m.innerHTML='';}
+  adCooldown=false;adCompleted=false;_rewarding=false;
 }
 
 function _showGiftOverlay() {
-  var giftOverlay = document.createElement('div');
-  giftOverlay.id = 'giftBoxOverlay';
-  giftOverlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.9);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;animation:fadeIn 0.5s ease';
-  giftOverlay.innerHTML =
-    '<div style="text-align:center">' +
-      '<div style="font-size:80px;margin-bottom:16px;animation:giftBounce 1s ease infinite">\xf0\x9f\x8e\x81</div>' +
-      '<div style="font-size:24px;font-weight:800;background:linear-gradient(135deg,var(--gold),#fff2c0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">Reward Earned!</div>' +
-      '<div style="font-size:14px;color:var(--text-secondary);margin-bottom:8px">Balance updated</div>' +
-      '<div style="display:flex;align-items:center;justify-content:center;gap:4px;font-size:36px;font-weight:800;color:var(--emerald);margin-bottom:20px" id="rewardAmountDisplay">+$' + AD_REWARD.toFixed(3) + '</div>' +
-      '<div style="font-size:28px;margin-bottom:16px">\xf0\x9f\x8e\x89\xe2\x9c\xa8\xf0\x9f\x8e\x89\xe2\x9c\xa8</div>' +
-      '<button id="giftCloseBtn" style="padding:14px 48px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A;border:none;font-size:16px;font-weight:800;cursor:pointer">Awesome! \xf0\x9f\x9a\x80</button>' +
-    '</div>';
-  
-  document.body.appendChild(giftOverlay);
-  
-  // Close button handler
-  document.getElementById('giftCloseBtn').addEventListener('click', function() {
-    document.getElementById('giftBoxOverlay').remove();
-    _rewarding = false;
-  });
-  
-  // Animated counter
-  var rewardEl = $('rewardAmountDisplay');
-  if (rewardEl) {
-    var count = 0;
-    var target = AD_REWARD;
-    var step = target / 20;
-    var counter = setInterval(function() {
-      count += step;
-      if (count >= target) { count = target; clearInterval(counter); }
-      rewardEl.textContent = '+$' + count.toFixed(3);
-    }, 50);
-  }
-  
-  setTimeout(function() {
-    var el = document.getElementById('giftBoxOverlay');
-    if (el) el.remove();
-    _rewarding = false;
-  }, 6000);
+  closeAdUI();
+  var g=document.createElement('div');
+  g.id='giftBoxOverlay';
+  g.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.9);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;animation:fadeIn 0.5s ease';
+  var cfg=getAdConfig(currentAdType);
+  var rw=cfg.reward||AD_REWARD;
+  g.innerHTML='<div style="text-align:center"><div style="font-size:80px;margin-bottom:16px;animation:giftBounce 1s ease infinite">\ud83c\udf81</div><div style="font-size:24px;font-weight:800;background:linear-gradient(135deg,var(--gold),#fff2c0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">'+currentAdType.toUpperCase()+' Complete!</div><div style="font-size:14px;color:var(--text-secondary);margin-bottom:8px">+$'+rw.toFixed(3)+' added</div><div style="font-size:36px;font-weight:800;color:var(--emerald);margin-bottom:16px" id="rewardAmountDisplay2">+$'+rw.toFixed(3)+'</div><div style="font-size:28px;margin-bottom:16px">\ud83c\udf89\u2728\ud83c\udf89\u2728</div><button id="giftCloseBtn" style="padding:14px 48px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A;border:none;font-size:16px;font-weight:800;cursor:pointer">Awesome! \ud83d\ude80</button></div>';
+  document.body.appendChild(g);
+  document.getElementById('giftCloseBtn').addEventListener('click',function(){document.getElementById('giftBoxOverlay').remove();_rewarding=false;});
+  setTimeout(function(){var e=document.getElementById('giftBoxOverlay');if(e)e.remove();_rewarding=false;},6000);
 }
 async function completeAd() {
   dailyAdCount++;
