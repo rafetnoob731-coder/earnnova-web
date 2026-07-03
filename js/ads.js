@@ -138,6 +138,11 @@ var SafeAdNetwork = {
       main.appendChild(bottomSlot);
     }
 
+    // Move Adsterra visible containers into dashboard slots
+    setTimeout(function() {
+      SafeAdNetwork._placeVisibleAds(topSlot, bottomSlot);
+    }, 500);
+
     // Render AdSense after a delay
     setTimeout(function() {
       if (typeof adsbygoogle !== 'undefined') {
@@ -167,6 +172,23 @@ var SafeAdNetwork = {
       console.log('[ADS] ✅ AdSense rendered');
     } catch(e) {
       console.warn('[ADS] AdSense render error:', e.message);
+    }
+  },
+
+  // Move Adsterra banner containers into visible dashboard slots
+  _placeVisibleAds: function(top, bottom) {
+    // 300x250 rectangle goes in the middle (between dashboard and earn)
+    var middleArea = document.getElementById('pageDashboard') || document.querySelector('.page-view');
+    var rect = document.getElementById('adsterra-rect-300x250');
+    if (rect && middleArea) {
+      // Move into dashboard page content area
+      middleArea.appendChild(rect);
+    }
+    
+    // 320x50 banner goes in top slot if AdSense not rendered yet
+    var banner = document.getElementById('adsterra-banner-320x50');
+    if (banner && top && !top.hasChildNodes()) {
+      top.appendChild(banner);
     }
   },
 

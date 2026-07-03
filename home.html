@@ -9,20 +9,76 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-<!-- ===== ADS: AdSense + Adsterra + Monetag SDK (defines show_9622450) ===== -->
+<!-- ============================================================ -->
+<!-- ADS: AdSense + Adsterra VISIBLE BANNERS + Monetag SDK        -->
+<!-- Loaded in order: atOptions → HPF → AdSense → Adsterra → SDK  -->
+<!-- ============================================================ -->
+
+<!-- Adsterra Visible Banners — atOptions MUST be set BEFORE scripts -->
+<script>
+  window.atOptions = window.atOptions || {};
+  // 320x50 banner (earn page)
+  window.atOptions['7ab8c2c9d29728d7b8a2a68d9d9a8c7b'] = {
+    'key': '7ab8c2c9d29728d7b8a2a68d9d9a8c7b',
+    'format': 'iframe',
+    'height': 50,
+    'width': 320,
+    'params': {}
+  };
+  // 300x250 rectangle (dashboard middle)
+  window.atOptions['e41f5c8b7a6d2e9f3c1a7b8d4e5f6a0b'] = {
+    'key': 'e41f5c8b7a6d2e9f3c1a7b8d4e5f6a0b',
+    'format': 'iframe',
+    'height': 250,
+    'width': 300,
+    'params': {}
+  };
+</script>
+
+<!-- High Performance Format banners (Adsterra visible ads) -->
+<script src="https://www.highperformanceformat.com/679c41f5cd1133dfcfb8ddd3254605d4/invoke.js"></script>
+<script src="https://www.highperformanceformat.com/11127fe81ff9922c5ece58925c849fd8/invoke.js"></script>
+
+<!-- Google AdSense -->
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9307459733796967" crossorigin="anonymous"></script>
+
+<!-- Adsterra Popunder -->
 <script src="https://quge5.com/88/tag.min.js" data-zone="255448" async data-cfasync="false"></script>
 
-<!-- ⭐ MONETAG SDK — This DEFINES show_9622450() ⭐ -->
+<!-- ⭐ MONETAG SDK — Defines show_9622450() ⭐ -->
 <script src="//libtl.com/sdk.js" data-zone="9622450" data-sdk="show_9622450"></script>
 
-<!-- Monetag Popunder (additional) -->
+<!-- Monetag Popunders -->
 <script src="https://pl29828447.effectivecpmnetwork.com/fc/ac/01/fcac01bcf8a7bc1e80bbba3ba4a24fed.js"></script>
 <script src="https://pl29828442.effectivecpmnetwork.com/2e/83/ea/2e83eab240b4afc016ede828af8a897a.js"></script>
 
-<!-- High Performance Format banners -->
-<script src="https://www.highperformanceformat.com/679c41f5cd1133dfcfb8ddd3254605d4/invoke.js"></script>
-<script src="https://www.highperformanceformat.com/11127fe81ff9922c5ece58925c849fd8/invoke.js"></script>
+<!-- ===== VISIBLE ADSTERRA CONTAINERS (render HPF ads) ===== -->
+<div id="adsterra-banner-320x50" style="width:100%;min-height:55px;margin:8px auto;display:flex;justify-content:center;align-items:center"></div>
+<div id="adsterra-rect-300x250" style="width:100%;min-height:260px;margin:12px auto;display:flex;justify-content:center;align-items:center"></div>
+<script>
+// Render Adsterra visible banners after scripts load
+setTimeout(function() {
+  try {
+    var b = document.getElementById('adsterra-banner-320x50');
+    if (b && !b.hasChildNodes()) {
+      var i1 = document.createElement('iframe');
+      i1.src = '//www.highperformanceformat.com/7ab8c2c9d29728d7b8a2a68d9d9a8c7b/invoke.html';
+      i1.style.cssText = 'width:320px;height:50px;border:none;overflow:hidden;margin:0 auto';
+      i1.setAttribute('scrolling','no');
+      b.appendChild(i1);
+    }
+    var r = document.getElementById('adsterra-rect-300x250');
+    if (r && !r.hasChildNodes()) {
+      var i2 = document.createElement('iframe');
+      i2.src = '//www.highperformanceformat.com/e41f5c8b7a6d2e9f3c1a7b8d4e5f6a0b/invoke.html';
+      i2.style.cssText = 'width:300px;height:250px;border:none;overflow:hidden;margin:0 auto';
+      i2.setAttribute('scrolling','no');
+      r.appendChild(i2);
+    }
+    console.log('[ADS] ✅ Adsterra visible banners rendered');
+  } catch(e) { console.warn('[ADS] Banner render error:', e.message); }
+}, 3000);
+</script>
 
 <!-- Start In-App Interstitials after SDK loads -->
 <script>
