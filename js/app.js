@@ -383,7 +383,7 @@ function updateAdUI() {
 
 async function watchAd() {
   if (adCooldown) { showToast('🏳', 'Cooldown Active', 'Please wait 10 seconds between ads.', 'warning'); return; }
-  if (dailyAdCount >= MAX_DAILY_ADS) { showToast('⚠️', 'Daily Limit Reached', 'You've watched ' + MAX_DAILY_ADS + ' ads today. Come back tomorrow!', 'warning'); return; }
+  if (dailyAdCount >= MAX_DAILY_ADS) { showToast('⚠️', 'Daily Limit Reached', 'You\'ve watched ' + MAX_DAILY_ADS + ' ads today. Come back tomorrow!', 'warning'); return; }
   
   // Random ad type
   currentAdType = AdTypes[Math.floor(Math.random() * AdTypes.length)];
@@ -405,11 +405,14 @@ function showAdUI() {
   
   var adContent = getAdContent(currentAdType);
   
-  modal.innerHTML =
-    '<div class="ad-fullscreen" id="adFullscreen">' +
+  var html =
+    '<div class="ad-fullscreen">' +
       '<div class="ad-topbar">' +
-        '<div class="ad-topbar-left"><span class="ad-type-badge">' + currentAdType.toUpperCase() + '</span></div>' +
-        '<button class="ad-close-btn" id="adCloseBtn" onclick="handleAdClose()">✖</button>' +
+        '<div class="ad-topbar-left">' +
+          '<span class="ad-type-badge">' + currentAdType.toUpperCase() + '</span>' +
+          '<span style="font-size:10px;color:var(--text-muted);margin-left:4px">60s task</span>' +
+        '</div>' +
+        '<button class="ad-close-btn" id="adCloseBtn" onclick="handleAdClose()">\u2716</button>' +
       '</div>' +
       '<div class="ad-content-area" id="adContentArea">' +
         adContent +
@@ -419,19 +422,19 @@ function showAdUI() {
           '<div class="ad-progress-bar" id="adProgressBar"></div>' +
         '</div>' +
         '<div class="ad-progress-text">' +
-          '<span id="adTimerDisplay">0:60</span>' +
+          '<span id="adTimerDisplay">1:00</span>' +
           '<span id="adProgressPercent">0%</span>' +
         '</div>' +
         '<div class="ad-earnings-inline" id="adEarningsInline">+$0.000</div>' +
       '</div>' +
     '</div>';
   
+  modal.innerHTML = html;
   modal.classList.add('show');
   adCooldown = true;
   
   startAdProgress();
 }
-
 function getAdContent(type) {
   var adImages = {
     ads1: 'https://via.placeholder.com/320x180/0A0E1A/D4AF37?text=Watch+Ad',
@@ -553,9 +556,9 @@ function showGiftBoxAnimation() {
       '<div id="giftBoxAnim" style="font-size:80px;margin-bottom:16px;animation:giftBounce 1s ease infinite">🎁</div>' +
       '<div style="font-size:24px;font-weight:800;background:linear-gradient(135deg,var(--gold),#fff2c0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">Reward Earned!</div>' +
       '<div style="font-size:14px;color:var(--text-secondary);margin-bottom:8px">Balance updated</div>' +
-      '<div style="display:flex;align-items:center;justify-content:center;gap:4px;font-size:36px;font-weight:800;color:var(--emerald);margin-bottom:20px" id="rewardAmountDisplay">+$' + str(AD_REWARD).encode() + b'</div>' +
+      '<div style="display:flex;align-items:center;justify-content:center;gap:4px;font-size:36px;font-weight:800;color:var(--emerald);margin-bottom:20px" id="rewardAmountDisplay">+$' + AD_REWARD.toFixed(3) + '</div>' +
       '<div style="font-size:28px;margin-bottom:16px">🎉✨🎉✨</div>' +
-      '<button onclick="document.getElementById('giftBoxOverlay').remove()" style="padding:14px 48px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A;border:none;font-size:16px;font-weight:800;cursor:pointer">Awesome! 🚀</button>' +
+      '<button onclick="var x=document.getElementById(\'giftBoxOverlay\');if(x)x.remove()" style="padding:14px 48px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A;border:none;font-size:16px;font-weight:800;cursor:pointer">Awesome! 🚀</button>' +
     '</div>';
   
   document.body.appendChild(giftOverlay);

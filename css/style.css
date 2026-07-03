@@ -533,10 +533,13 @@ body.light-mode .admin-overlay { background: rgba(255,255,255,0.98); }
 
 /* ===== AD UI SYSTEM ===== */
 .ad-fullscreen {
-  position: fixed; inset: 0; z-index: 9999;
+  width: 100%; max-width: 400px;
   background: linear-gradient(180deg, #0A0E1A 0%, #0F172A 100%);
+  border-radius: 24px;
   display: flex; flex-direction: column;
-  animation: fadeIn 0.3s ease;
+  animation: scaleIn 0.3s ease;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
 .ad-topbar {
