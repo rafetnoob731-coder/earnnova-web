@@ -343,6 +343,13 @@ async function loadTransactions() {
 // ===== AD SYSTEM =====
 var adCooldown = false;
 var dailyAdCount = 0;
+var AdTypes = ['ads1', 'ads2', 'ads3'];
+var currentAdType = 'ads1';
+var adProgress = 0;
+var adInterval = null;
+var adCompleted = false;
+var AD_TASK_DURATION = 60;
+var AD_INCREMENT = 0.010;
 var MAX_DAILY_ADS = 30;
 var AD_REWARD = 0.02;
 
@@ -375,58 +382,201 @@ function updateAdUI() {
 }
 
 async function watchAd() {
-  if (adCooldown) { showToast('⏳', 'Cooldown Active', 'Please wait 10 seconds between ads.', 'warning'); return; }
-  if (dailyAdCount >= MAX_DAILY_ADS) { showToast('⚠️', 'Daily Limit Reached', 'You\'ve watched ' + MAX_DAILY_ADS + ' ads today. Come back tomorrow!', 'warning'); return; }
+  if (adCooldown) { showToast('🏳', 'Cooldown Active', 'Please wait 10 seconds between ads.', 'warning'); return; }
+  if (dailyAdCount >= MAX_DAILY_ADS) { showToast('⚠️', 'Daily Limit Reached', 'You've watched ' + MAX_DAILY_ADS + ' ads today. Come back tomorrow!', 'warning'); return; }
   
-  // Show interstitial ad from network before starting timer
+  // Random ad type
+  currentAdType = AdTypes[Math.floor(Math.random() * AdTypes.length)];
+  adProgress = 0;
+  adCompleted = false;
+  
   if (typeof SafeAdNetwork !== 'undefined' && SafeAdNetwork.showInterstitial) {
     SafeAdNetwork.showInterstitial(function() {
-      startAdTimer();
+      showAdUI();
     });
   } else {
-    startAdTimer();
+    showAdUI();
   }
 }
 
-function startAdTimer() {
+function showAdUI() {
   var modal = $('adModal');
   if (!modal) return;
   
+  var adContent = getAdContent(currentAdType);
+  
   modal.innerHTML =
-    '<div class="ad-modal-content">' +
-      '<div style="font-size:18px;font-weight:700;margin-bottom:4px">📺 Watch Ad</div>' +
-      '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">Earn ' + formatCurrency(AD_REWARD) + '</div>' +
-      '<div class="ad-timer-circle">' +
-        '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" class="ad-timer-bg"/><circle cx="50" cy="50" r="42" class="ad-timer-progress" id="adTimerProgress" stroke-dasharray="264" stroke-dashoffset="0"/></svg>' +
-        '<div class="ad-timer-text" id="adTimerText">30</div>' +
+    '<div class="ad-fullscreen" id="adFullscreen">' +
+      '<div class="ad-topbar">' +
+        '<div class="ad-topbar-left"><span class="ad-type-badge">' + currentAdType.toUpperCase() + '</span></div>' +
+        '<button class="ad-close-btn" id="adCloseBtn" onclick="handleAdClose()">✖</button>' +
       '</div>' +
-      '<div class="ad-status" id="adStatus">Watching... stay focused</div>' +
+      '<div class="ad-content-area" id="adContentArea">' +
+        adContent +
+      '</div>' +
+      '<div class="ad-bottom-bar">' +
+        '<div class="ad-progress-container">' +
+          '<div class="ad-progress-bar" id="adProgressBar"></div>' +
+        '</div>' +
+        '<div class="ad-progress-text">' +
+          '<span id="adTimerDisplay">0:60</span>' +
+          '<span id="adProgressPercent">0%</span>' +
+        '</div>' +
+        '<div class="ad-earnings-inline" id="adEarningsInline">+$0.000</div>' +
+      '</div>' +
     '</div>';
   
   modal.classList.add('show');
   adCooldown = true;
   
-  var countdown = 30;
-  var timerProgress = $('adTimerProgress');
-  var timerText = $('adTimerText');
-  var adStatus = $('adStatus');
-  var circumference = 2 * Math.PI * 42;
+  startAdProgress();
+}
+
+function getAdContent(type) {
+  var adImages = {
+    ads1: 'https://via.placeholder.com/320x180/0A0E1A/D4AF37?text=Watch+Ad',
+    ads2: 'https://via.placeholder.com/320x200/0A0E1A/10B981?text=Sponsored',
+    ads3: 'https://via.placeholder.com/320x220/0A0E1A/F59E0B?text=Rewarded'
+  };
+  var adLabels = {
+    ads1: 'Banner Ad \u2014 60s to earn',
+    ads2: 'Sponsored Content \u2014 60s to earn',
+    ads3: 'Rewarded Task \u2014 Complete to earn'
+  };
+  return '<div class="ad-inner">' +
+    '<div class="ad-placeholder">' +
+      '<img src="' + adImages[type] + '" alt="Ad" style="width:100%;max-width:320px;border-radius:12px;display:block;margin:0 auto" />' +
+    '</div>' +
+    '<div class="ad-label">' + adLabels[type] + '</div>' +
+    '<div class="ad-reward-info">' +
+      '<span class="ad-earn-badge">+$' + AD_INCREMENT.toFixed(3) + '</span>' +
+      '<span class="ad-earn-sub">per task</span>' +
+    '</div>' +
+  '</div>';
+}
+
+function startAdProgress() {
+  adProgress = 0;
+  adCompleted = false;
+  var totalSeconds = AD_TASK_DURATION;
+  var elapsed = 0;
+  var progressBar = $('adProgressBar');
+  var timerDisplay = $('adTimerDisplay');
+  var progressPercent = $('adProgressPercent');
+  var earningsDisplay = $('adEarningsInline');
   
-  var interval = setInterval(function() {
-    countdown--;
-    if (timerText) timerText.textContent = countdown;
-    if (timerProgress) {
-      timerProgress.style.strokeDashoffset = circumference * (1 - countdown / 30);
-    }
-    if (adStatus) adStatus.textContent = countdown > 0 ? 'Watching... ' + countdown + 's remaining' : 'Completing...';
+  adInterval = setInterval(function() {
+    elapsed++;
+    adProgress = (elapsed / totalSeconds) * 100;
     
-    if (countdown <= 0) {
-      clearInterval(interval);
-      completeAd();
+    if (progressBar) progressBar.style.width = Math.min(100, adProgress) + '%';
+    
+    var remaining = Math.max(0, totalSeconds - elapsed);
+    var mins = Math.floor(remaining / 60);
+    var secs = remaining % 60;
+    if (timerDisplay) timerDisplay.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+    if (progressPercent) progressPercent.textContent = Math.floor(adProgress) + '%';
+    
+    var earnedSoFar = (elapsed / totalSeconds) * AD_REWARD;
+    if (earningsDisplay) earningsDisplay.textContent = '+' + earnedSoFar.toFixed(3);
+    
+    if (elapsed >= totalSeconds) {
+      clearInterval(adInterval);
+      adInterval = null;
+      adCompleted = true;
+      if (progressBar) progressBar.style.width = '100%';
+      if (timerDisplay) timerDisplay.textContent = '0:00';
+      if (progressPercent) progressPercent.textContent = '100%';
+      if (earningsDisplay) {
+        earningsDisplay.textContent = '+' + AD_REWARD.toFixed(3);
+        earningsDisplay.style.color = 'var(--emerald)';
+        earningsDisplay.style.fontWeight = '800';
+      }
+      var closeBtn = $('adCloseBtn');
+      if (closeBtn) {
+        closeBtn.style.background = 'var(--emerald)';
+        closeBtn.style.color = '#fff';
+        closeBtn.innerHTML = '✔';
+      }
     }
   }, 1000);
 }
 
+function handleAdClose() {
+  if (adCompleted) {
+    showGiftBoxAnimation();
+    return;
+  }
+  
+  if ($('adCloseConfirmOverlay')) return;
+  
+  var overlay = document.createElement('div');
+  overlay.id = 'adCloseConfirmOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;animation:fadeIn 0.3s ease';
+  overlay.innerHTML =
+    '<div style="background:rgba(16,24,40,0.96);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:28px 24px;text-align:center;max-width:300px;width:90%">' +
+      '<div style="font-size:42px;margin-bottom:12px">⚠️</div>' +
+      '<div style="font-size:16px;font-weight:700;margin-bottom:8px;color:#f59e0b">Task not completed</div>' +
+      '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">Download and play to earn rewards</div>' +
+      '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:12px;margin-bottom:16px">' +
+        '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Task progress</div>' +
+        '<div style="width:100%;height:6px;border-radius:6px;background:rgba(255,255,255,0.06);overflow:hidden">' +
+          '<div style="height:100%;width:' + adProgress + '%;border-radius:6px;background:linear-gradient(90deg,var(--gold),var(--emerald));transition:width 0.3s"></div>' +
+        '</div>' +
+        '<div style="font-size:10px;color:var(--text-muted);margin-top:4px">' + Math.floor(adProgress) + '% complete</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px">' +
+        '<button onclick="this.parentElement.parentElement.parentElement.remove()" style="flex:1;padding:10px;border-radius:10px;background:var(--gold);color:#0A0E1A;border:none;font-size:13px;font-weight:700;cursor:pointer">Continue task</button>' +
+        '<button onclick="this.parentElement.parentElement.parentElement.remove();closeAdUI()" style="flex:1;padding:10px;border-radius:10px;background:rgba(255,255,255,0.06);color:var(--text-secondary);border:1px solid rgba(255,255,255,0.08);font-size:13px;font-weight:600;cursor:pointer">Give up</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+}
+
+function closeAdUI() {
+  if (adInterval) { clearInterval(adInterval); adInterval = null; }
+  var modal = $('adModal');
+  if (modal) { modal.classList.remove('show'); modal.innerHTML = ''; }
+  adCooldown = false;
+  adCompleted = false;
+}
+
+function showGiftBoxAnimation() {
+  if (adCompleted) { completeAd(); return; }
+  closeAdUI();
+  
+  var giftOverlay = document.createElement('div');
+  giftOverlay.id = 'giftBoxOverlay';
+  giftOverlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.9);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;animation:fadeIn 0.5s ease';
+  giftOverlay.innerHTML =
+    '<div style="text-align:center">' +
+      '<div id="giftBoxAnim" style="font-size:80px;margin-bottom:16px;animation:giftBounce 1s ease infinite">🎁</div>' +
+      '<div style="font-size:24px;font-weight:800;background:linear-gradient(135deg,var(--gold),#fff2c0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">Reward Earned!</div>' +
+      '<div style="font-size:14px;color:var(--text-secondary);margin-bottom:8px">Balance updated</div>' +
+      '<div style="display:flex;align-items:center;justify-content:center;gap:4px;font-size:36px;font-weight:800;color:var(--emerald);margin-bottom:20px" id="rewardAmountDisplay">+$' + str(AD_REWARD).encode() + b'</div>' +
+      '<div style="font-size:28px;margin-bottom:16px">🎉✨🎉✨</div>' +
+      '<button onclick="document.getElementById('giftBoxOverlay').remove()" style="padding:14px 48px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A;border:none;font-size:16px;font-weight:800;cursor:pointer">Awesome! 🚀</button>' +
+    '</div>';
+  
+  document.body.appendChild(giftOverlay);
+  
+  var rewardEl = $('rewardAmountDisplay');
+  if (rewardEl) {
+    var count = 0;
+    var target = AD_REWARD;
+    var step = target / 20;
+    var counter = setInterval(function() {
+      count += step;
+      if (count >= target) { count = target; clearInterval(counter); }
+      rewardEl.textContent = '+$' + count.toFixed(3);
+    }, 50);
+  }
+  
+  setTimeout(function() {
+    var el = document.getElementById('giftBoxOverlay');
+    if (el) el.remove();
+  }, 6000);
+}
 async function completeAd() {
   dailyAdCount++;
   localStorage.setItem('en_ad_count', String(dailyAdCount));
