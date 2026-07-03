@@ -348,6 +348,7 @@ var currentAdType = 'ads1';
 var adProgress = 0;
 var adInterval = null;
 var adCompleted = false;
+var _rewarding = false;
 var AD_TASK_DURATION = 60;
 var AD_INCREMENT = 0.010;
 var MAX_DAILY_ADS = 30;
@@ -545,24 +546,44 @@ function closeAdUI() {
 }
 
 function showGiftBoxAnimation() {
-  if (adCompleted) { completeAd(); return; }
-  closeAdUI();
+  if (_rewarding) return;
+  _rewarding = true;
   
+  if (adCompleted) {
+    completeAd().then(function() {
+      _showGiftOverlay();
+    }).catch(function() {
+      _showGiftOverlay();
+    });
+    return;
+  }
+  closeAdUI();
+  _showGiftOverlay();
+}
+
+function _showGiftOverlay() {
   var giftOverlay = document.createElement('div');
   giftOverlay.id = 'giftBoxOverlay';
   giftOverlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.9);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;animation:fadeIn 0.5s ease';
   giftOverlay.innerHTML =
     '<div style="text-align:center">' +
-      '<div id="giftBoxAnim" style="font-size:80px;margin-bottom:16px;animation:giftBounce 1s ease infinite">🎁</div>' +
+      '<div style="font-size:80px;margin-bottom:16px;animation:giftBounce 1s ease infinite">\xf0\x9f\x8e\x81</div>' +
       '<div style="font-size:24px;font-weight:800;background:linear-gradient(135deg,var(--gold),#fff2c0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">Reward Earned!</div>' +
       '<div style="font-size:14px;color:var(--text-secondary);margin-bottom:8px">Balance updated</div>' +
       '<div style="display:flex;align-items:center;justify-content:center;gap:4px;font-size:36px;font-weight:800;color:var(--emerald);margin-bottom:20px" id="rewardAmountDisplay">+$' + AD_REWARD.toFixed(3) + '</div>' +
-      '<div style="font-size:28px;margin-bottom:16px">🎉✨🎉✨</div>' +
-      '<button onclick="var x=document.getElementById(\'giftBoxOverlay\');if(x)x.remove()" style="padding:14px 48px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A;border:none;font-size:16px;font-weight:800;cursor:pointer">Awesome! 🚀</button>' +
+      '<div style="font-size:28px;margin-bottom:16px">\xf0\x9f\x8e\x89\xe2\x9c\xa8\xf0\x9f\x8e\x89\xe2\x9c\xa8</div>' +
+      '<button id="giftCloseBtn" style="padding:14px 48px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A;border:none;font-size:16px;font-weight:800;cursor:pointer">Awesome! \xf0\x9f\x9a\x80</button>' +
     '</div>';
   
   document.body.appendChild(giftOverlay);
   
+  // Close button handler
+  document.getElementById('giftCloseBtn').addEventListener('click', function() {
+    document.getElementById('giftBoxOverlay').remove();
+    _rewarding = false;
+  });
+  
+  // Animated counter
   var rewardEl = $('rewardAmountDisplay');
   if (rewardEl) {
     var count = 0;
@@ -578,6 +599,7 @@ function showGiftBoxAnimation() {
   setTimeout(function() {
     var el = document.getElementById('giftBoxOverlay');
     if (el) el.remove();
+    _rewarding = false;
   }, 6000);
 }
 async function completeAd() {

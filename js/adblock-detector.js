@@ -14,7 +14,7 @@ var AdBlockDetector = {
 
       var results = { bait: false, bait2: false, fetchBlocked: 0, fetchTotal: 0, controlFailed: false };
       var completed = 0;
-      var totalTests = 3; // bait, adsense bait, fetch group
+      var totalTests = 4; // bait, ins bait, script bait, image fetch
 
       function finish() {
         // Only mark as blocked if bait tests say blocked AND fetch to ad URLs fails
@@ -52,7 +52,7 @@ var AdBlockDetector = {
         }, 100);
       } catch(e) { checkDone(); }
 
-      // === TEST 2: AdSense bait ===
+      // === TEST 2: AdSense bait (ins element) ===
       try {
         var ins = document.createElement('ins');
         ins.className = 'adsbygoogle';
@@ -71,48 +71,55 @@ var AdBlockDetector = {
         }, 100);
       } catch(e) { checkDone(); }
 
-      // === TEST 3: Fetch traps with CONTROL URL ===
-      // Control URL (should always work) — if this fails, it's network issue, NOT adblock
-      var controlUrl = 'https://www.google.com/favicon.ico';
-      var adUrls = [
+      // === TEST 2b: Google AdSense script bait ===
+      // Adblockers specifically block adsbygoogle.js script loads
+      try {
+        var scriptBait = document.createElement('script');
+        scriptBait.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
+        scriptBait.async = true;
+        scriptBait.onerror = function() { results.bait2 = true; };
+        document.head.appendChild(scriptBait);
+        setTimeout(function() {
+          // If script didn't load by now, it was blocked
+          if (!window.adsbygoogle) {
+            results.bait2 = true;
+          }
+          checkDone();
+        }, 500);
+      } catch(e) { checkDone(); }
+
+      // === TEST 3: Image bait — adblockers block ad image requests ===
+      // Using IMG tags is more reliable than fetch for adblock detection
+      function testImageLoad(url) {
+        return new Promise(function(res) {
+          var img = new Image();
+          var timeout = setTimeout(function() { img.src = ''; res('timeout'); }, 2000);
+          img.onload = function() { clearTimeout(timeout); res('success'); };
+          img.onerror = function() { clearTimeout(timeout); res('blocked'); };
+          img.src = url;
+        });
+      }
+
+      // Control image (always loads)
+      var controlImg = 'https://www.google.com/favicon.ico';
+      var adImgs = [
         'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js',
         'https://ad.doubleclick.net/ddm/trackimp/',
         'https://www.googletagservices.com/tag/js/gpt.js'
       ];
 
-      function tryFetch(url) {
-        return new Promise(function(res) {
-          var controller = new AbortController();
-          var timeout = setTimeout(function() { controller.abort(); res('timeout'); }, 2000);
-          
-          fetch(url, { method: 'HEAD', mode: 'no-cors', signal: controller.signal, cache: 'no-store' })
-            .then(function() {
-              clearTimeout(timeout);
-              res('success');
-            })
-            .catch(function(err) {
-              clearTimeout(timeout);
-              if (err.name === 'AbortError') res('timeout');
-              else res('blocked');
-            });
-        });
-      }
-
-      // First test control URL
-      tryFetch(controlUrl).then(function(controlResult) {
-        results.controlFailed = (controlResult !== 'success');
+      testImageLoad(controlImg).then(function(ctrl) {
+        results.controlFailed = (ctrl !== 'success');
         
         if (results.controlFailed) {
-          // Network issue — all subsequent fetches will fail too, so skip ad tests
-          console.log('[ADBLOCK] Control URL failed — network issue, skipping ad tests');
+          console.log('[ADBLOCK] Control image failed — network issue');
           checkDone();
           return;
         }
 
-        // Control passed — now test ad URLs
-        var pending = adUrls.length;
-        adUrls.forEach(function(url) {
-          tryFetch(url).then(function(result) {
+        var pending = adImgs.length;
+        adImgs.forEach(function(url) {
+          testImageLoad(url).then(function(result) {
             results.fetchTotal++;
             if (result === 'blocked') results.fetchBlocked++;
             pending--;
