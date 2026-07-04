@@ -5,9 +5,8 @@
 
 var AdBlockDetector = {
   _blocked: false,
- 0,
-  _checked:,
-  _callbacks:,
+  _checked: false,
+  _callbacks: [],
 
   detect: function() {
     var self = this;
@@ -54,7 +53,6 @@ var AdBlockDetector = {
               if (document.body.contains(el)) document.body.removeChild(el);
             } catch(e) {}
           });
-          // Only block if MULTIPLE baits hidden (not just 1 which might be Chrome)
           if (hidden >= 3) markBlocked();
           oneCheck();
         }, 150);
@@ -66,7 +64,6 @@ var AdBlockDetector = {
         s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
         s.async = true;
         s.onload = function() {
-          // If script loads, wait to see if adsbygoogle object exists
           setTimeout(function() {
             if (typeof window.adsbygoogle === 'undefined') markBlocked();
             oneCheck();
@@ -102,13 +99,13 @@ var AdBlockDetector = {
         } catch(e) { done(); }
       });
 
-      // ===== 5. CONTROL TEST - google.com =====
+      // ===== 5. CONTROL TEST - google.com favicon =====
       // If control fails, it's network issue NOT adblock
       try {
         var ctrl = new Image();
         var t = setTimeout(function() { ctrl.src=''; }, 2000);
         ctrl.onload = function() { clearTimeout(t); oneCheck(); };
-        ctrl.onerror = function() { clearTimeout(t); oneCheck(); }; // network issue
+        ctrl.onerror = function() { clearTimeout(t); oneCheck(); };
         ctrl.src = 'https://www.google.com/favicon.ico';
       } catch(e) { oneCheck(); }
 
@@ -148,4 +145,4 @@ var AdBlockDetector = {
 if (document.readyState === 'complete') AdBlockDetector.showWarning();
 else window.addEventListener('load', function() { AdBlockDetector.showWarning(); });
 
-console.log('[ADBLOCK] v5 loaded — Chrome-safe, 5 methods, multi-bait threshold');
+console.log('[ADBLOCK] v5 loaded — multi-bait threshold (3+), Chrome-safe, control URL validation');
