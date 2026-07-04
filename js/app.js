@@ -104,6 +104,7 @@ async function createUserDoc(user) {
       balance: 0, totalEarned: 0, totalWithdrawn: 0, adsWatched: 0,
       todayAds: 0, lastAdDate: '', isActive: true, isAdmin: user.email === ADMIN_EMAIL,
       referralCode: refCode, referredBy: '', referralCount: 0, referralEarnings: 0,
+      referralBonusPaid: false, regIp: '',
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       lastLogin: firebase.firestore.FieldValue.serverTimestamp()
     }));
@@ -971,6 +972,60 @@ async function completeAd() {
     updateAdUI();
     loadTransactions();
   }, 1800);
+  
+  // Check referral bonus: after 30 ads, credit referrer
+  checkReferralMilestone();
+}
+
+// ===== REFERRAL BONUS SYSTEM =====
+// Referrer gets $0.50 after referred user watches 30 ads
+async function checkReferralMilestone() {
+  if (!db || !currentUser || !currentUserData) return;
+  
+  // Check if referred by someone, has 30+ ads, and bonus not yet paid
+  var referredBy = currentUserData.referredBy;
+  var adsWatched = currentUserData.adsWatched || 0;
+  var bonusPaid = currentUserData.referralBonusPaid === true;
+  
+  if (!referredBy || bonusPaid || adsWatched < 30) return;
+  
+  try {
+    // Get referrer data
+    var refDoc = await fbTimeout(usersRef.doc(referredBy).get());
+    if (!refDoc.exists) return;
+    
+    // Credit referrer
+    await usersRef.doc(referredBy).update({
+      balance: firebase.firestore.FieldValue.increment(0.50),
+      referralEarnings: firebase.firestore.FieldValue.increment(0.50),
+      totalEarned: firebase.firestore.FieldValue.increment(0.50)
+    });
+    
+    // Mark as paid for referred user
+    await usersRef.doc(currentUser.uid).update({
+      referralBonusPaid: true
+    });
+    currentUserData.referralBonusPaid = true;
+    
+    // Update referral document
+    var refSnap = await fbTimeout(referralsRef.where('referredId', '==', currentUser.uid).get());
+    if (!refSnap.empty) {
+      refSnap.forEach(function(doc) {
+        doc.ref.update({ bonusPaid: true });
+      });
+    }
+    
+    // Log transaction for referrer
+    await transactionsRef.add({
+      userId: referredBy, type: 'referral_bonus', amount: 0.50,
+      status: 'completed',
+      description: 'Referral bonus for ' + (currentUserData.name || currentUser.email) + ' (30 ads completed)',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    
+    showToast('🎉', 'Referral Bonus Earned!', 'Your referrer earned $0.50 because you watched 30 ads!', 'success');
+    
+  } catch(e) { console.warn('Referral bonus error:', e.message); }
 }
 
 // ===== WITHDRAWAL =====

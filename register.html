@@ -181,6 +181,31 @@ document.getElementById('registerForm').addEventListener('submit', async functio
   if (isDisposableEmail(email)) { showAlert('Temporary emails are not allowed', 'error'); return; }
 
   btn.disabled = true;
+  btn.textContent = '⏳ Checking...';
+
+  // Get user IP
+  btn.textContent = '⏳ Getting IP...';
+  var userIp = '0.0.0.0';
+  try {
+    var ipResp = await fetch('https://api.ipify.org?format=json');
+    var ipData = await ipResp.json();
+    userIp = ipData.ip;
+  } catch(e) { showAlert('Could not verify network. Please check connection.', 'error'); btn.disabled=false; btn.textContent='Create Account'; return; }
+
+  // One IP = One Account check
+  btn.textContent = '⏳ Checking IP...';
+  if (db) {
+    try {
+      var ipSnap = await fbTimeout(usersRef.where('regIp', '==', userIp).get());
+      if (!ipSnap.empty) {
+        showAlert('⚠️ One account per IP address only. You already registered from this IP.', 'error');
+        btn.disabled=false;
+        btn.textContent='Create Account';
+        return;
+      }
+    } catch(e) { console.warn('IP check error:', e); }
+  }
+
   btn.textContent = '⏳ Creating account...';
 
   try {
@@ -194,12 +219,13 @@ document.getElementById('registerForm').addEventListener('submit', async functio
       uid: user.uid, email: email, name: name, photo: '', phone: '',
       balance: 0, totalEarned: 0, totalWithdrawn: 0, adsWatched: 0,
       todayAds: 0, lastAdDate: '', referralCode: refCode, referredBy: '',
+      referralBonusPaid: false, regIp: userIp,
       isActive: true, isAdmin: user.email === ADMIN_EMAIL,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       lastLogin: firebase.firestore.FieldValue.serverTimestamp()
     };
 
-    // Handle referral
+    // Handle referral — save but DON'T credit bonus yet
     if (ref && db) {
       try {
         var refSnap = await fbTimeout(usersRef.where('referralCode', '==', ref).get());
@@ -207,13 +233,11 @@ document.getElementById('registerForm').addEventListener('submit', async functio
           var referrer = refSnap.docs[0];
           userData.referredBy = referrer.id;
           await usersRef.doc(referrer.id).update({
-            balance: firebase.firestore.FieldValue.increment(0.50),
-            totalEarned: firebase.firestore.FieldValue.increment(0.50),
             referralCount: firebase.firestore.FieldValue.increment(1)
           });
           await referralsRef.add({
             referrerId: referrer.id, referredId: user.uid,
-            referredName: name, bonus: 0.50,
+            referredName: name, bonus: 0.50, bonusPaid: false,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           });
         }
