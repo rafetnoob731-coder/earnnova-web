@@ -366,7 +366,8 @@ var _tapStartTime = 0;
 var _tapTimes = [];
 var AD_TASK_DURATION = 60;
 var AD_INCREMENT = 0.010;
-var MAX_DAILY_ADS = 30;
+var MAX_DAILY_ADS = 100;
+var AD_COOLDOWN_MS = 1800000; // 30 minutes
 var AD_REWARD = 0.02;
 
 function initAdSystem() {
@@ -397,8 +398,10 @@ function updateAdUI() {
 }
 
 async function watchAd() {
-  if (adCooldown) { showToast('\u23f3', 'Cooldown Active', 'Please wait 10 seconds between ads.', 'warning'); return; }
-  if (dailyAdCount >= MAX_DAILY_ADS) { showToast('\u26a0\ufe0f', 'Daily Limit Reached', 'You\'ve watched ' + MAX_DAILY_ADS + ' ads today. Come back tomorrow!', 'warning'); return; }
+  if (adCooldown) { showToast('\u23f3', 'Cooldown Active', 'Please wait 30 minutes between ads.', 'warning'); return; }
+  if (!(currentUserData && (currentUserData.isAdmin || currentUser?.email === ADMIN_EMAIL)) && dailyAdCount >= MAX_DAILY_ADS) {
+    showToast('\u26a0\ufe0f', 'Daily Limit Reached', 'You\'ve watched ' + MAX_DAILY_ADS + ' ads today. Come back tomorrow!', 'warning'); return;
+  }
   
   currentAdType = AdTypes[Math.floor(Math.random() * AdTypes.length)];
   adProgress = 0;
@@ -874,7 +877,13 @@ function closeAdUI() {
   if(_comboBannerTimer){clearInterval(_comboBannerTimer);_comboBannerTimer=null;}
   var m=$('adModal');
   if(m){m.classList.remove('show');m.innerHTML='';}
-  adCooldown=false;adCompleted=false;_rewarding=false;
+  adCompleted=false;_rewarding=false;
+  // 30 min cooldown
+  if (!(currentUserData && (currentUserData.isAdmin || currentUser?.email === ADMIN_EMAIL))) {
+    setTimeout(function() { adCooldown = false; }, AD_COOLDOWN_MS);
+  } else {
+    adCooldown = false;
+  }
 }
 
 function _showGiftOverlay() {
@@ -951,7 +960,12 @@ async function completeAd() {
   setTimeout(function() {
     var modal = $('adModal');
     if (modal) modal.classList.remove('show');
-    adCooldown = false;
+    // 30 min cooldown for non-admin
+    if (!(currentUserData && (currentUserData.isAdmin || currentUser?.email === ADMIN_EMAIL))) {
+      setTimeout(function() { adCooldown = false; }, AD_COOLDOWN_MS);
+    } else {
+      adCooldown = false;
+    }
     updateAdUI();
     loadTransactions();
   }, 1800);
