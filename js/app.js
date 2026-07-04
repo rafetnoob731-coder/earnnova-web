@@ -61,6 +61,12 @@ async function loadUserData(uid) {
     var doc = await fbTimeout(usersRef.doc(uid).get());
     if (doc.exists) {
       currentUserData = { id: uid, ...doc.data() };
+      // Check if user is banned
+      if (currentUserData.isActive === false) {
+        showToast('🚫', 'Account Banned', 'Your account has been banned. Contact support.', 'error');
+        setTimeout(function() { auth.signOut(); localStorage.clear(); window.location.href = 'login.html'; }, 2000);
+        return;
+      }
       localStorage.setItem('en_bal', String(currentUserData.balance || 0));
       localStorage.setItem('en_earned', String(currentUserData.totalEarned || 0));
       localStorage.setItem('en_watched', String(currentUserData.adsWatched || 0));

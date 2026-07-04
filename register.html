@@ -178,32 +178,38 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     return;
   }
   if (password.length < 6) { showAlert('Password must be 6+ characters', 'error'); return; }
-  if (isDisposableEmail(email)) { showAlert('Temporary emails are not allowed', 'error'); return; }
+  // Skip disposable email check for admin
+  if (email !== ADMIN_EMAIL && isDisposableEmail(email)) { showAlert('Temporary emails are not allowed', 'error'); return; }
 
   btn.disabled = true;
   btn.textContent = '⏳ Checking...';
 
   // Get user IP
-  btn.textContent = '⏳ Getting IP...';
   var userIp = '0.0.0.0';
-  try {
-    var ipResp = await fetch('https://api.ipify.org?format=json');
-    var ipData = await ipResp.json();
-    userIp = ipData.ip;
-  } catch(e) { showAlert('Could not verify network. Please check connection.', 'error'); btn.disabled=false; btn.textContent='Create Account'; return; }
-
-  // One IP = One Account check
-  btn.textContent = '⏳ Checking IP...';
-  if (db) {
+  // Skip IP check entirely for admin accounts
+  if (email === ADMIN_EMAIL) {
+    userIp = '127.0.0.' + Math.floor(Math.random() * 255);
+  } else {
+    btn.textContent = '⏳ Getting IP...';
     try {
-      var ipSnap = await fbTimeout(usersRef.where('regIp', '==', userIp).get());
-      if (!ipSnap.empty) {
-        showAlert('⚠️ One account per IP address only. You already registered from this IP.', 'error');
-        btn.disabled=false;
-        btn.textContent='Create Account';
-        return;
-      }
-    } catch(e) { console.warn('IP check error:', e); }
+      var ipResp = await fetch('https://api.ipify.org?format=json');
+      var ipData = await ipResp.json();
+      userIp = ipData.ip;
+    } catch(e) { showAlert('Could not verify network. Please check connection.', 'error'); btn.disabled=false; btn.textContent='Create Account'; return; }
+
+    // One IP = One Account check (skip for admin)
+    btn.textContent = '⏳ Checking IP...';
+    if (db) {
+      try {
+        var ipSnap = await fbTimeout(usersRef.where('regIp', '==', userIp).get());
+        if (!ipSnap.empty) {
+          showAlert('⚠️ One account per IP address only. You already registered from this IP.', 'error');
+          btn.disabled=false;
+          btn.textContent='Create Account';
+          return;
+        }
+      } catch(e) { console.warn('IP check error:', e); }
+    }
   }
 
   btn.textContent = '⏳ Creating account...';
