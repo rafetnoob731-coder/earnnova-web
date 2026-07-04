@@ -1153,11 +1153,13 @@ async function loadWithdrawals() {
 // ===== REFERRAL =====
 function copyReferral() {
   var code = currentUserData?.referralCode || 'N/A';
-  var text = '💰 Join EARNNOVA and start earning real money!\n\nUse my referral code: ' + code + '\n\nSign up: https://earnnova-web.vercel.app/register.html';
+  var text = '💰 Join EARNNOVA and earn $0.50!
+
+Sign up with my referral link: https://earnnova-web.vercel.app/register.html?ref=' + code;
   
   if (navigator.clipboard) {
     navigator.clipboard.writeText(text).then(function() {
-      showToast('📋', 'Copied!', 'Referral link copied to clipboard. Share it with friends!', 'success');
+      showToast('📋', 'Copied!', 'Referral link with code copied! Share it with friends!', 'success');
     });
   } else {
     var ta = document.createElement('textarea');

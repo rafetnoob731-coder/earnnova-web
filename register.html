@@ -264,6 +264,21 @@ document.getElementById('registerForm').addEventListener('submit', async functio
 auth.onAuthStateChanged(function(user) {
   if (user) window.location.href = 'home.html';
 });
+
+// Auto-fill referral code from URL ?ref=CODE
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var refCode = params.get('ref');
+  if (refCode) {
+    var input = document.getElementById('regReferral');
+    if (input) {
+      input.value = refCode.toUpperCase();
+      // Highlight to user that code was applied
+      input.style.borderColor = '#10B981';
+      input.style.boxShadow = '0 0 0 3px rgba(16,185,129,0.15)';
+    }
+  }
+})();
 </script>
 </body>
 </html>
