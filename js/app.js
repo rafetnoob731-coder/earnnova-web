@@ -1153,9 +1153,7 @@ async function loadWithdrawals() {
 // ===== REFERRAL =====
 function copyReferral() {
   var code = currentUserData?.referralCode || 'N/A';
-  var text = '💰 Join EARNNOVA and earn $0.50!
-
-Sign up with my referral link: https://earnnova-web.vercel.app/register.html?ref=' + code;
+  var text = '💰 Join EARNNOVA and earn $0.50!\n\nSign up with my referral link: https://earnnova-web.vercel.app/register.html?ref=' + code;
   
   if (navigator.clipboard) {
     navigator.clipboard.writeText(text).then(function() {
