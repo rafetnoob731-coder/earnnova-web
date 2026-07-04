@@ -172,7 +172,7 @@ setTimeout(function() {
   <!-- PAGE: EARN -->
   <div class="page-view" id="pageEarn">
     <div class="section-title" style="margin-top:0">📺 Watch & Earn</div>
-    <div class="section-subtitle">Earn $0.02 per ad • 30 ads daily • 60s each</div>
+    <div class="section-subtitle">Earn $0.02 per ad • 100 ads daily • various formats</div>
 
     <div class="glass-card text-center" style="padding:28px 16px;margin-top:12px">
       <div style="font-size:48px;margin-bottom:8px">📺</div>
@@ -270,8 +270,10 @@ setTimeout(function() {
     <div class="glass-card">
       <div class="setting-item"><div class="setting-left"><div class="setting-icon" style="background:rgba(212,175,55,0.1);color:var(--gold)"><i class="fas fa-user"></i></div><div><div class="setting-label">Name</div><div class="setting-desc" data-name>User</div></div></div></div>
       <div class="setting-item"><div class="setting-left"><div class="setting-icon" style="background:rgba(59,130,246,0.1);color:#3B82F6"><i class="fas fa-envelope"></i></div><div><div class="setting-label">Email</div><div class="setting-desc" data-email>email@example.com</div></div></div></div>
+      <div class="setting-item"><div class="setting-left"><div class="setting-icon" style="background:rgba(139,92,246,0.1);color:#8B5CF6"><i class="fas fa-id-card"></i></div><div><div class="setting-label">User ID</div><div class="setting-desc text-xs" id="profileUserID">------</div></div></div></div>
       <div class="setting-item"><div class="setting-left"><div class="setting-icon" style="background:rgba(16,185,129,0.1);color:var(--emerald)"><i class="fas fa-trophy"></i></div><div><div class="setting-label">Total Earned</div><div class="setting-desc text-gold fw-600" data-earned>$0.00</div></div></div></div>
       <div class="setting-item"><div class="setting-left"><div class="setting-icon" style="background:rgba(139,92,246,0.1);color:#8B5CF6"><i class="fas fa-eye"></i></div><div><div class="setting-label">Ads Watched</div><div class="setting-desc" data-watched>0</div></div></div></div>
+      <div class="setting-item" style="cursor:pointer" onclick="editProfile()"><div class="setting-left"><div class="setting-icon" style="background:rgba(16,185,129,0.1);color:var(--emerald)"><i class="fas fa-pen"></i></div><div><div class="setting-label">Edit Profile</div><div class="setting-desc">Change name, photo, phone</div></div></div><i class="fas fa-chevron-right" style="color:var(--text-muted);font-size:12px"></i></div>
     </div>
 
     <div class="glass-card">
@@ -303,7 +305,10 @@ setTimeout(function() {
 <div class="admin-overlay" id="adminOverlay">
   <div class="admin-head">
     <h2><i class="fas fa-shield-halved text-gold"></i> Admin Panel</h2>
-    <button class="btn-icon" onclick="toggleAdmin()"><i class="fas fa-times"></i></button>
+    <div style="display:flex;gap:4px">
+      <span id="adminRoleBadge" style="font-size:9px;padding:2px 8px;border-radius:4px;background:rgba(212,175,55,0.12);color:var(--gold);display:none">CREATOR</span>
+      <button class="btn-icon" onclick="toggleAdmin()"><i class="fas fa-times"></i></button>
+    </div>
   </div>
   <div class="admin-grid">
     <div class="admin-stat-card"><div class="admin-stat-val" id="adminUsers">0</div><div class="admin-stat-lbl">Users</div></div>
@@ -314,15 +319,95 @@ setTimeout(function() {
     <div class="admin-tab active" data-tab="dashboard" onclick="adminSwitchTab('dashboard')">Dashboard</div>
     <div class="admin-tab" data-tab="users" onclick="adminSwitchTab('users')">Users</div>
     <div class="admin-tab" data-tab="withdrawals" onclick="adminSwitchTab('withdrawals')">Withdrawals</div>
+    <div class="admin-tab" data-tab="notifications" onclick="adminSwitchTab('notifications')">Notify</div>
+    <div class="admin-tab" data-tab="settings" onclick="adminSwitchTab('settings')">Settings</div>
   </div>
   <div class="admin-section active" id="adminSectionDashboard">
     <div class="text-sm text-muted">System Overview</div>
   </div>
   <div class="admin-section" id="adminSectionUsers">
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      <input id="adminSearchInput" placeholder="Search by UID or email..." style="flex:1;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;font-size:13px;outline:none">
+      <button class="btn-small" onclick="adminSearchUser()" style="padding:8px 14px;border-radius:10px;border:none;background:var(--emerald);color:#fff;font-weight:600;cursor:pointer">Search</button>
+    </div>
     <div id="adminUsersList"></div>
   </div>
   <div class="admin-section" id="adminSectionWithdrawals">
     <div id="adminWDList"></div>
+  </div>
+  <div class="admin-section" id="adminSectionNotifications">
+    <div class="glass-card-sm" style="padding:16px">
+      <div class="fw-600 text-sm mb-2">Send Notification</div>
+      <textarea id="adminNotifText" placeholder="Write notification message..." style="width:100%;height:80px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;font-size:13px;resize:vertical;outline:none;box-sizing:border-box;margin-bottom:8px"></textarea>
+      <div style="display:flex;gap:6px">
+        <button class="btn-small" onclick="adminSendNotif('all')" style="flex:1;padding:10px;border-radius:10px;border:none;background:var(--emerald);color:#fff;font-weight:600;cursor:pointer">Send to All</button>
+        <button class="btn-small" onclick="adminSendNotif('active')" style="flex:1;padding:10px;border-radius:10px;border:none;background:var(--gold);color:#0A0E1A;font-weight:600;cursor:pointer">Active Users</button>
+      </div>
+    </div>
+    <div class="glass-card-sm" style="padding:16px;margin-top:8px">
+      <div class="fw-600 text-sm mb-2">Recent Notifications</div>
+      <div id="adminNotifHistory">
+        <div class="text-xs text-muted">No notifications sent yet</div>
+      </div>
+    </div>
+  </div>
+  <div class="admin-section" id="adminSectionSettings">
+    <div class="glass-card-sm" style="padding:16px">
+      <div class="fw-600 text-sm mb-2">Admin Roles</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Creator: owner@nova.com — full access</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Admin: Can manage users & withdrawals</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Child Admin: Can view only</div>
+    </div>
+    <div class="glass-card-sm" style="padding:16px;margin-top:8px">
+      <div class="fw-600 text-sm mb-2">App Settings</div>
+      <div style="margin-bottom:8px">
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Min Withdrawal ($)</label>
+        <input id="adminMinWD" type="number" value="5" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;font-size:13px;outline:none;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:8px">
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Ad Reward Amount ($)</label>
+        <input id="adminAdReward" type="number" value="0.02" step="0.005" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;font-size:13px;outline:none;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:8px">
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Referral Bonus ($)</label>
+        <input id="adminRefBonus" type="number" value="0.50" step="0.10" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;font-size:13px;outline:none;box-sizing:border-box">
+      </div>
+      <button class="btn-small" onclick="adminSaveSettings()" style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--emerald);color:#fff;font-weight:600;cursor:pointer">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- USER DETAIL MODAL -->
+<div class="admin-overlay" id="userDetailModal" style="z-index:99996">
+  <div class="admin-head">
+    <h2 id="userDetailTitle">User Details</h2>
+    <button class="btn-icon" onclick="closeUserDetail()"><i class="fas fa-times"></i></button>
+  </div>
+  <div id="userDetailContent" style="padding:16px"></div>
+</div>
+
+<!-- PROFILE EDIT MODAL -->
+<div class="admin-overlay" id="profileEditModal" style="z-index:99996">
+  <div class="admin-head">
+    <h2>Edit Profile</h2>
+    <button class="btn-icon" onclick="document.getElementById('profileEditModal').classList.remove('show')"><i class="fas fa-times"></i></button>
+  </div>
+  <div style="padding:16px">
+    <div class="glass-card-sm" style="padding:16px">
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Your Name</label>
+        <input id="profileEditName" type="text" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;font-size:13px;outline:none;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Photo URL (optional)</label>
+        <input id="profileEditPhoto" type="text" placeholder="https://example.com/avatar.jpg" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;font-size:13px;outline:none;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:8px">
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Phone Number</label>
+        <input id="profileEditPhone" type="text" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;font-size:13px;outline:none;box-sizing:border-box">
+      </div>
+      <button class="btn-emerald w-full" onclick="saveProfile()" style="padding:12px;border-radius:10px;border:none;background:var(--emerald);color:#fff;font-weight:700;cursor:pointer">Save Profile</button>
+    </div>
   </div>
 </div>
 

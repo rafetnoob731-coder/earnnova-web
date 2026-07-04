@@ -149,6 +149,8 @@ function updateUI() {
   qsa('[data-earned]').forEach(function(el) { el.textContent = formatCurrency(d.totalEarned || 0); });
   qsa('[data-watched]').forEach(function(el) { el.textContent = d.adsWatched || 0; });
   qsa('[data-ref]').forEach(function(el) { el.textContent = d.referralCode || 'N/A'; });
+  var uidEl = document.getElementById('profileUserID');
+  if (uidEl) uidEl.textContent = currentUser?.uid || 'N/A';
   qsa('[data-referrals]').forEach(function(el) { el.textContent = d.referralCount || 0; });
   qsa('[data-refearned]').forEach(function(el) { el.textContent = formatCurrency(d.referralEarnings || 0); });
   qsa('[data-balance-num]').forEach(function(el) { el.textContent = bal.toFixed(2); });
@@ -487,7 +489,7 @@ function getAdContent(type) {
     case 'ads4':
       return '<div class="ad-inner"><div class="ad-placeholder" style="width:100%;height:180px;border-radius:16px;background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(139,92,246,0.1));border:1px solid rgba(59,130,246,0.15);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:12px"><div style="font-size:48px;margin-bottom:8px">\ud83d\udd01</div><div style="font-size:13px;color:#60a5fa;font-weight:600">Monetag x2</div><div id="monetagStepText" style="font-size:11px;color:var(--text-muted);margin-top:4px">Step 1 of 2</div></div><div class="ad-label"><span id="monetagActionText">Watching ad 1...</span></div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.035</span></div></div>';
     case 'ads5':
-      return '<div class="ad-inner"><div class="ad-placeholder" style="width:100%;height:180px;border-radius:16px;background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(5,150,105,0.1));border:1px solid rgba(16,185,129,0.15);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:12px"><div style="font-size:48px;margin-bottom:8px">\u23f1\ufe0f</div><div style="font-size:13px;color:#34d399;font-weight:600">Full Ad</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px">Watch 60s</div></div><div class="ad-label">Watch the full 60s ad</div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.040</span></div></div>';
+      return '<div class="ad-inner"><div class="ad-video-placeholder" style="width:100%;height:200px;border-radius:16px;background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(245,158,11,0.08));border:1px solid rgba(212,175,55,0.15);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:12px;position:relative;overflow:hidden"><div style="position:absolute;inset:0;background:radial-gradient(circle at 30% 40%,rgba(212,175,55,0.08),transparent 70%)"></div><div style="position:relative;font-size:60px;margin-bottom:8px;animation:pulse 2s infinite">\u25b6\ufe0f</div><div style="position:relative;font-size:15px;color:var(--gold);font-weight:700">SPONSOR VIDEO</div><div style="position:relative;font-size:11px;color:var(--text-muted);margin-top:4px">Watch 60s • Premium Content</div><div id="videoTimer" style="position:relative;margin-top:8px;font-size:13px;font-weight:700;color:var(--emerald)">0:60</div></div><div style="display:flex;gap:6px;margin-bottom:8px"><span style="padding:2px 8px;border-radius:4px;font-size:9px;background:rgba(212,175,55,0.1);color:var(--gold)">\u2b50 PREMIUM</span><span style="padding:2px 8px;border-radius:4px;font-size:9px;background:rgba(16,185,129,0.1);color:var(--emerald)">\ud83d\udcb0 +$0.040</span></div><div class="ad-label" style="font-size:11px;color:var(--text-secondary);text-align:center">This video is sponsored by our partners. Thanks for watching!</div></div>';
     case 'ads6':
       return '<div class="ad-inner"><div style="font-size:14px;font-weight:600;margin-bottom:8px">\ud83c\udfae Hit the Target!</div><div id="gameArea" style="width:100%;height:180px;border-radius:16px;background:linear-gradient(135deg,rgba(251,191,36,0.08),rgba(245,158,11,0.08));border:1px solid rgba(251,191,36,0.15);position:relative;margin-bottom:8px"><div id="gameTarget" style="width:44px;height:44px;border-radius:50%;background:var(--gold);position:absolute;left:20px;top:20px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;box-shadow:0 4px 16px rgba(212,175,55,0.4);transition:all 0.15s">\ud83c\udfaf</div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);padding:0 4px;margin-bottom:8px"><span id="gameScoreText">Click target 0/5</span></div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.050</span></div></div>';
     case 'ads7':
@@ -1112,6 +1114,7 @@ function toggleAdmin() {
   $('adminOverlay')?.classList.toggle('show');
   if ($('adminOverlay')?.classList.contains('show')) {
     adminLoadStats();
+    adminShowRoleBadge();
   }
 }
 
@@ -1152,13 +1155,17 @@ async function adminLoadUsers() {
     container.innerHTML = '';
     snap.forEach(function(doc) {
       var d = doc.data();
+      var isBanned = d.isActive === false;
       container.innerHTML +=
-        '<div class="glass-card-sm flex justify-between items-center" style="margin-bottom:8px">' +
+        '<div class="glass-card-sm flex justify-between items-center" style="margin-bottom:8px;' + (isBanned ? 'opacity:0.5' : '') + '">' +
           '<div><div style="font-size:13px;font-weight:600">' + (d.name || '?') + '</div>' +
-          '<div style="font-size:11px;color:var(--text-muted)">' + (d.email || '') + ' • ' + formatCurrency(d.balance || 0) + '</div></div>' +
+          '<div style="font-size:10px;color:var(--text-muted)">' + (d.email || '') + ' • ID: ' + doc.id.slice(0,8) + '... • ' + formatCurrency(d.balance || 0) + '</div></div>' +
           '<div class="flex gap-1 items-center">' +
-            (d.isAdmin ? '<span class="text-gold fw-600 text-xs" style="padding:2px 8px;border-radius:4px;background:rgba(212,175,55,0.1)">ADMIN</span>' : '') +
-            '<span class="text-xs" style="padding:2px 8px;border-radius:4px;background:rgba(255,255,255,0.04);color:var(--text-muted)">' + (d.adsWatched || 0) + '</span>' +
+            (isBanned ? '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(239,68,68,0.12);color:#ef4444">BANNED</span>' : '') +
+            (d.isAdmin === true ? '<span class="text-gold fw-600 text-xs" style="padding:2px 8px;border-radius:4px;background:rgba(212,175,55,0.1)">ADMIN</span>' : '') +
+            (d.isAdmin === 'child' ? '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(99,102,241,0.1);color:#6366f1">CHILD</span>' : '') +
+            '<span style="font-size:10px;color:var(--text-muted)">' + (d.adsWatched || 0) + '</span>' +
+            '<button class="btn-small" onclick="adminViewUser(\'' + doc.id + '\')" style="padding:3px 8px;font-size:9px;border-radius:4px;border:none;background:rgba(16,185,129,0.1);color:var(--emerald);cursor:pointer">View</button>' +
           '</div>' +
         '</div>';
     });
@@ -1189,6 +1196,353 @@ async function adminLoadWD() {
     });
     if (snap.empty) container.innerHTML = '<div class="empty-state"><div class="empty-desc">No withdrawals</div></div>';
   } catch(e) { container.innerHTML = '<div class="empty-state"><div class="empty-desc">Error</div></div>'; }
+}
+
+// ===== ADMIN FUNCTIONS =====
+
+// Search user by UID or email
+async function adminSearchUser() {
+  var q = document.getElementById('adminSearchInput')?.value?.trim();
+  if (!q) { showToast('⚠️','Empty','Enter a UID or email to search','warning'); return; }
+  
+  var container = document.getElementById('adminUsersList');
+  if (!container) return;
+  container.innerHTML = '<div class="skeleton skeleton-card"></div>';
+  
+  try {
+    // Try by UID first
+    var doc = await fbTimeout(usersRef.doc(q).get());
+    if (doc.exists) {
+      showResult(doc);
+      return;
+    }
+    // Try by email
+    var snap = await fbTimeout(usersRef.where('email', '==', q).get());
+    if (!snap.empty) {
+      snap.forEach(function(d) { showResult(d); });
+      return;
+    }
+    container.innerHTML = '<div class="empty-state"><div class="empty-desc">User not found</div></div>';
+  } catch(e) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-desc">Error: ' + e.message + '</div></div>';
+  }
+  
+  function showResult(doc) {
+    var d = doc.data();
+    container.innerHTML = 
+      '<div class="glass-card-sm" style="margin-bottom:8px">' +
+        '<div class="flex justify-between items-center">' +
+          '<div><div style="font-size:13px;font-weight:600">' + (d.name || '?') + '</div>' +
+          '<div style="font-size:10px;color:var(--text-muted)">' + (d.email || '') + '<br>UID: ' + doc.id + '</div></div>' +
+          '<button class="btn-small" onclick="adminViewUser(\'' + doc.id + '\')" style="padding:6px 12px;border-radius:6px;border:none;background:var(--emerald);color:#fff;font-weight:600;cursor:pointer">View Profile</button>' +
+        '</div>' +
+      '</div>';
+  }
+}
+
+// View user details with actions
+async function adminViewUser(uid) {
+  var modal = document.getElementById('userDetailModal');
+  var content = document.getElementById('userDetailContent');
+  if (!modal || !content) return;
+  
+  content.innerHTML = '<div class="text-xs text-muted">Loading...</div>';
+  modal.classList.add('show');
+  
+  try {
+    var doc = await fbTimeout(usersRef.doc(uid).get());
+    if (!doc.exists) { content.innerHTML = '<div class="empty-state"><div class="empty-desc">User not found</div></div>'; return; }
+    
+    var d = doc.data();
+    var isCreator = currentUser?.email === ADMIN_EMAIL;
+    var isThisUser = currentUser?.uid === uid;
+    var roleLabel = d.isAdmin === true ? '👑 Full Admin' : d.isAdmin === 'child' ? '🔹 Child Admin' : '👤 User';
+    
+    var html = 
+      '<div class="glass-card-sm" style="padding:16px;margin-bottom:12px">' +
+        '<div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">' +
+          '<div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--emerald));display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#0A0E1A">' + (d.name?.[0] || 'U').toUpperCase() + '</div>' +
+          '<div><div style="font-size:16px;font-weight:700">' + (d.name || 'Unknown') + '</div>' +
+          '<div style="font-size:11px;color:var(--text-muted)">' + (d.email || 'No email') + '</div>' +
+          '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">' + roleLabel + '</div></div>' +
+        '</div>' +
+        '<div class="flex gap-2" style="flex-wrap:wrap;margin-bottom:8px">' +
+          '<div class="admin-stat-card" style="flex:1;min-width:60px;padding:8px"><div class="admin-stat-val" style="font-size:14px">' + formatCurrency(d.balance || 0) + '</div><div class="admin-stat-lbl" style="font-size:9px">Balance</div></div>' +
+          '<div class="admin-stat-card" style="flex:1;min-width:60px;padding:8px"><div class="admin-stat-val" style="font-size:14px">' + (d.adsWatched || 0) + '</div><div class="admin-stat-lbl" style="font-size:9px">Ads</div></div>' +
+          '<div class="admin-stat-card" style="flex:1;min-width:60px;padding:8px"><div class="admin-stat-val" style="font-size:14px">' + (d.todayAds || 0) + '</div><div class="admin-stat-lbl" style="font-size:9px">Today</div></div>' +
+        '</div>' +
+        '<div style="font-size:10px;color:var(--text-muted)">UID: <span style="font-family:monospace">' + uid + '</span></div>' +
+        '<div style="font-size:10px;color:var(--text-muted)">Referred: ' + (d.referralCount || 0) + ' users</div>' +
+        '<div style="font-size:10px;color:var(--text-muted)">Referral Earnings: ' + formatCurrency(d.referralEarnings || 0) + '</div>' +
+      '</div>';
+    
+    // Actions (not for yourself)
+    if (!isThisUser) {
+      html += '<div class="glass-card-sm" style="padding:16px;margin-bottom:8px">';
+      html += '<div class="fw-600 text-sm mb-2">Actions</div>';
+      
+      // Ban/Unban (admin+)
+      html += '<div class="action-row" style="display:flex;gap:6px;margin-bottom:6px">';
+      html += '<button class="btn-small" style="flex:1;padding:8px;border-radius:8px;border:none;background:' + (d.isActive === false ? 'rgba(16,185,129,0.12);color:var(--emerald)' : 'rgba(239,68,68,0.12);color:#ef4444') + ';font-weight:600;cursor:pointer" onclick="adminToggleBan(\'' + uid + '\',' + (d.isActive === false ? 'true' : 'false') + ')">' + (d.isActive === false ? '✅ Unban' : '🚫 Ban') + '</button>';
+      html += '</div>';
+      
+      // Promote/Demote (creator only)
+      if (isCreator) {
+        if (!d.isAdmin) {
+          html += '<div class="action-row" style="display:flex;gap:6px;margin-bottom:6px">';
+          html += '<button class="btn-small" style="flex:1;padding:8px;border-radius:8px;border:none;background:rgba(212,175,55,0.12);color:var(--gold);font-weight:600;cursor:pointer" onclick="adminSetRole(\'' + uid + '\',\'admin\')">👑 Make Admin</button>';
+          html += '<button class="btn-small" style="flex:1;padding:8px;border-radius:8px;border:none;background:rgba(99,102,241,0.12);color:#6366f1;font-weight:600;cursor:pointer" onclick="adminSetRole(\'' + uid + '\',\'child\')">🔹 Make Child Admin</button>';
+          html += '</div>';
+        } else if (d.isAdmin === 'child') {
+          html += '<div class="action-row" style="display:flex;gap:6px;margin-bottom:6px">';
+          html += '<button class="btn-small" style="flex:1;padding:8px;border-radius:8px;border:none;background:rgba(212,175,55,0.12);color:var(--gold);font-weight:600;cursor:pointer" onclick="adminSetRole(\'' + uid + '\',\'admin\')">👑 Promote to Admin</button>';
+          html += '<button class="btn-small" style="flex:1;padding:8px;border-radius:8px;border:none;background:rgba(239,68,68,0.12);color:#ef4444;font-weight:600;cursor:pointer" onclick="adminSetRole(\'' + uid + '\',\'user\')">⬇ Demote to User</button>';
+          html += '</div>';
+        } else {
+          html += '<div class="action-row" style="display:flex;gap:6px;margin-bottom:6px">';
+          html += '<button class="btn-small" style="flex:1;padding:8px;border-radius:8px;border:none;background:rgba(99,102,241,0.12);color:#6366f1;font-weight:600;cursor:pointer" onclick="adminSetRole(\'' + uid + '\',\'child\')">🔹 Make Child Admin</button>';
+          html += '<button class="btn-small" style="flex:1;padding:8px;border-radius:8px;border:none;background:rgba(239,68,68,0.12);color:#ef4444;font-weight:600;cursor:pointer" onclick="adminSetRole(\'' + uid + '\',\'user\')">⬇ Demote to User</button>';
+          html += '</div>';
+        }
+      }
+      
+      // Ad Limit (admin+)
+      html += '<div class="action-row" style="display:flex;gap:6px;margin-bottom:6px">';
+      html += '<input id="adLimitInput" type="number" placeholder="Ad limit" style="flex:1;padding:8px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;font-size:12px;outline:none">';
+      html += '<button class="btn-small" style="padding:8px 12px;border-radius:8px;border:none;background:rgba(16,185,129,0.12);color:var(--emerald);font-weight:600;cursor:pointer" onclick="adminSetAdLimit(\'' + uid + '\')">Set</button>';
+      html += '</div>';
+      
+      // Balance adjust (admin+)
+      html += '<div class="action-row" style="display:flex;gap:6px;margin-bottom:6px">';
+      html += '<input id="balanceAdjustInput" type="number" placeholder="Amount" step="0.01" style="flex:1;padding:8px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;font-size:12px;outline:none">';
+      html += '<button class="btn-small" style="padding:8px 12px;border-radius:8px;border:none;background:rgba(16,185,129,0.12);color:var(--emerald);font-weight:600;cursor:pointer" onclick="adminAddBalance(\'' + uid + '\')">+</button>';
+      html += '<button class="btn-small" style="padding:8px 12px;border-radius:8px;border:none;background:rgba(239,68,68,0.12);color:#ef4444;font-weight:600;cursor:pointer" onclick="adminSubBalance(\'' + uid + '\')">−</button>';
+      html += '</div>';
+      
+      // Send notification to user
+      html += '<div class="action-row" style="display:flex;gap:6px">';
+      html += '<input id="adminNotifSingle" type="text" placeholder="Personal notification..." style="flex:1;padding:8px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;font-size:12px;outline:none">';
+      html += '<button class="btn-small" style="padding:8px 12px;border-radius:8px;border:none;background:rgba(245,158,11,0.12);color:#f59e0b;font-weight:600;cursor:pointer" onclick="adminNotifSingle(\'' + uid + '\')">Send</button>';
+      html += '</div>';
+      
+      html += '</div>';
+    }
+    
+    content.innerHTML = html;
+    document.getElementById('userDetailTitle').textContent = d.name || 'User Details';
+  } catch(e) {
+    content.innerHTML = '<div class="empty-state"><div class="empty-desc">Error: ' + e.message + '</div></div>';
+  }
+}
+
+function closeUserDetail() {
+  document.getElementById('userDetailModal')?.classList.remove('show');
+}
+
+// Ban / Unban
+async function adminToggleBan(uid, currentlyBanned) {
+  if (!confirm(currentlyBanned ? 'Unban this user?' : 'Ban this user? They will not be able to login or earn.')) return;
+  try {
+    await fbTimeout(usersRef.doc(uid).update({ isActive: currentlyBanned }));
+    showToast('✅', currentlyBanned ? 'Unbanned!' : 'Banned!', currentlyBanned ? 'User can now login and earn.' : 'User has been banned.','success');
+    adminViewUser(uid);
+  } catch(e) { showToast('❌','Error',e.message,'error'); }
+}
+
+// Set Role (creator only)
+async function adminSetRole(uid, role) {
+  if (currentUser?.email !== ADMIN_EMAIL) { showToast('❌','Denied','Only creator can change roles','error'); return; }
+  var labels = { admin: 'Full Admin', child: 'Child Admin', user: 'User' };
+  if (!confirm('Set ' + labels[role] + ' role for this user?')) return;
+  try {
+    await fbTimeout(usersRef.doc(uid).update({ isAdmin: role === 'admin' ? true : (role === 'child' ? 'child' : false) }));
+    showToast('✅','Role Updated','User is now: ' + labels[role],'success');
+    adminViewUser(uid);
+  } catch(e) { showToast('❌','Error',e.message,'error'); }
+}
+
+// Set custom ad limit
+async function adminSetAdLimit(uid) {
+  var val = parseInt(document.getElementById('adLimitInput')?.value);
+  if (isNaN(val) || val < 0) { showToast('⚠️','Invalid','Enter a valid number (0+)','warning'); return; }
+  try {
+    await fbTimeout(usersRef.doc(uid).update({ customAdLimit: val }));
+    showToast('✅','Limit Set','User ad limit: ' + val + '/day','success');
+    document.getElementById('adLimitInput').value = '';
+  } catch(e) { showToast('❌','Error',e.message,'error'); }
+}
+
+// Add balance
+async function adminAddBalance(uid) {
+  var val = parseFloat(document.getElementById('balanceAdjustInput')?.value);
+  if (isNaN(val) || val <= 0) { showToast('⚠️','Invalid','Enter a valid amount','warning'); return; }
+  try {
+    await fbTimeout(usersRef.doc(uid).update({ balance: firebase.firestore.FieldValue.increment(val) }));
+    showToast('✅','Added','+${formatCurrency(val)} to user balance','success');
+    document.getElementById('balanceAdjustInput').value = '';
+    adminViewUser(uid);
+  } catch(e) { showToast('❌','Error',e.message,'error'); }
+}
+
+// Subtract balance
+async function adminSubBalance(uid) {
+  var val = parseFloat(document.getElementById('balanceAdjustInput')?.value);
+  if (isNaN(val) || val <= 0) { showToast('⚠️','Invalid','Enter a valid amount','warning'); return; }
+  try {
+    await fbTimeout(usersRef.doc(uid).update({ balance: firebase.firestore.FieldValue.increment(-val) }));
+    showToast('✅','Subtracted','-${formatCurrency(val)} from user balance','success');
+    document.getElementById('balanceAdjustInput').value = '';
+    adminViewUser(uid);
+  } catch(e) { showToast('❌','Error',e.message,'error'); }
+}
+
+// Send notification to all users
+async function adminSendNotif(target) {
+  var text = document.getElementById('adminNotifText')?.value?.trim();
+  if (!text) { showToast('⚠️','Empty','Write a notification message','warning'); return; }
+  if (!confirm('Send this notification to ' + target + ' users?')) return;
+  
+  try {
+    // Store in a notifications collection
+    var notifRef = db.collection('notifications');
+    await notifRef.add({
+      message: text, target: target,
+      sentBy: currentUser?.email || 'admin',
+      sentAt: firebase.firestore.FieldValue.serverTimestamp(),
+      readBy: []
+    });
+    showToast('✅','Sent!','Notification sent to ' + target + ' users','success');
+    document.getElementById('adminNotifText').value = '';
+    loadNotifHistory();
+  } catch(e) { showToast('❌','Error',e.message,'error'); }
+}
+
+// Send notification to single user
+async function adminNotifSingle(uid) {
+  var text = document.getElementById('adminNotifSingle')?.value?.trim();
+  if (!text) { showToast('⚠️','Empty','Write a message','warning'); return; }
+  try {
+    var notifRef = db.collection('notifications');
+    await notifRef.add({
+      message: text, target: 'single', userId: uid,
+      sentBy: currentUser?.email || 'admin',
+      sentAt: firebase.firestore.FieldValue.serverTimestamp(),
+      readBy: []
+    });
+    showToast('✅','Sent!','Personal notification sent','success');
+    document.getElementById('adminNotifSingle').value = '';
+  } catch(e) { showToast('❌','Error',e.message,'error'); }
+}
+
+async function loadNotifHistory() {
+  var container = document.getElementById('adminNotifHistory');
+  if (!container || !db) return;
+  try {
+    var snap = await fbTimeout(db.collection('notifications').orderBy('sentAt', 'desc').limit(20).get());
+    if (snap.empty) { container.innerHTML = '<div class="text-xs text-muted">No notifications sent yet</div>'; return; }
+    container.innerHTML = '';
+    snap.forEach(function(doc) {
+      var d = doc.data();
+      var date = d.sentAt?.toDate ? d.sentAt.toDate() : new Date();
+      container.innerHTML += 
+        '<div style="font-size:11px;padding:8px;border-bottom:1px solid rgba(255,255,255,0.04)">' +
+          '<div>' + d.message + '</div>' +
+          '<div style="font-size:9px;color:var(--text-muted);margin-top:2px">To: ' + (d.target || 'all') + (d.userId ? ' (user)' : '') + ' • ' + formatDate(date) + '</div>' +
+        '</div>';
+    });
+  } catch(e) {
+    container.innerHTML = '<div class="text-xs text-muted">Error loading history</div>';
+  }
+}
+
+// Save admin settings
+async function adminSaveSettings() {
+  var minWD = parseFloat(document.getElementById('adminMinWD')?.value);
+  var adReward = parseFloat(document.getElementById('adminAdReward')?.value);
+  var refBonus = parseFloat(document.getElementById('adminRefBonus')?.value);
+  
+  if (isNaN(minWD) || isNaN(adReward) || isNaN(refBonus)) {
+    showToast('⚠️','Invalid','Check all values','warning'); return;
+  }
+  
+  try {
+    // Save to Firestore config doc
+    await fbTimeout(db.collection('config').doc('app').set({
+      minWithdrawal: minWD, adReward: adReward, refBonus: refBonus,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedBy: currentUser?.email || 'admin'
+    }, { merge: true }));
+    showToast('✅','Saved!','Settings updated successfully','success');
+  } catch(e) { showToast('❌','Error',e.message,'error'); }
+}
+
+// Load admin settings
+async function adminLoadSettings() {
+  try {
+    var doc = await fbTimeout(db.collection('config').doc('app').get());
+    if (doc.exists) {
+      var d = doc.data();
+      if (document.getElementById('adminMinWD')) document.getElementById('adminMinWD').value = d.minWithdrawal || 5;
+      if (document.getElementById('adminAdReward')) document.getElementById('adminAdReward').value = d.adReward || 0.02;
+      if (document.getElementById('adminRefBonus')) document.getElementById('adminRefBonus').value = d.refBonus || 0.50;
+    }
+  } catch(e) {}
+}
+
+// Profile editing
+function editProfile() {
+  var modal = document.getElementById('profileEditModal');
+  if (!modal) return;
+  if (document.getElementById('profileEditName')) document.getElementById('profileEditName').value = currentUserData?.name || '';
+  if (document.getElementById('profileEditPhoto')) document.getElementById('profileEditPhoto').value = currentUserData?.photo || '';
+  if (document.getElementById('profileEditPhone')) document.getElementById('profileEditPhone').value = currentUserData?.phone || '';
+  modal.classList.add('show');
+}
+
+async function saveProfile() {
+  var name = document.getElementById('profileEditName')?.value?.trim();
+  var photo = document.getElementById('profileEditPhoto')?.value?.trim();
+  var phone = document.getElementById('profileEditPhone')?.value?.trim();
+  
+  if (!name) { showToast('⚠️','Empty','Name cannot be empty','warning'); return; }
+  
+  try {
+    var updateData = { name: name };
+    if (photo) updateData.photo = photo;
+    if (phone) updateData.phone = phone;
+    
+    await fbTimeout(usersRef.doc(currentUser.uid).update(updateData));
+    
+    if (currentUserData) {
+      currentUserData.name = name;
+      if (photo) currentUserData.photo = photo;
+      if (phone) currentUserData.phone = phone;
+    }
+    
+    showToast('✅','Saved!','Profile updated successfully','success');
+    document.getElementById('profileEditModal')?.classList.remove('show');
+    updateUI();
+  } catch(e) { showToast('❌','Error',e.message,'error'); }
+}
+
+// Extend adminSwitchTab
+var _origAdminSwitch = adminSwitchTab;
+adminSwitchTab = function(tab) {
+  if (_origAdminSwitch) _origAdminSwitch(tab);
+  if (tab === 'notifications') loadNotifHistory();
+  if (tab === 'settings') adminLoadSettings();
+};
+
+// Show role badge in admin panel
+function adminShowRoleBadge() {
+  var badge = document.getElementById('adminRoleBadge');
+  if (!badge) return;
+  if (currentUser?.email === ADMIN_EMAIL) {
+    badge.style.display = 'inline-block';
+    badge.textContent = 'CREATOR';
+  } else {
+    badge.style.display = 'none';
+  }
 }
 
 // ===== LOGOUT =====
