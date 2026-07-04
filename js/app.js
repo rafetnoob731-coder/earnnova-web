@@ -494,7 +494,33 @@ function getAdContent(type) {
     case 'ads9':
       return '<div class="ad-inner"><div class="ad-placeholder" style="width:100%;height:180px;border-radius:16px;background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(217,70,239,0.1));border:1px solid rgba(139,92,246,0.15);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:12px"><div style="font-size:48px">\ud83d\udd01\ud83d\udd01\ud83d\udd01</div><div style="font-size:13px;color:#a78bfa;font-weight:600">Monetag x3</div><div id="monetag3StepText" style="font-size:11px;color:var(--text-muted);margin-top:4px">Step 1 of 3</div></div><div class="ad-label"><span id="monetag3ActionText">Ad 1...</span></div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.080</span></div></div>';
     case 'ads10':
-      return '<div class="ad-inner"><div style="text-align:center;margin-bottom:8px"><div style="font-size:14px;font-weight:700;color:var(--gold)">\ud83c\udfc6 MEGA COMBO!</div><div style="font-size:10px;color:var(--text-secondary)">Complete all 4 tasks for big reward</div></div><div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px"><div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:10px"><span>\u2460</span><span style="flex:1;color:var(--text-secondary)">Banner 30s</span><span id="combo1Status" style="color:var(--text-muted)">\u23f3</span></div><div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:10px"><span>\u2461</span><span style="flex:1;color:var(--text-secondary)">Tap 10 balls</span><span id="combo2Status" style="color:var(--text-muted)">\u23f3</span></div><div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:10px"><span>\u2462</span><span style="flex:1;color:var(--text-secondary)">Tap 100x</span><span id="combo3Status" style="color:var(--text-muted)">\u23f3</span></div><div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:10px"><span>\u2463</span><span style="flex:1;color:var(--text-secondary)">Target 3x</span><span id="combo4Status" style="color:var(--text-muted)">\u23f3</span></div></div><div class="ad-reward-info"><span class="ad-earn-badge" style="font-size:15px;padding:6px 20px">+$0.100</span></div></div>';
+      return '<div class="ad-inner">' +
+        '<div style="text-align:center;margin-bottom:6px"><div style="font-size:14px;font-weight:700;color:var(--gold)">\ud83c\udfc6 MEGA COMBO!</div><div style="font-size:10px;color:var(--text-secondary)">Complete all for +$0.100</div></div>' +
+        // Task 1
+        '<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:10px;margin-bottom:4px">' +
+          '<span>\u2460</span><span style="flex:1;color:var(--text-secondary)">Banner</span><span id="combo1Status" style="color:var(--text-muted)">30s...</span>' +
+        '</div>' +
+        // Task 2: Balls
+        '<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:10px;margin-bottom:4px">' +
+          '<span>\u2461</span><span style="flex:1;color:var(--text-secondary)">Tap balls</span><span id="combo2Status" style="color:var(--text-muted)">0/10</span>' +
+        '</div>' +
+        '<div id="comboBallArea" style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-bottom:6px"></div>' +
+        // Task 3: Tap
+        '<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:10px;margin-bottom:4px">' +
+          '<span>\u2462</span><span style="flex:1;color:var(--text-secondary)">Tap 100x</span><span id="combo3Status" style="color:var(--text-muted)">0/100</span>' +
+        '</div>' +
+        '<div id="comboTapArea" style="width:100%;height:44px;border-radius:10px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:6px;cursor:pointer" onclick="handleComboTap()">' +
+          '<span style="font-size:12px;color:var(--text-muted)">\ud83d\udc46 Tap here!</span>' +
+        '</div>' +
+        // Task 4: Game
+        '<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:10px;margin-bottom:4px">' +
+          '<span>\u2463</span><span style="flex:1;color:var(--text-secondary)">Click target</span><span id="combo4Status" style="color:var(--text-muted)">0/3</span>' +
+        '</div>' +
+        '<div id="comboGameArea" style="width:100%;height:70px;border-radius:12px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.12);position:relative;margin-bottom:8px">' +
+          '<div id="comboGameTarget" style="width:28px;height:28px;border-radius:50%;background:var(--gold);position:absolute;left:10px;top:20px;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;box-shadow:0 4px 12px rgba(212,175,55,0.4)">\ud83c\udfaf</div>' +
+        '</div>' +
+        '<div class="ad-reward-info"><span class="ad-earn-badge" style="font-size:15px;padding:6px 20px">+$0.100</span></div>' +
+      '</div>';
     default: return '<div class="ad-inner">Ad loading...</div>';
   }
 }
@@ -707,29 +733,79 @@ function checkBanner2() { if(_banner1Done&&_banner2Done){adCompleted=true;comple
 
 function startComboTask() {
   _comboBannerDone=false;_comboBallsDone=false;_comboTapDone=false;_comboGameDone=false;_tapCount=0;_ballCount=0;_gameScore=0;
+  
+  // Task 1: Auto banner timer
   var el=0;
   _comboBannerTimer=setInterval(function(){
     el++;
     var s=document.getElementById('combo1Status');
-    if(s)s.textContent=el+'s/30s';
-    if(el>=30){clearInterval(_comboBannerTimer);_comboBannerTimer=null;_comboBannerDone=true;if(s){s.textContent='\u2705 Done!';s.style.color='#34d399';}checkCombo();}
-  },1000);
-  setTimeout(function(){
-    var a=document.getElementById('adContentArea');
-    if(a){
-      var d=document.createElement('div');
-      d.id='comboBallArea';
-      d.style.cssText='display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:4px';
-      for(var i=0;i<10;i++){
-        var b=document.createElement('div');
-        b.style.cssText='width:22px;height:22px;border-radius:50%;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-size:9px;color:white;cursor:pointer';
-        b.textContent=i+1;
-        b.onclick=function(){comboBallTap(this);};
-        d.appendChild(b);
-      }
-      a.appendChild(d);
+    if(s) s.textContent=el+'s/30s';
+    if(el>=30){
+      clearInterval(_comboBannerTimer);_comboBannerTimer=null;_comboBannerDone=true;
+      if(s){s.textContent='\u2705 Done!';s.style.color='#34d399';}
+      checkCombo();
     }
-  },500);
+  },1000);
+  
+  // Task 2: Interactive balls in the ball area
+  spawnComboBalls();
+  
+  // Task 3: Tap area is already in HTML with onclick
+  
+  // Task 4: Set up game target clicks
+  setTimeout(function(){
+    var target=document.getElementById('comboGameTarget');
+    if(target){
+      target.onclick=function(){
+        if(_comboGameDone) return;
+        _gameScore++;
+        var s=document.getElementById('combo4Status');
+        if(s){s.textContent=_gameScore+'/3';s.style.color='#f59e0b';}
+        if(_gameScore>=3){
+          _comboGameDone=true;
+          if(s){s.textContent='\u2705 Done!';s.style.color='#34d399';}
+          checkCombo();
+        } else {
+          // Move target
+          var area=document.getElementById('comboGameArea');
+          if(area){
+            var aw=Math.max(area.offsetWidth-40,50);
+            var ah=Math.max(area.offsetHeight-40,30);
+            target.style.left=(5+Math.random()*aw)+'px';
+            target.style.top=(5+Math.random()*ah)+'px';
+          }
+        }
+      };
+    }
+  }, 300);
+}
+
+function spawnComboBalls() {
+  var area=document.getElementById('comboBallArea');
+  if(!area) return;
+  area.innerHTML='';
+  for(var i=0;i<10;i++){
+    var b=document.createElement('div');
+    var colors=['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ec4899','#14b8a6','#f97316','#6366f1','#d946ef'];
+    b.style.cssText='width:28px;height:28px;border-radius:50%;background:'+colors[i]+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(0,0,0,0.2)';
+    b.textContent=i+1;
+    b.onclick=function(){comboBallTap(this);};
+    b.onmouseover=function(){this.style.transform='scale(1.15)';};
+    b.onmouseout=function(){this.style.transform='scale(1)';};
+    area.appendChild(b);
+  }
+}
+
+function handleComboTap() {
+  if(_comboTapDone) return;
+  _tapCount++;
+  var s=document.getElementById('combo3Status');
+  if(s){s.textContent=_tapCount+'/100';s.style.color='#f59e0b';}
+  if(_tapCount>=100){
+    _comboTapDone=true;
+    if(s){s.textContent='\u2705 Done!';s.style.color='#34d399';}
+    checkCombo();
+  }
 }
 
 function comboTapHandler(e) {
