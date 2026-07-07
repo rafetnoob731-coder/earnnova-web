@@ -10,7 +10,11 @@ var _authResolved = false;
 var _balanceInterval = null;
 
 // ===== UTILITY FUNCTIONS =====
-function $(id) { return document.getElementById(id); }
+function $(id) {
+  if (typeof EN_adblockDetected !== 'undefined' && EN_adblockDetected) {
+    showToast('🚫','Ad Blocker Active!','Please disable your ad blocker to watch ads.','error');
+    return;
+  } return document.getElementById(id); }
 function qs(sel) { return document.querySelector(sel); }
 function qsa(sel) { return document.querySelectorAll(sel); }
 
@@ -1892,10 +1896,16 @@ async function adminViewUser(uid) {
       html += '<div class="glass-card-sm" style="padding:16px;margin-bottom:8px">';
       html += '<div class="fw-600 text-sm mb-2">Actions</div>';
       
-      // Ban/Unban (admin+)
-      html += '<div class="action-row" style="display:flex;gap:6px;margin-bottom:6px">';
-      html += '<button class="btn-small" style="flex:1;padding:8px;border-radius:8px;border:none;background:' + (d.isActive === false ? 'rgba(16,185,129,0.12);color:var(--emerald)' : 'rgba(239,68,68,0.12);color:#ef4444') + ';font-weight:600;cursor:pointer" onclick="adminToggleBan(\'' + uid + '\',' + (d.isActive === false ? 'true' : 'false') + ')">' + (d.isActive === false ? '✅ Unban' : '🚫 Ban') + '</button>';
-      html += '</div>';
+      //       // Ban/Unban (admin+) - CANNOT ban owner
+      if (d.email !== ADMIN_EMAIL) {
+        html += '<div class="action-row" style="display:flex;gap:6px;margin-bottom:6px">';
+        html += '<button class="btn-small" style="flex:1;padding:8px;border-radius:8px;border:none;background:' + (d.isActive === false ? 'rgba(16,185,129,0.12);color:var(--emerald)' : 'rgba(239,68,68,0.12);color:#ef4444') + ';font-weight:600;cursor:pointer" onclick="adminToggleBan('' + uid + '',' + (d.isActive === false ? 'true' : 'false') + ')">' + (d.isActive === false ? '✅ Unban' : '🚫 Ban') + '</button>';
+        html += '</div>';
+      } else {
+        html += '<div class="action-row" style="display:flex;gap:6px;margin-bottom:6px">';
+        html += '<div style="padding:8px;font-size:11px;color:var(--gold);font-weight:600">👑 Owner account - protected</div>';
+        html += '</div>';
+      }
       
       // Promote/Demote (creator only)
       if (isCreator) {
