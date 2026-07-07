@@ -1954,6 +1954,12 @@ function closeUserDetail() {
 async function adminToggleBan(uid, currentlyBanned) {
   if (!confirm(currentlyBanned ? 'Unban this user?' : 'Ban this user? They will not be able to login or earn.')) return;
   try {
+    // Check if target user is the owner - CANNOT ban owner
+    var targetDoc = await fbTimeout(usersRef.doc(uid).get());
+    if (targetDoc.exists && targetDoc.data().email === ADMIN_EMAIL) {
+      showToast('❌','Protected','Cannot ban the owner account!','error');
+      return;
+    }
     await fbTimeout(usersRef.doc(uid).update({ isActive: currentlyBanned }));
     showToast('✅', currentlyBanned ? 'Unbanned!' : 'Banned!', currentlyBanned ? 'User can now login and earn.' : 'User has been banned.','success');
     adminViewUser(uid);
