@@ -469,14 +469,14 @@ function getAdConfig(type) {
   var c = {
     ads1:  { label: 'Monetag ad',     timerStart: '0:30', duration: 30,  reward: 0.020 },
     ads2:  { label: 'SMART AD',       timerStart: '0:00', duration: 5,   reward: 0.100 },
-    ads3:  { label: 'OFF',            timerStart: '0:00', duration: 5,   reward: 0 },
+    ads3:  { label: 'QUIZ',           timerStart: '0:00', duration: 30,  reward: 0.030 },
     ads4:  { label: 'Monetag x2',     timerStart: '0:00', duration: 5,   reward: 0.035 },
-    ads5:  { label: 'OFF',            timerStart: '0:00', duration: 5,   reward: 0 },
-    ads6:  { label: 'OFF',            timerStart: '0:00', duration: 5,   reward: 0 },
-    ads7:  { label: 'OFF',            timerStart: '0:00', duration: 5,   reward: 0 },
-    ads8:  { label: 'OFF',            timerStart: '0:00', duration: 5,   reward: 0 },
+    ads5:  { label: 'CATCH COINS',    timerStart: '0:00', duration: 20,  reward: 0.040 },
+    ads6:  { label: 'SPIN WHEEL',     timerStart: '0:00', duration: 10,  reward: 0.050 },
+    ads7:  { label: 'MEMORY GAME',    timerStart: '0:00', duration: 40,  reward: 0.060 },
+    ads8:  { label: 'TRIVIA',         timerStart: '0:00', duration: 30,  reward: 0.070 },
     ads9:  { label: 'Monetag x3',     timerStart: '0:00', duration: 8,   reward: 0.080 },
-    ads10: { label: 'OFF',            timerStart: '0:00', duration: 5,   reward: 0 }
+    ads10: { label: 'MEGA QUIZ',      timerStart: '0:00', duration: 60,  reward: 0.100 }
   };
   return c[type] || c.ads1;
 }
@@ -509,12 +509,67 @@ function getAdContent(type) {
       '</div>' +
       '<div class="ad-reward-info"><span class="ad-earn-badge" style="background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A">\ud83e\udde0 SMART AD +$0.050</span></div></div>';
     case 'ads3':
+      return '<div class="ad-inner">' +
+        '<div style="text-align:center;margin-bottom:8px"><div style="font-size:16px;font-weight:800;color:var(--gold)">\ud83e\uddea QUIZ TIME!</div><div style="font-size:10px;color:var(--text-secondary)">Answer 5 questions correctly to earn $0.030</div></div>' +
+        '<div id="quizArea" style="width:100%;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(212,175,55,0.1);padding:12px;box-sizing:border-box;margin-bottom:8px;min-height:200px">' +
+          '<div id="quizQuestion" style="font-size:13px;font-weight:600;margin-bottom:12px">Loading question...</div>' +
+          '<div id="quizOptions" style="display:flex;flex-direction:column;gap:6px"></div>' +
+          '<div id="quizFeedback" style="font-size:12px;margin-top:8px;text-align:center"></div>' +
+          '<div style="font-size:10px;color:var(--text-muted);text-align:center;margin-top:8px"><span id="quizProgress">Question 1/5</span></div>' +
+        '</div>' +
+        '<div class="ad-reward-info"><span class="ad-earn-badge">+$0.030</span></div></div>';
     case 'ads5':
+      return '<div class="ad-inner">' +
+        '<div style="text-align:center;margin-bottom:8px"><div style="font-size:16px;font-weight:800;color:var(--gold)">\ud83e\udeb0 CATCH COINS!</div><div style="font-size:10px;color:var(--text-secondary)">Catch 10 falling coins to earn $0.040</div></div>' +
+        '<div id="coinGameArea" style="width:100%;height:220px;border-radius:12px;background:rgba(16,185,129,0.04);border:1px solid rgba(16,185,129,0.1);position:relative;overflow:hidden;margin-bottom:8px;cursor:pointer">' +
+          '<div id="coinCatcher" style="width:50px;height:16px;border-radius:8px;background:var(--gold);position:absolute;bottom:8px;left:50%;transform:translateX(-50%);transition:left 0.1s"></div>' +
+          '<div id="coinScore" style="position:absolute;top:4px;right:6px;font-size:11px;font-weight:700;color:var(--gold)">0/10 \ud83e\udeb0</div>' +
+          '<div id="coinTimer" style="position:absolute;top:4px;left:6px;font-size:10px;color:var(--text-muted)">20s</div>' +
+        '</div>' +
+        '<div class="ad-reward-info"><span class="ad-earn-badge">+$0.040</span></div></div>';
     case 'ads6':
+      return '<div class="ad-inner">' +
+        '<div style="text-align:center;margin-bottom:8px"><div style="font-size:16px;font-weight:800;color:var(--gold)">\ud83c\udfaf SPIN THE WHEEL!</div><div style="font-size:10px;color:var(--text-secondary)">Spin and win up to $0.050!</div></div>' +
+        '<div id="wheelArea" style="width:100%;display:flex;flex-direction:column;align-items:center;padding:12px 0;margin-bottom:8px">' +
+          '<div id="wheelContainer" style="width:160px;height:160px;border-radius:50%;position:relative;background:conic-gradient(#ef4444 0deg 60deg,#f59e0b 60deg 120deg,#10b981 120deg 180deg,#3b82f6 180deg 240deg,#8b5cf6 240deg 300deg,#ec4899 300deg 360deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px rgba(0,0,0,0.3);transition:transform 3s cubic-bezier(0.17,0.67,0.12,0.99);margin-bottom:12px">' +
+            '<div style="width:30px;height:30px;border-radius:50%;background:#0A0E1A;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--gold);z-index:2">\ud83c\udfaf</div>' +
+            '<div style="position:absolute;top:-6px;left:50%;margin-left:-6px;width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:14px solid var(--gold);z-index:3"></div>' +
+          '</div>' +
+          '<button id="spinBtn" onclick="spinWheel()" style="padding:10px 28px;border-radius:10px;background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A;border:none;font-size:14px;font-weight:700;cursor:pointer">\ud83c\udfaf SPIN!</button>' +
+          '<div id="wheelResult" style="font-size:13px;font-weight:700;margin-top:8px;color:var(--gold);display:none"></div>' +
+        '</div>' +
+        '<div class="ad-reward-info"><span class="ad-earn-badge">+$0.050</span></div></div>';
     case 'ads7':
+      return '<div class="ad-inner">' +
+        '<div style="text-align:center;margin-bottom:8px"><div style="font-size:16px;font-weight:800;color:var(--gold)">\ud83e\udde0 MEMORY GAME!</div><div style="font-size:10px;color:var(--text-secondary)">Match 4 pairs to earn $0.060</div></div>' +
+        '<div id="memoryArea" style="width:100%;display:flex;flex-wrap:wrap;justify-content:center;gap:6px;padding:8px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);margin-bottom:8px">' +
+          '<div style="font-size:11px;color:var(--text-muted);text-align:center;width:100%;padding:12px 0">Loading cards...</div>' +
+        '</div>' +
+        '<div class="ad-reward-info"><span class="ad-earn-badge">+$0.060</span></div></div>';
     case 'ads8':
+      return '<div class="ad-inner">' +
+        '<div style="text-align:center;margin-bottom:8px"><div style="font-size:16px;font-weight:800;color:var(--gold)">\ud83e\uddea TRIVIA CHALLENGE!</div><div style="font-size:10px;color:var(--text-secondary)">Answer 10 True/False questions for $0.070</div></div>' +
+        '<div id="triviaArea" style="width:100%;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(212,175,55,0.1);padding:12px;box-sizing:border-box;margin-bottom:8px;min-height:180px">' +
+          '<div id="triviaQuestion" style="font-size:14px;font-weight:600;margin-bottom:12px">Loading...</div>' +
+          '<div id="triviaOptions" style="display:flex;gap:8px">' +
+            '<button id="triviaTrue" onclick="answerTrivia(true)" style="flex:1;padding:12px;border-radius:10px;border:none;background:rgba(16,185,129,0.1);color:var(--emerald);font-size:14px;font-weight:700;cursor:pointer">\u2705 TRUE</button>' +
+            '<button id="triviaFalse" onclick="answerTrivia(false)" style="flex:1;padding:12px;border-radius:10px;border:none;background:rgba(239,68,68,0.1);color:#ef4444;font-size:14px;font-weight:700;cursor:pointer">\u274c FALSE</button>' +
+          '</div>' +
+          '<div id="triviaFeedback" style="font-size:12px;margin-top:8px;text-align:center"></div>' +
+          '<div style="font-size:10px;color:var(--text-muted);text-align:center;margin-top:8px"><span id="triviaProgress">Q1/10</span> <span id="triviaScore">Score: 0</span></div>' +
+        '</div>' +
+        '<div class="ad-reward-info"><span class="ad-earn-badge">+$0.070</span></div></div>';
     case 'ads10':
-      return '<div class="ad-inner"><div class="ad-placeholder" style="width:100%;height:200px;border-radius:16px;background:linear-gradient(135deg,rgba(107,114,128,0.05),rgba(75,85,99,0.05));border:1px solid rgba(107,114,128,0.1);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:12px"><div style="font-size:48px;margin-bottom:8px;opacity:0.4">\ud83d\uded1</div><div style="font-size:15px;font-weight:700;color:var(--text-muted)">Ad Currently Off</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;max-width:240px;text-align:center">This ad type is unavailable. Please try ADS2 (Smart Ad)!</div></div><div class="ad-label" style="color:var(--text-muted);text-align:center">Use Smart Ads (ADS2) to earn now</div></div>';
+      return '<div class="ad-inner">' +
+        '<div style="text-align:center;margin-bottom:6px"><div style="font-size:16px;font-weight:800;color:var(--gold)">\ud83c\udfc6 MEGA QUIZ CHALLENGE!</div><div style="font-size:10px;color:var(--text-secondary)">10 mixed questions + mini-game for $0.100</div></div>' +
+        '<div id="megaQuizArea" style="width:100%;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(212,175,55,0.12);padding:12px;box-sizing:border-box;margin-bottom:8px;min-height:200px">' +
+          '<div id="megaQuizContent" style="text-align:center;padding:16px 0">' +
+            '<div style="font-size:36px;margin-bottom:8px">\ud83c\udfc6</div>' +
+            '<div id="megaQuizStatus" style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">10 rounds of fun! Start when ready...</div>' +
+            '<button id="megaQuizStartBtn" onclick="startMegaQuiz()" style="padding:12px 32px;border-radius:10px;background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A;border:none;font-size:14px;font-weight:800;cursor:pointer">\ud83d\ude80 START CHALLENGE!</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="ad-reward-info"><span class="ad-earn-badge" style="font-size:15px;padding:6px 20px">+$0.100</span></div></div>';
     case 'ads4':
       return '<div class="ad-inner"><div class="ad-placeholder" style="width:100%;height:180px;border-radius:16px;background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(139,92,246,0.1));border:1px solid rgba(59,130,246,0.15);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:12px"><div style="font-size:48px;margin-bottom:8px">\ud83d\udd01</div><div style="font-size:13px;color:#60a5fa;font-weight:600">Monetag x2</div><div id="monetagStepText" style="font-size:11px;color:var(--text-muted);margin-top:4px">Step 1 of 2</div></div><div class="ad-label"><span id="monetagActionText">Watching ad 1...</span></div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.035</span></div></div>';
     case 'ads9':
@@ -555,14 +610,14 @@ function startAdTask(type) {
   switch(type) {
     case 'ads1': startMonetagTask(1); break;
     case 'ads2': startSmartAd(); break;
-    case 'ads3':
-    case 'ads5':
-    case 'ads6':
-    case 'ads7':
-    case 'ads8':
-    case 'ads10': startOffAd(); break;
+    case 'ads3': startQuiz(); break;
     case 'ads4': startMonetagTask(2); break;
+    case 'ads5': startCatchCoins(); break;
+    case 'ads6': /* Wheel ready on click */ break;
+    case 'ads7': startMemoryGame(); break;
+    case 'ads8': startTrivia(); break;
     case 'ads9': startMonetagTask(3); break;
+    case 'ads10': /* Mega quiz starts on click */ break;
   }
 }
 
@@ -662,6 +717,415 @@ function loadAntiAdblock() {
 function startOffAd() {
   setTimeout(function() { handleAdClose(); }, 3000);
 }
+
+// ===== QUIZ SYSTEM (ADS3) =====
+var _quizQuestions = [
+  { q: 'What planet is known as the Red Planet?', opts: ['Venus', 'Mars', 'Jupiter', 'Saturn'], ans: 1 },
+  { q: 'What is the largest ocean on Earth?', opts: ['Atlantic', 'Indian', 'Arctic', 'Pacific'], ans: 3 },
+  { q: 'Which country has the largest population?', opts: ['USA', 'India', 'China', 'Indonesia'], ans: 1 },
+  { q: 'What element is needed for fire?', opts: ['Water', 'Oxygen', 'Nitrogen', 'Carbon'], ans: 1 },
+  { q: 'How many continents are there?', opts: ['5', '6', '7', '8'], ans: 2 }
+];
+var _quizIndex = 0;
+
+function startQuiz() {
+  _quizIndex = 0;
+  showQuizQuestion();
+}
+
+function showQuizQuestion() {
+  if (_quizIndex >= _quizQuestions.length) {
+    adCompleted = true; completeStep();
+    return;
+  }
+  var q = _quizQuestions[_quizIndex];
+  document.getElementById('quizQuestion').textContent = q.q;
+  document.getElementById('quizProgress').textContent = 'Question ' + (_quizIndex+1) + '/5';
+  document.getElementById('quizFeedback').textContent = '';
+  document.getElementById('quizFeedback').style.color = '';
+  var optsDiv = document.getElementById('quizOptions');
+  optsDiv.innerHTML = '';
+  q.opts.forEach(function(opt, i) {
+    var btn = document.createElement('button');
+    btn.textContent = String.fromCharCode(65 + i) + '. ' + opt;
+    btn.style.cssText = 'padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;font-size:12px;cursor:pointer;text-align:left;transition:all 0.15s';
+    btn.onmouseover = function() { this.style.background = 'rgba(212,175,55,0.1)'; this.style.borderColor = 'rgba(212,175,55,0.2)'; };
+    btn.onmouseout = function() { this.style.background = 'rgba(255,255,255,0.04)'; this.style.borderColor = 'rgba(255,255,255,0.06)'; };
+    btn.onclick = function() { answerQuiz(i); };
+    optsDiv.appendChild(btn);
+  });
+}
+
+function answerQuiz(idx) {
+  var q = _quizQuestions[_quizIndex];
+  var fb = document.getElementById('quizFeedback');
+  var opts = document.getElementById('quizOptions').children;
+  for (var i = 0; i < opts.length; i++) opts[i].style.pointerEvents = 'none';
+  
+  if (idx === q.ans) {
+    fb.textContent = '\u2705 Correct!';
+    fb.style.color = '#34d399';
+    _quizIndex++;
+    setTimeout(showQuizQuestion, 800);
+  } else {
+    fb.textContent = '\u274c Wrong! Correct: ' + q.opts[q.ans];
+    fb.style.color = '#ef4444';
+    _quizIndex++;
+    setTimeout(showQuizQuestion, 1200);
+  }
+}
+
+// ===== CATCH COINS GAME (ADS5) =====
+var _coinInterval = null;
+var _coinCount = 0;
+var _coinTimeLeft = 20;
+var _coinTimer = null;
+
+function startCatchCoins() {
+  _coinCount = 0;
+  _coinTimeLeft = 20;
+  if (_coinInterval) clearInterval(_coinInterval);
+  if (_coinTimer) clearInterval(_coinTimer);
+  
+  document.getElementById('coinScore').textContent = '0/10 \ud83e\udeb0';
+  document.getElementById('coinTimer').textContent = '20s';
+  
+  // Mouse/touch move to control catcher
+  var area = document.getElementById('coinGameArea');
+  if (area) {
+    area.onmousemove = function(e) {
+      var rect = area.getBoundingClientRect();
+      var x = e.clientX - rect.left;
+      var catcher = document.getElementById('coinCatcher');
+      if (catcher) catcher.style.left = Math.max(0, Math.min(rect.width - 50, x)) + 'px';
+    };
+    area.ontouchmove = function(e) {
+      var rect = area.getBoundingClientRect();
+      var x = e.touches[0].clientX - rect.left;
+      var catcher = document.getElementById('coinCatcher');
+      if (catcher) catcher.style.left = Math.max(0, Math.min(rect.width - 50, x)) + 'px';
+    };
+  }
+  
+  // Spawn coins
+  _coinInterval = setInterval(spawnCoin, 800);
+  
+  // Timer
+  _coinTimer = setInterval(function() {
+    _coinTimeLeft--;
+    document.getElementById('coinTimer').textContent = _coinTimeLeft + 's';
+    if (_coinTimeLeft <= 0 || _coinCount >= 10) {
+      clearInterval(_coinTimer);
+      clearInterval(_coinInterval);
+      if (_coinCount >= 10) {
+        adCompleted = true; completeStep();
+      } else {
+        handleAdClose();
+      }
+    }
+  }, 1000);
+}
+
+function spawnCoin() {
+  var area = document.getElementById('coinGameArea');
+  if (!area) return;
+  var coin = document.createElement('div');
+  var x = Math.random() * (area.offsetWidth - 24);
+  coin.style.cssText = 'width:24px;height:24px;border-radius:50%;background:var(--gold);position:absolute;left:' + x + 'px;top:-24px;font-size:12px;display:flex;align-items:center;justify-content:center;transition:top 3s linear;z-index:1';
+  coin.textContent = '\ud83e\udeb0';
+  area.appendChild(coin);
+  
+  // Animate falling
+  setTimeout(function() { coin.style.top = area.offsetHeight + 'px'; }, 10);
+  
+  // Check if caught
+  var checkInterval = setInterval(function() {
+    if (!coin.parentNode) { clearInterval(checkInterval); return; }
+    var catcher = document.getElementById('coinCatcher');
+    if (!catcher) { clearInterval(checkInterval); return; }
+    var coinRect = coin.getBoundingClientRect();
+    var catcherRect = catcher.getBoundingClientRect();
+    if (coinRect.bottom >= catcherRect.top && coinRect.top <= catcherRect.bottom &&
+        coinRect.right >= catcherRect.left && coinRect.left <= catcherRect.right) {
+      clearInterval(checkInterval);
+      coin.remove();
+      _coinCount++;
+      document.getElementById('coinScore').textContent = _coinCount + '/10 \ud83e\udeb0';
+      if (_coinCount >= 10) {
+        adCompleted = true; completeStep();
+      }
+    }
+  }, 50);
+  
+  // Remove after falling
+  setTimeout(function() { if (coin.parentNode) coin.remove(); }, 3500);
+}
+
+// ===== SPIN WHEEL (ADS6) =====
+var _hasSpun = false;
+
+function spinWheel() {
+  if (_hasSpun) return;
+  _hasSpun = true;
+  
+  var wheel = document.getElementById('wheelContainer');
+  var result = document.getElementById('wheelResult');
+  var btn = document.getElementById('spinBtn');
+  
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+  
+  // Random spin
+  var degrees = 720 + Math.random() * 720;
+  wheel.style.transform = 'rotate(' + degrees + 'deg)';
+  
+  // Determine prize
+  var prizes = [
+    { label: '$0.010', reward: 0.010, color: '#ef4444' },
+    { label: '$0.050!', reward: 0.050, color: '#f59e0b' },
+    { label: '$0.020', reward: 0.020, color: '#10b981' },
+    { label: '$0.030', reward: 0.030, color: '#3b82f6' },
+    { label: '$0.040', reward: 0.040, color: '#8b5cf6' },
+    { label: '$0.060!!', reward: 0.060, color: '#ec4899' }
+  ];
+  var prize = prizes[Math.floor(Math.random() * prizes.length)];
+  
+  setTimeout(function() {
+    if (result) {
+      result.style.display = 'block';
+      result.textContent = '\ud83c\udf89 You won ' + prize.label + '!';
+      result.style.color = prize.color;
+    }
+    // Credit reward
+    var earnings = prize.reward;
+    var bal = parseFloat(localStorage.getItem('en_bal') || '0');
+    bal += earnings;
+    localStorage.setItem('en_bal', String(bal));
+    
+    if (currentUserData) currentUserData.balance = (currentUserData.balance || 0) + earnings;
+    updateUI();
+    showToast('\ud83c\udfaf', 'Spin Win!', '+' + formatCurrency(earnings) + ' from the wheel!', 'money');
+    adCompleted = true;
+    completeStep();
+  }, 3500);
+}
+
+// ===== MEMORY GAME (ADS7) =====
+var _memoryCards = [];
+var _flippedCards = [];
+var _matchedPairs = 0;
+var _memoryLocked = false;
+
+function startMemoryGame() {
+  _memoryCards = [];
+  _flippedCards = [];
+  _matchedPairs = 0;
+  _memoryLocked = false;
+  
+  var emojis = ['\ud83d\udc36', '\ud83d\udc31', '\ud83d\udc30', '\ud83d\udc3b', '\ud83e\udd85', '\ud83d\udc37', '\ud83e\udd8a', '\ud83d\udc3e'];
+  emojis = emojis.slice(0, 4); // 4 pairs = 8 cards
+  var cards = emojis.concat(emojis);
+  // Shuffle
+  for (var i = cards.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var temp = cards[i]; cards[i] = cards[j]; cards[j] = temp;
+  }
+  
+  var area = document.getElementById('memoryArea');
+  area.innerHTML = '';
+  var statusLine = document.createElement('div');
+  statusLine.style.cssText = 'font-size:11px;color:var(--text-muted);text-align:center;width:100%;margin-bottom:6px';
+  statusLine.innerHTML = 'Match 4 pairs! <span id="memoryStatus">0/4 matched</span>';
+  area.appendChild(statusLine);
+  
+  cards.forEach(function(emoji, idx) {
+    var card = document.createElement('div');
+    card.id = 'mem_' + idx;
+    card.style.cssText = 'width:60px;height:60px;border-radius:10px;background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.05));border:1px solid rgba(212,175,55,0.15);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:all 0.3s;transform:rotateY(0deg)';
+    card.dataset.emoji = emoji;
+    card.dataset.matched = 'false';
+    card.textContent = '?';
+    card.onclick = function() { flipCard(this); };
+    area.appendChild(card);
+  });
+}
+
+function flipCard(el) {
+  if (_memoryLocked || el.dataset.matched === 'true' || _flippedCards.includes(el)) return;
+  el.textContent = el.dataset.emoji;
+  el.style.transform = 'rotateY(180deg)';
+  el.style.background = 'rgba(212,175,55,0.1)';
+  _flippedCards.push(el);
+  
+  if (_flippedCards.length === 2) {
+    _memoryLocked = true;
+    var c1 = _flippedCards[0];
+    var c2 = _flippedCards[1];
+    
+    if (c1.dataset.emoji === c2.dataset.emoji) {
+      c1.dataset.matched = 'true';
+      c2.dataset.matched = 'true';
+      c1.style.background = 'rgba(16,185,129,0.15)';
+      c1.style.borderColor = 'rgba(16,185,129,0.3)';
+      c2.style.background = 'rgba(16,185,129,0.15)';
+      c2.style.borderColor = 'rgba(16,185,129,0.3)';
+      _matchedPairs++;
+      document.getElementById('memoryStatus').textContent = _matchedPairs + '/4 matched';
+      _flippedCards = [];
+      _memoryLocked = false;
+      
+      if (_matchedPairs >= 4) {
+        adCompleted = true; completeStep();
+      }
+    } else {
+      setTimeout(function() {
+        c1.textContent = '?';
+        c1.style.transform = 'rotateY(0deg)';
+        c1.style.background = 'linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.05))';
+        c2.textContent = '?';
+        c2.style.transform = 'rotateY(0deg)';
+        c2.style.background = 'linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.05))';
+        _flippedCards = [];
+        _memoryLocked = false;
+      }, 1000);
+    }
+  }
+}
+
+// ===== TRIVIA (ADS8) =====
+var _triviaQuestions = [
+  { q: 'The Earth is flat.', ans: false },
+  { q: 'Water boils at 100\u00b0C at sea level.', ans: true },
+  { q: 'Humans have 5 senses.', ans: false },
+  { q: 'The sun rises in the east.', ans: true },
+  { q: 'Mount Everest is the tallest mountain.', ans: true },
+  { q: 'Goldfish have a 3-second memory.', ans: false },
+  { q: 'Lightning never strikes the same place twice.', ans: false },
+  { q: 'Bananas grow on trees.', ans: false },
+  { q: 'Octopuses have 3 hearts.', ans: true },
+  { q: 'Diamonds are made of compressed coal.', ans: false }
+];
+var _triviaIndex = 0;
+var _triviaCorrect = 0;
+
+function startTrivia() {
+  _triviaIndex = 0;
+  _triviaCorrect = 0;
+  showTriviaQuestion();
+}
+
+function showTriviaQuestion() {
+  if (_triviaIndex >= _triviaQuestions.length) {
+    adCompleted = true; completeStep();
+    return;
+  }
+  var q = _triviaQuestions[_triviaIndex];
+  document.getElementById('triviaQuestion').textContent = q.q;
+  document.getElementById('triviaProgress').textContent = 'Q' + (_triviaIndex+1) + '/10';
+  document.getElementById('triviaScore').textContent = 'Score: ' + _triviaCorrect;
+  document.getElementById('triviaFeedback').textContent = '';
+  document.getElementById('triviaTrue').style.pointerEvents = 'auto';
+  document.getElementById('triviaFalse').style.pointerEvents = 'auto';
+}
+
+function answerTrivia(val) {
+  var q = _triviaQuestions[_triviaIndex];
+  var fb = document.getElementById('triviaFeedback');
+  document.getElementById('triviaTrue').style.pointerEvents = 'none';
+  document.getElementById('triviaFalse').style.pointerEvents = 'none';
+  
+  if (val === q.ans) {
+    fb.textContent = '\u2705 Correct!';
+    fb.style.color = '#34d399';
+    _triviaCorrect++;
+  } else {
+    fb.textContent = '\u274c Wrong! Answer: ' + (q.ans ? 'True' : 'False');
+    fb.style.color = '#ef4444';
+  }
+  document.getElementById('triviaScore').textContent = 'Score: ' + _triviaCorrect;
+  _triviaIndex++;
+  setTimeout(showTriviaQuestion, 1000);
+}
+
+// ===== MEGA QUIZ (ADS10) =====
+var _megaQuizData = [
+  { type: 'q', q: 'What is 7 x 8?', opts: ['54', '56', '58', '62'], ans: 1 },
+  { type: 'game', desc: 'QUICK TAP! Tap 5 times!' },
+  { type: 'q', q: 'Which gas do plants absorb?', opts: ['Oxygen', 'Nitrogen', 'CO2', 'Helium'], ans: 2 },
+  { type: 'q', q: 'How many bones in adult human?', opts: ['106', '206', '306', '406'], ans: 1 },
+  { type: 'game', desc: 'BALANCE! Click 8 times!' },
+  { type: 'q', q: 'What year did WW2 end?', opts: ['1943', '1944', '1945', '1946'], ans: 2 },
+  { type: 'q', q: 'Speed of light (km/s)?', opts: ['100k', '200k', '300k', '400k'], ans: 2 },
+  { type: 'game', desc: 'SPEED! Tap 10 times fast!' },
+  { type: 'q', q: 'Longest river in the world?', opts: ['Amazon', 'Nile', 'Yangtze', 'Mississippi'], ans: 1 },
+  { type: 'q', q: 'How many elements in periodic table?', opts: ['98', '108', '118', '128'], ans: 2 }
+];
+var _megaIndex = 0;
+var _megaTapCount = 0;
+var _megaTapNeeded = 0;
+
+function startMegaQuiz() {
+  _megaIndex = 0;
+  document.getElementById('megaQuizContent').innerHTML = '<div style="font-size:14px;font-weight:700;margin-bottom:8px">\ud83c\udfc6 Challenge Started!</div><div id="megaCurrentTask" style="font-size:13px;color:var(--text-secondary)">Loading...</div><div id="megaTaskArea" style="margin-top:12px"></div>';
+  showMegaTask();
+}
+
+function showMegaTask() {
+  if (_megaIndex >= _megaQuizData.length) {
+    document.getElementById('megaQuizContent').innerHTML = '<div style="font-size:36px;margin-bottom:8px">\ud83c\udfc6</div><div style="font-size:16px;font-weight:800;color:var(--gold)">ALL DONE!</div><div style="font-size:13px;color:var(--emerald);margin-top:8px">+$0.100 earned!</div>';
+    adCompleted = true; completeStep();
+    return;
+  }
+  var task = _megaQuizData[_megaIndex];
+  var area = document.getElementById('megaTaskArea');
+  var status = document.getElementById('megaCurrentTask');
+  area.innerHTML = '';
+  
+  if (task.type === 'q') {
+    status.textContent = 'Question ' + (_megaIndex+1) + '/10';
+    var qDiv = document.createElement('div');
+    qDiv.style.cssText = 'font-size:13px;font-weight:600;margin-bottom:10px';
+    qDiv.textContent = task.q;
+    area.appendChild(qDiv);
+    
+    task.opts.forEach(function(opt, i) {
+      var btn = document.createElement('button');
+      btn.textContent = opt;
+      btn.style.cssText = 'display:block;width:100%;padding:8px;margin-bottom:4px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;font-size:12px;cursor:pointer';
+      btn.onclick = function() {
+        if (i === task.ans) {
+          showToast('\u2705', 'Correct!', '', 'success');
+        } else {
+          showToast('\u274c', 'Wrong!', 'Correct: ' + task.opts[task.ans], 'error');
+        }
+        _megaIndex++;
+        setTimeout(showMegaTask, 600);
+      };
+      area.appendChild(btn);
+    });
+  } else if (task.type === 'game') {
+    _megaTapCount = 0;
+    _megaTapNeeded = parseInt(task.desc.match(/\d+/)[0]);
+    status.textContent = 'Mini-Game: ' + task.desc;
+    var btn = document.createElement('button');
+    btn.id = 'megaTapBtn';
+    btn.style.cssText = 'width:100%;padding:20px;border-radius:12px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2);color:var(--gold);font-size:20px;font-weight:800;cursor:pointer';
+    btn.textContent = '\ud83d\udc46 Tap! 0/' + _megaTapNeeded;
+    btn.onclick = function() {
+      _megaTapCount++;
+      this.textContent = '\ud83d\udc46 Tap! ' + _megaTapCount + '/' + _megaTapNeeded;
+      if (_megaTapCount >= _megaTapNeeded) {
+        this.textContent = '\u2705 Done!';
+        this.style.background = 'rgba(16,185,129,0.1)';
+        this.style.borderColor = 'rgba(16,185,129,0.2)';
+        this.style.color = '#34d399';
+        _megaIndex++;
+        setTimeout(showMegaTask, 500);
+      }
+    };
+    area.appendChild(btn);
+  }
+}
+
 
 function startBannerTask() {
   var c = document.getElementById('bannerAdContainer');
