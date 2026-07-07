@@ -489,16 +489,23 @@ function getAdContent(type) {
       return '<div class="ad-inner"><div class="smart-ad-wrap" style="width:100%;border-radius:16px;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(16,185,129,0.08));border:1px solid rgba(212,175,55,0.2);overflow:hidden;margin-bottom:12px">' +
         '<div style="padding:12px;text-align:center;background:rgba(212,175,55,0.05)">' +
           '<div style="font-size:16px;font-weight:800;color:var(--gold)">\ud83e\udde0 SMART AD</div>' +
-          '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">Click the ad below to earn $0.050</div>' +
+          '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">AdSense + Smartlink • Click to earn $0.050</div>' +
         '</div>' +
-        '<div id="smartAdContainer" style="width:100%;min-height:180px;display:flex;align-items:center;justify-content:center;padding:12px 0;box-sizing:border-box">' +
+        // AdSense visible banner
+        '<div style="width:100%;min-height:100px;display:flex;justify-content:center;padding:6px 0;background:rgba(0,0,0,0.08)">' +
+          '<ins class="adsbygoogle" style="display:inline-block;width:320px;height:100px" data-ad-client="ca-pub-9307459733796967" data-ad-slot="3746278661"></ins>' +
+        '</div>' +
+        '<script>try{(adsbygoogle=window.adsbygoogle||[]).push({})}catch(e){}</script>' +
+        '<div id="smartAdContainer" style="width:100%;min-height:120px;display:flex;align-items:center;justify-content:center;padding:8px 0;box-sizing:border-box">' +
           '<div style="text-align:center">' +
-            '<div id="smartAdStatus" style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">\ud83d\udc42 Click the ad to start earning...</div>' +
+            '<div id="smartAdStatus" style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">\ud83d\udc42 Click to earn!</div>' +
             '<button id="smartAdClickBtn" onclick="handleSmartAdClick()" style="padding:14px 40px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A;border:none;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 20px rgba(212,175,55,0.3);transition:all 0.2s">\ud83d\udcb0 Click to Earn</button>' +
             '<div id="smartAdResult" style="margin-top:12px;font-size:11px;color:var(--text-muted);display:none">\u2705 Ad visited! Reward will be credited soon...</div>' +
           '</div>' +
         '</div>' +
-        '<div style="padding:8px 12px;border-top:1px solid rgba(255,255,255,0.04);font-size:9px;color:var(--text-muted);text-align:center">Sponsored Content • Click = Reward</div>' +
+        // EffectiveCPM smartlink iframe
+        '<iframe src="https://www.effectivecpmnetwork.com/zjzbzfk7?key=5be534a9c13e9ed7a663c6cc527b5b74" style="width:100%;height:60px;border:none;overflow:hidden;display:block" scrolling="no" frameborder="0" allowtransparency="true"></iframe>' +
+        '<div style="padding:8px 12px;border-top:1px solid rgba(255,255,255,0.04);font-size:9px;color:var(--text-muted);text-align:center">Google AdSense • EffectiveCPM • Sponsored</div>' +
       '</div>' +
       '<div class="ad-reward-info"><span class="ad-earn-badge" style="background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A">\ud83e\udde0 SMART AD +$0.050</span></div></div>';
     case 'ads3':
@@ -601,7 +608,10 @@ function handleSmartAdClick() {
   var status = document.getElementById('smartAdStatus');
   var result = document.getElementById('smartAdResult');
   
-  // Open the smartlink in a new tab
+  // Push AdSense ads
+  try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+  
+  // Open smartlink
   window.open('https://www.effectivecpmnetwork.com/zjzbzfk7?key=5be534a9c13e9ed7a663c6cc527b5b74', '_blank');
   
   // Also try Monetag popunder
@@ -612,7 +622,7 @@ function handleSmartAdClick() {
   } catch(e) {}
   
   if (btn) { btn.textContent = '\u2705 Processing...'; btn.style.opacity = '0.6'; btn.disabled = true; }
-  if (status) status.textContent = '\u2705 Ad opened! Complete the offer to earn...';
+  if (status) status.textContent = '\u2705 Ads opened! Complete the offer to earn...';
   if (result) result.style.display = 'block';
   
   _smartAdClicked = true;
@@ -623,7 +633,8 @@ function handleSmartAdClick() {
     completeStep();
   }, 5000);
   
-  // Load anti-adblock
+  // Load ad networks
+  loadSmartAdNetworks();
   loadAntiAdblock();
 }
 
