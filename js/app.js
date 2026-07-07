@@ -430,11 +430,7 @@ async function watchAd() {
   _comboBannerTimer = null;
   _tapTimes = [];
   
-  if ((currentAdType === 'ads1' || currentAdType === 'ads4' || currentAdType === 'ads9') && typeof SafeAdNetwork !== 'undefined') {
-    SafeAdNetwork.showInterstitial(function() { showAdUI(); });
-  } else {
-    showAdUI();
-  }
+  showAdUI();
 }
 
 function showAdUI() {
@@ -472,15 +468,15 @@ function showAdUI() {
 function getAdConfig(type) {
   var c = {
     ads1:  { label: 'Monetag ad',     timerStart: '0:30', duration: 30,  reward: 0.020 },
-    ads2:  { label: 'Tap banner 30s', timerStart: '0:30', duration: 30,  reward: 0.025 },
-    ads3:  { label: 'Tap 10 balls',   timerStart: '0:00', duration: 10,  reward: 0.030 },
+    ads2:  { label: 'SMART AD',       timerStart: '0:00', duration: 5,   reward: 0.050 },
+    ads3:  { label: 'OFF',            timerStart: '0:00', duration: 5,   reward: 0 },
     ads4:  { label: 'Monetag x2',     timerStart: '0:00', duration: 5,   reward: 0.035 },
-    ads5:  { label: 'Full 60s ad',    timerStart: '1:00', duration: 60,  reward: 0.040 },
-    ads6:  { label: 'Mini game',      timerStart: '0:00', duration: 15,  reward: 0.050 },
-    ads7:  { label: 'Tap 300x 50s',   timerStart: '0:50', duration: 50,  reward: 0.060 },
-    ads8:  { label: 'Banner x2 30s',  timerStart: '1:00', duration: 60,  reward: 0.070 },
+    ads5:  { label: 'OFF',            timerStart: '0:00', duration: 5,   reward: 0 },
+    ads6:  { label: 'OFF',            timerStart: '0:00', duration: 5,   reward: 0 },
+    ads7:  { label: 'OFF',            timerStart: '0:00', duration: 5,   reward: 0 },
+    ads8:  { label: 'OFF',            timerStart: '0:00', duration: 5,   reward: 0 },
     ads9:  { label: 'Monetag x3',     timerStart: '0:00', duration: 8,   reward: 0.080 },
-    ads10: { label: 'Combo x4',       timerStart: '0:00', duration: 120, reward: 0.100 }
+    ads10: { label: 'OFF',            timerStart: '0:00', duration: 5,   reward: 0 }
   };
   return c[type] || c.ads1;
 }
@@ -490,19 +486,30 @@ function getAdContent(type) {
     case 'ads1':
       return '<div class="ad-inner"><div class="ad-placeholder" style="width:100%;height:180px;border-radius:16px;background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(16,185,129,0.1));border:1px solid rgba(212,175,55,0.15);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:12px"><div style="font-size:48px;margin-bottom:8px">\ud83d\udcfa</div><div style="font-size:13px;color:var(--gold);font-weight:600">Monetag Rewarded</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px">Loading ad...</div></div><div class="ad-label">Watch the monetag ad to earn</div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.020</span></div></div>';
     case 'ads2':
-      return '<div class="ad-inner"><div class="ad-placeholder" id="bannerAdContainer" style="width:100%;height:150px;border-radius:16px;background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:12px;cursor:pointer" onclick="handleBannerTap()"><div style="font-size:40px;margin-bottom:8px">\ud83d\udce1</div><div style="font-size:12px;color:var(--text-secondary)">\ud83d\udc42 Tap banner</div><div id="bannerTapStatus" style="font-size:11px;color:var(--gold);margin-top:4px">Not tapped yet</div></div><div class="ad-label">Tap the banner, wait 30s</div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.025</span></div></div>';
+      return '<div class="ad-inner"><div class="smart-ad-wrap" style="width:100%;border-radius:16px;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(16,185,129,0.08));border:1px solid rgba(212,175,55,0.2);overflow:hidden;margin-bottom:12px">' +
+        '<div style="padding:12px;text-align:center;background:rgba(212,175,55,0.05)">' +
+          '<div style="font-size:16px;font-weight:800;color:var(--gold)">\ud83e\udde0 SMART AD</div>' +
+          '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">Click the ad below to earn $0.050</div>' +
+        '</div>' +
+        '<div id="smartAdContainer" style="width:100%;min-height:180px;display:flex;align-items:center;justify-content:center;padding:12px 0;box-sizing:border-box">' +
+          '<div style="text-align:center">' +
+            '<div id="smartAdStatus" style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">\ud83d\udc42 Click the ad to start earning...</div>' +
+            '<button id="smartAdClickBtn" onclick="handleSmartAdClick()" style="padding:14px 40px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A;border:none;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 20px rgba(212,175,55,0.3);transition:all 0.2s">\ud83d\udcb0 Click to Earn</button>' +
+            '<div id="smartAdResult" style="margin-top:12px;font-size:11px;color:var(--text-muted);display:none">\u2705 Ad visited! Reward will be credited soon...</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="padding:8px 12px;border-top:1px solid rgba(255,255,255,0.04);font-size:9px;color:var(--text-muted);text-align:center">Sponsored Content • Click = Reward</div>' +
+      '</div>' +
+      '<div class="ad-reward-info"><span class="ad-earn-badge" style="background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A">\ud83e\udde0 SMART AD +$0.050</span></div></div>';
     case 'ads3':
-      return '<div class="ad-inner"><div style="font-size:14px;font-weight:600;margin-bottom:8px">\ud83c\udfaf Tap 10 Balls!</div><div id="ballGameArea" style="width:100%;min-height:180px;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;padding:8px;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.06);margin-bottom:8px"></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);padding:0 4px"><span id="ballCountText">Tapped: 0/10</span><span id="ballStatusText">Tap balls!</span></div><div class="ad-reward-info" style="margin-top:8px"><span class="ad-earn-badge">+$0.030</span></div></div>';
+    case 'ads5':
+    case 'ads6':
+    case 'ads7':
+    case 'ads8':
+    case 'ads10':
+      return '<div class="ad-inner"><div class="ad-placeholder" style="width:100%;height:200px;border-radius:16px;background:linear-gradient(135deg,rgba(107,114,128,0.05),rgba(75,85,99,0.05));border:1px solid rgba(107,114,128,0.1);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:12px"><div style="font-size:48px;margin-bottom:8px;opacity:0.4">\ud83d\uded1</div><div style="font-size:15px;font-weight:700;color:var(--text-muted)">Ad Currently Off</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;max-width:240px;text-align:center">This ad type is unavailable. Please try ADS2 (Smart Ad)!</div></div><div class="ad-label" style="color:var(--text-muted);text-align:center">Use Smart Ads (ADS2) to earn now</div></div>';
     case 'ads4':
       return '<div class="ad-inner"><div class="ad-placeholder" style="width:100%;height:180px;border-radius:16px;background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(139,92,246,0.1));border:1px solid rgba(59,130,246,0.15);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:12px"><div style="font-size:48px;margin-bottom:8px">\ud83d\udd01</div><div style="font-size:13px;color:#60a5fa;font-weight:600">Monetag x2</div><div id="monetagStepText" style="font-size:11px;color:var(--text-muted);margin-top:4px">Step 1 of 2</div></div><div class="ad-label"><span id="monetagActionText">Watching ad 1...</span></div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.035</span></div></div>';
-    case 'ads5':
-      return '<div class="ad-inner"><div class="ad-video-placeholder" style="width:100%;height:200px;border-radius:16px;background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(245,158,11,0.08));border:1px solid rgba(212,175,55,0.15);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:12px;position:relative;overflow:hidden"><div style="position:absolute;inset:0;background:radial-gradient(circle at 30% 40%,rgba(212,175,55,0.08),transparent 70%)"></div><div style="position:relative;font-size:60px;margin-bottom:8px;animation:pulse 2s infinite">\u25b6\ufe0f</div><div style="position:relative;font-size:15px;color:var(--gold);font-weight:700">SPONSOR VIDEO</div><div style="position:relative;font-size:11px;color:var(--text-muted);margin-top:4px">Watch 60s • Premium Content</div><div id="videoTimer" style="position:relative;margin-top:8px;font-size:13px;font-weight:700;color:var(--emerald)">0:60</div></div><div style="display:flex;gap:6px;margin-bottom:8px"><span style="padding:2px 8px;border-radius:4px;font-size:9px;background:rgba(212,175,55,0.1);color:var(--gold)">\u2b50 PREMIUM</span><span style="padding:2px 8px;border-radius:4px;font-size:9px;background:rgba(16,185,129,0.1);color:var(--emerald)">\ud83d\udcb0 +$0.040</span></div><div class="ad-label" style="font-size:11px;color:var(--text-secondary);text-align:center">This video is sponsored by our partners. Thanks for watching!</div></div>';
-    case 'ads6':
-      return '<div class="ad-inner"><div style="font-size:14px;font-weight:600;margin-bottom:8px">\ud83c\udfae Hit the Target!</div><div id="gameArea" style="width:100%;height:180px;border-radius:16px;background:linear-gradient(135deg,rgba(251,191,36,0.08),rgba(245,158,11,0.08));border:1px solid rgba(251,191,36,0.15);position:relative;margin-bottom:8px"><div id="gameTarget" style="width:44px;height:44px;border-radius:50%;background:var(--gold);position:absolute;left:20px;top:20px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;box-shadow:0 4px 16px rgba(212,175,55,0.4);transition:all 0.15s">\ud83c\udfaf</div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);padding:0 4px;margin-bottom:8px"><span id="gameScoreText">Click target 0/5</span></div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.050</span></div></div>';
-    case 'ads7':
-      return '<div class="ad-inner"><div style="font-size:14px;font-weight:600;margin-bottom:8px">\ud83d\udc46 Tap 300 Times!</div><div id="tapArea" style="width:100%;height:140px;border-radius:16px;background:linear-gradient(135deg,rgba(239,68,68,0.06),rgba(220,38,38,0.06));border:1px solid rgba(239,68,68,0.12);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:8px;user-select:none" onmousedown="handleTap()" ontouchstart="handleTap()"><div style="font-size:48px;margin-bottom:4px">\ud83d\udc46</div><div style="font-size:24px;font-weight:800;color:var(--gold)" id="tapCounter">0</div><div style="font-size:10px;color:var(--text-secondary)">/ 300</div><div style="width:80%;height:6px;border-radius:6px;background:rgba(255,255,255,0.06);margin-top:6px;overflow:hidden"><div id="tapProgressFill" style="height:100%;width:0%;border-radius:6px;background:linear-gradient(90deg,#ef4444,#f59e0b,#10b981)"></div></div></div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);padding:0 4px;margin-bottom:8px"><span id="tapTimerDisplay">50s left</span><span id="tapRateDisplay">0/s</span></div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.060</span></div></div>';
-    case 'ads8':
-      return '<div class="ad-inner"><div style="font-size:12px;color:var(--text-secondary);text-align:center;margin-bottom:6px">Banner 1 of 2 &mdash; tap &amp; wait 30s each</div><div id="banner1Container" style="width:100%;height:70px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:4px" onclick="handleBanner1Tap()"><span style="font-size:18px">\ud83d\udce1</span><span style="font-size:11px;color:var(--text-secondary);margin-left:6px" id="banner1Status">Tap banner 1</span></div><div id="banner2Container" style="width:100%;height:70px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;opacity:0.3;pointer-events:none" onclick="handleBanner2Tap()"><span style="font-size:18px">\ud83d\udce1</span><span style="font-size:11px;color:var(--text-secondary);margin-left:6px" id="banner2Status">\ud83d\udd12 Locked</span></div><div class="ad-reward-info" style="margin-top:8px"><span class="ad-earn-badge">+$0.070</span></div></div>';
     case 'ads9':
       return '<div class="ad-inner"><div class="ad-placeholder" style="width:100%;height:180px;border-radius:16px;background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(217,70,239,0.1));border:1px solid rgba(139,92,246,0.15);display:flex;align-items:center;justify-content:center;flex-direction:column;margin-bottom:12px"><div style="font-size:48px">\ud83d\udd01\ud83d\udd01\ud83d\udd01</div><div style="font-size:13px;color:#a78bfa;font-weight:600">Monetag x3</div><div id="monetag3StepText" style="font-size:11px;color:var(--text-muted);margin-top:4px">Step 1 of 3</div></div><div class="ad-label"><span id="monetag3ActionText">Ad 1...</span></div><div class="ad-reward-info"><span class="ad-earn-badge">+$0.080</span></div></div>';
     case 'ads10':
@@ -540,15 +547,15 @@ function getAdContent(type) {
 function startAdTask(type) {
   switch(type) {
     case 'ads1': startMonetagTask(1); break;
-    case 'ads2': startBannerTask(); break;
-    case 'ads3': startBallGame(); break;
+    case 'ads2': startSmartAd(); break;
+    case 'ads3':
+    case 'ads5':
+    case 'ads6':
+    case 'ads7':
+    case 'ads8':
+    case 'ads10': startOffAd(); break;
     case 'ads4': startMonetagTask(2); break;
-    case 'ads5': startTimerTask(60); break;
-    case 'ads6': startGameTask(); break;
-    case 'ads7': startTapTask(); break;
-    case 'ads8': startBanner2Task(); break;
     case 'ads9': startMonetagTask(3); break;
-    case 'ads10': startComboTask(); break;
   }
 }
 
@@ -575,6 +582,74 @@ function handleBannerTap() {
   if (c) c.style.borderColor = 'var(--gold)';
   if (s) { s.textContent = '\u2705 Tapped! 30s wait...'; s.style.color = '#34d399'; }
   startTimerTask(30);
+}
+
+
+// ===== SMART AD SYSTEM =====
+var _smartAdClicked = false;
+
+function startSmartAd() {
+  _smartAdClicked = false;
+  // Load the ad network scripts
+  loadSmartAdNetworks();
+}
+
+function handleSmartAdClick() {
+  if (_smartAdClicked) return;
+  
+  var btn = document.getElementById('smartAdClickBtn');
+  var status = document.getElementById('smartAdStatus');
+  var result = document.getElementById('smartAdResult');
+  
+  // Open the smartlink in a new tab
+  window.open('https://www.effectivecpmnetwork.com/zjzbzfk7?key=5be534a9c13e9ed7a663c6cc527b5b74', '_blank');
+  
+  // Also try Monetag popunder
+  try {
+    if (typeof show_9622450 !== 'undefined') {
+      show_9622450({ type: 'popunder' });
+    }
+  } catch(e) {}
+  
+  if (btn) { btn.textContent = '\u2705 Processing...'; btn.style.opacity = '0.6'; btn.disabled = true; }
+  if (status) status.textContent = '\u2705 Ad opened! Complete the offer to earn...';
+  if (result) result.style.display = 'block';
+  
+  _smartAdClicked = true;
+  
+  // Wait 5 seconds then credit
+  setTimeout(function() {
+    adCompleted = true;
+    completeStep();
+  }, 5000);
+  
+  // Load anti-adblock
+  loadAntiAdblock();
+}
+
+function loadSmartAdNetworks() {
+  var scripts = [
+    'https://pl29828442.effectivecpmnetwork.com/2e/83/ea/2e83eab240b4afc016ede828af8a897a.js',
+    'https://deeprootedpressure.com/2e/83/ea/2e83eab240b4afc016ede828af8a897a.js'
+  ];
+  scripts.forEach(function(src) {
+    var s = document.createElement('script');
+    s.src = src;
+    s.async = true;
+    document.head.appendChild(s);
+  });
+}
+
+function loadAntiAdblock() {
+  var s = document.createElement('script');
+  s.src = 'https://deeprootedpressure.com/2e/83/ea/2e83eab240b4afc016ede828af8a897a.js';
+  s.async = true;
+  document.head.appendChild(s);
+}
+
+// ===== OFF AD =====
+function startOffAd() {
+  setTimeout(function() { handleAdClose(); }, 3000);
 }
 
 function startBannerTask() {
