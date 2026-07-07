@@ -468,7 +468,7 @@ function showAdUI() {
 function getAdConfig(type) {
   var c = {
     ads1:  { label: 'Monetag ad',     timerStart: '0:30', duration: 30,  reward: 0.020 },
-    ads2:  { label: 'SMART AD',       timerStart: '0:00', duration: 5,   reward: 0.050 },
+    ads2:  { label: 'SMART AD',       timerStart: '0:00', duration: 5,   reward: 0.100 },
     ads3:  { label: 'OFF',            timerStart: '0:00', duration: 5,   reward: 0 },
     ads4:  { label: 'Monetag x2',     timerStart: '0:00', duration: 5,   reward: 0.035 },
     ads5:  { label: 'OFF',            timerStart: '0:00', duration: 5,   reward: 0 },
