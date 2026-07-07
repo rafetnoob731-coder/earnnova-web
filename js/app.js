@@ -10,11 +10,7 @@ var _authResolved = false;
 var _balanceInterval = null;
 
 // ===== UTILITY FUNCTIONS =====
-function $(id) {
-  if (typeof EN_adblockDetected !== 'undefined' && EN_adblockDetected) {
-    showToast('🚫','Ad Blocker Active!','Please disable your ad blocker to watch ads.','error');
-    return;
-  } return document.getElementById(id); }
+function $(id) { return document.getElementById(id); }
 function qs(sel) { return document.querySelector(sel); }
 function qsa(sel) { return document.querySelectorAll(sel); }
 
@@ -411,6 +407,10 @@ function updateAdUI() {
 }
 
 async function watchAd() {
+  if (typeof EN_adblockDetected !== 'undefined' && EN_adblockDetected) {
+    showToast('🚫','Ad Blocker Active!','Please disable your ad blocker to watch ads.','error');
+    return;
+  }
   if (adCooldown) { showToast('\u23f3', 'Cooldown Active', 'Please wait 30 minutes between ads.', 'warning'); return; }
   if (!(currentUserData && (currentUserData.isAdmin || currentUser?.email === ADMIN_EMAIL)) && dailyAdCount >= MAX_DAILY_ADS) {
     showToast('\u26a0\ufe0f', 'Daily Limit Reached', 'You\'ve watched ' + MAX_DAILY_ADS + ' ads today. Come back tomorrow!', 'warning'); return;
