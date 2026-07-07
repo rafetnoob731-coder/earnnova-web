@@ -1979,6 +1979,12 @@ async function adminToggleBan(uid, currentlyBanned) {
 // Set Role (creator only)
 async function adminSetRole(uid, role) {
   if (currentUser?.email !== ADMIN_EMAIL) { showToast('❌','Denied','Only creator can change roles','error'); return; }
+  // Cannot modify owner account
+  var targetDoc = await fbTimeout(usersRef.doc(uid).get());
+  if (targetDoc.exists && targetDoc.data().email === ADMIN_EMAIL) {
+    showToast('❌','Protected','Cannot modify the owner account role!','error');
+    return;
+  }
   var labels = { admin: 'Full Admin', child: 'Child Admin', user: 'User' };
   if (!confirm('Set ' + labels[role] + ' role for this user?')) return;
   try {
