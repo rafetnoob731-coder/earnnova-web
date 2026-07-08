@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>EARNNOVA -- Referral Program</title>
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dark-mode">
+
+<nav class="top-nav">
+  <div class="nav-inner">
+    <div class="nav-logo" onclick="location.href='dashboard.html'">EARNNOVA</div>
+    <div class="nav-right">
+      <div class="nav-balance" id="navBalance">$0.00</div>
+    </div>
+  </div>
+</nav>
+
+<nav class="bottom-nav">
+  <div class="nav-item" data-page="dashboard" onclick="location.href='dashboard.html'"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+  <div class="nav-item" data-page="earn" onclick="location.href='earn.html'"><div class="nav-icon">📺</div><div class="nav-label">Earn</div></div>
+  <div class="nav-item" data-page="withdraw" onclick="location.href='withdraw.html'"><div class="nav-icon">💳</div><div class="nav-label">Cashout</div></div>
+  <div class="nav-item active" data-page="referrals" onclick="location.href='referrals.html'"><div class="nav-icon">👥</div><div class="nav-label">Refer</div></div>
+  <div class="nav-item" data-page="profile" onclick="location.href='profile.html'"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+</nav>
+<div class="main-content" id="mainContent">
+  <!-- PAGE: REFERRALS -->
+  <div class="page-view" id="pageReferrals">
+    <div class="section-title" style="margin-top:0">👥 Refer & Earn</div>
+    <div class="section-subtitle">Earn $0.50 for each friend who joins</div>
+
+    <div class="ref-hero" style="margin-top:12px">
+      <div style="font-size:40px;margin-bottom:8px">🎁</div>
+      <div class="fw-700" style="font-size:18px">Your Referral Code</div>
+      <div class="ref-code" data-ref>------</div>
+      <div class="text-sm text-muted mb-3">Share this code — friend signs up → watches 30 ads → you earn $0.50</div>
+      <button class="btn-copy" onclick="copyReferral()"><i class="fas fa-copy"></i> Copy Referral Code</button>
+    </div>
+
+    <div class="glass-card">
+      <div style="display:flex;justify-content:space-around;text-align:center;padding:12px 0">
+        <div><div class="text-xl fw-800 text-gold" data-referrals>0</div><div class="text-xs text-muted mt-1">Friends Joined</div></div>
+        <div><div class="text-xl fw-800 text-gold" data-refearned>$0.00</div><div class="text-xs text-muted mt-1">Referral Earnings</div></div>
+      </div>
+    </div>
+
+    <div class="section-title">📖 How It Works</div>
+    <div class="glass-card">
+      <div class="flex gap-3" style="padding:8px 0"><div style="width:24px;height:24px;border-radius:50%;background:rgba(212,175,55,0.12);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gold);flex-shrink:0">1</div><div><div class="fw-600 text-sm">Share your code</div><div class="text-xs text-muted mt-1">Send your referral code to friends</div></div></div>
+      <div class="flex gap-3" style="padding:8px 0"><div style="width:24px;height:24px;border-radius:50%;background:rgba(212,175,55,0.12);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gold);flex-shrink:0">2</div><div><div class="fw-600 text-sm">They sign up</div><div class="text-xs text-muted mt-1">Your friend uses your code during registration (one IP = one account)</div></div></div>
+      <div class="flex gap-3" style="padding:8px 0"><div style="width:24px;height:24px;border-radius:50%;background:rgba(212,175,55,0.12);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gold);flex-shrink:0">3</div><div><div class="fw-600 text-sm">They watch 30 ads</div><div class="text-xs text-muted mt-1">After your friend completes 30 ads, you earn $0.50 bonus</div></div></div>
+      <div class="flex gap-3" style="padding:8px 0"><div style="width:24px;height:24px;border-radius:50%;background:rgba(212,175,55,0.12);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gold);flex-shrink:0">4</div><div><div class="fw-600 text-sm">You earn $0.50</div><div class="text-xs text-muted mt-1">Bonus added to your balance automatically</div></div></div>
+    </div>
+  </div>
+
+</div>
+<button class="fab" onclick="location.href='earn.html'" title="Watch Ad">📺</button>
+<div id="toast" class="toast"></div>
+<div class="modal-overlay" id="userDetailModal" onclick="if(event.target===this)this.classList.remove('show')"><div class="modal-content" style="max-width:380px;padding:16px;border-radius:16px" id="userDetailContent"></div></div>
+<div class="modal-overlay" id="adModal" onclick="if(event.target===this)closeAd()"><div class="ad-modal-content" id="adModalContent"></div></div>
+
+<script>
+var EN_PAGE = 'referrals';
+function navigate(page) {
+  if (page === 'admin') { document.getElementById('adminPanel')?.classList.add('show'); return; }
+  location.href = page + '.html';
+}
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.highperformanceformat.com/679c41f5cd1133dfcfb8ddd3254605d4/invoke.js"></script>
+<script src="https://www.highperformanceformat.com/11127fe81ff9922c5ece58925c849fd8/invoke.js"></script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9307459733796967" crossorigin="anonymous"></script>
+<script src="https://quge5.com/88/tag.min.js" data-zone="255448" async data-cfasync="false"></script>
+<script src="//libtl.com/sdk.js" data-zone="9622450" data-sdk="show_9622450"></script>
+<script src="https://pl29828447.effectivecpmnetwork.com/fc/ac/01/fcac01bcf8a7bc1e80bbba3ba4a24fed.js"></script>
+<script src="https://pl29828442.effectivecpmnetwork.com/2e/83/ea/2e83eab240b4afc016ede828af8a897a.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/app.js"></script>
+<script src="js/ads.js"></script>
+<script src="js/games.js"></script>
+<script src="js/adblock-detector.js"></script>
+</body>
+</html>
