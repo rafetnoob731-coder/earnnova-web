@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>EARNNOVA -- My Profile</title>
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dark-mode">
+
+<nav class="top-nav">
+  <div class="nav-inner">
+    <div class="nav-logo" onclick="location.href='dashboard.html'">EARNNOVA</div>
+    <div class="nav-right">
+      <div class="nav-balance" id="navBalance">$0.00</div>
+    </div>
+  </div>
+</nav>
+
+<nav class="bottom-nav">
+  <div class="nav-item" data-page="dashboard" onclick="location.href='dashboard.html'"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+  <div class="nav-item" data-page="earn" onclick="location.href='earn.html'"><div class="nav-icon">📺</div><div class="nav-label">Earn</div></div>
+  <div class="nav-item" data-page="withdraw" onclick="location.href='withdraw.html'"><div class="nav-icon">💳</div><div class="nav-label">Cashout</div></div>
+  <div class="nav-item" data-page="referrals" onclick="location.href='referrals.html'"><div class="nav-icon">👥</div><div class="nav-label">Refer</div></div>
+  <div class="nav-item active" data-page="profile" onclick="location.href='profile.html'"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+</nav>
+<div class="main-content" id="mainContent">
+  <!-- PAGE: PROFILE -->
+  <div class="page-view" id="pageProfile">
+    <div class="profile-head">
+      <div class="profile-avatar" id="profileAvatar">U</div>
+      <div class="profile-name" data-name>User</div>
+      <div class="profile-email" data-email>email@example.com</div>
+    </div>
+
+    <div class="glass-card">
+      <div class="setting-item"><div class="setting-left"><div class="setting-icon" style="background:rgba(212,175,55,0.1);color:var(--gold)"><i class="fas fa-user"></i></div><div><div class="setting-label">Name</div><div class="setting-desc" data-name>User</div></div></div></div>
+      <div class="setting-item"><div class="setting-left"><div class="setting-icon" style="background:rgba(59,130,246,0.1);color:#3B82F6"><i class="fas fa-envelope"></i></div><div><div class="setting-label">Email</div><div class="setting-desc" data-email>email@example.com</div></div></div></div>
+      <div class="setting-item"><div class="setting-left"><div class="setting-icon" style="background:rgba(139,92,246,0.1);color:#8B5CF6"><i class="fas fa-id-card"></i></div><div><div class="setting-label">User ID</div><div class="setting-desc text-xs" id="profileUserID">------</div></div></div></div>
+      <div class="setting-item"><div class="setting-left"><div class="setting-icon" style="background:rgba(16,185,129,0.1);color:var(--emerald)"><i class="fas fa-trophy"></i></div><div><div class="setting-label">Total Earned</div><div class="setting-desc text-gold fw-600" data-earned>$0.00</div></div></div></div>
+      <div class="setting-item"><div class="setting-left"><div class="setting-icon" style="background:rgba(139,92,246,0.1);color:#8B5CF6"><i class="fas fa-eye"></i></div><div><div class="setting-label">Ads Watched</div><div class="setting-desc" data-watched>0</div></div></div></div>
+      <div class="setting-item" style="cursor:pointer" onclick="editProfile()"><div class="setting-left"><div class="setting-icon" style="background:rgba(16,185,129,0.1);color:var(--emerald)"><i class="fas fa-pen"></i></div><div><div class="setting-label">Edit Profile</div><div class="setting-desc">Change name, photo, phone</div></div></div><i class="fas fa-chevron-right" style="color:var(--text-muted);font-size:12px"></i></div>
+    </div>
+
+    <div class="glass-card">
+      <div class="setting-item"><div class="setting-left"><div class="setting-icon" style="background:rgba(239,68,68,0.1);color:var(--red)"><i class="fas fa-bell"></i></div><div><div class="setting-label">Notifications</div><div class="setting-desc">Get notified about earnings</div></div></div><div class="toggle on" id="notifToggle" onclick="this.classList.toggle('on')"></div></div>
+      <div class="setting-item"><div class="setting-left"><div class="setting-icon" style="background:rgba(245,158,11,0.1);color:var(--amber)"><i class="fas fa-moon"></i></div><div><div class="setting-label">Dark Mode</div><div class="setting-desc">Toggle light/dark theme</div></div></div><div class="toggle on" id="themeToggle"></div></div>
+    </div>
+
+    <button class="btn-ghost w-full mt-3" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+  </div>
+
+</div>
+</div>
+<button class="fab" onclick="location.href='earn.html'" title="Watch Ad">📺</button>
+<div id="toast" class="toast"></div>
+<div class="modal-overlay" id="userDetailModal" onclick="if(event.target===this)this.classList.remove('show')"><div class="modal-content" style="max-width:380px;padding:16px;border-radius:16px" id="userDetailContent"></div></div>
+<div class="modal-overlay" id="adModal" onclick="if(event.target===this)closeAd()"><div class="ad-modal-content" id="adModalContent"></div></div>
+
+<script>
+var EN_PAGE = 'profile';
+function navigate(page) {
+  if (page === 'admin') { document.getElementById('adminPanel')?.classList.add('show'); return; }
+  location.href = page + '.html';
+}
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.highperformanceformat.com/679c41f5cd1133dfcfb8ddd3254605d4/invoke.js"></script>
+<script src="https://www.highperformanceformat.com/11127fe81ff9922c5ece58925c849fd8/invoke.js"></script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9307459733796967" crossorigin="anonymous"></script>
+<script src="https://quge5.com/88/tag.min.js" data-zone="255448" async data-cfasync="false"></script>
+<script src="//libtl.com/sdk.js" data-zone="9622450" data-sdk="show_9622450"></script>
+<script src="https://pl29828447.effectivecpmnetwork.com/fc/ac/01/fcac01bcf8a7bc1e80bbba3ba4a24fed.js"></script>
+<script src="https://pl29828442.effectivecpmnetwork.com/2e/83/ea/2e83eab240b4afc016ede828af8a897a.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/app.js"></script>
+<script src="js/ads.js"></script>
+<script src="js/games.js"></script>
+<script src="js/adblock-detector.js"></script>
+</body>
+</html>
