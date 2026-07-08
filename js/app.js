@@ -1935,7 +1935,7 @@ async function adminViewUser(uid) {
       //       // Ban/Unban (admin+) - CANNOT ban owner
       if (d.email !== ADMIN_EMAIL) {
         html += '<div class="action-row" style="display:flex;gap:6px;margin-bottom:6px">';
-        html += '<button class="btn-small" style="flex:1;padding:8px;border-radius:8px;border:none;background:' + (d.isActive === false ? 'rgba(16,185,129,0.12);color:var(--emerald)' : 'rgba(239,68,68,0.12);color:#ef4444') + ';font-weight:600;cursor:pointer" onclick="adminToggleBan('' + uid + '',' + (d.isActive === false ? 'true' : 'false') + ')">' + (d.isActive === false ? '✅ Unban' : '🚫 Ban') + '</button>';
+        html += '<button class="btn-small" style="flex:1;padding:8px;border-radius:8px;border:none;background:' + (d.isActive === false ? 'rgba(16,185,129,0.12);color:var(--emerald)' : 'rgba(239,68,68,0.12);color:#ef4444') + ';font-weight:600;cursor:pointer" onclick="adminToggleBan(\'' + uid + '\',' + (d.isActive === false ? 'true' : 'false') + ')">' + (d.isActive === false ? '✅ Unban' : '🚫 Ban') + '</button>';
         html += '</div>';
       } else {
         html += '<div class="action-row" style="display:flex;gap:6px;margin-bottom:6px">';
