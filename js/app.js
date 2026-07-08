@@ -505,7 +505,7 @@ function getAdContent(type) {
       return '<div class="ad-inner"><div class="smart-ad-wrap" style="width:100%;border-radius:16px;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(16,185,129,0.08));border:1px solid rgba(212,175,55,0.2);overflow:hidden;margin-bottom:12px">' +
         '<div style="padding:12px;text-align:center;background:rgba(212,175,55,0.05)">' +
           '<div style="font-size:16px;font-weight:800;color:var(--gold)">\ud83e\udde0 SMART AD</div>' +
-          '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">AdSense + Smartlink • Click to earn $0.050</div>' +
+          '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">AdSense + Smartlink • Click to earn $0.100</div>' +
         '</div>' +
         // AdSense visible banner
         '<div style="width:100%;min-height:100px;display:flex;justify-content:center;padding:6px 0;background:rgba(0,0,0,0.08)">' +
@@ -523,7 +523,7 @@ function getAdContent(type) {
         '<iframe src="https://www.effectivecpmnetwork.com/zjzbzfk7?key=5be534a9c13e9ed7a663c6cc527b5b74" style="width:100%;height:60px;border:none;overflow:hidden;display:block" scrolling="no" frameborder="0" allowtransparency="true"></iframe>' +
         '<div style="padding:8px 12px;border-top:1px solid rgba(255,255,255,0.04);font-size:9px;color:var(--text-muted);text-align:center">Google AdSense • EffectiveCPM • Sponsored</div>' +
       '</div>' +
-      '<div class="ad-reward-info"><span class="ad-earn-badge" style="background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A">\ud83e\udde0 SMART AD +$0.050</span></div></div>';
+      '<div class="ad-reward-info"><span class="ad-earn-badge" style="background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A">\ud83e\udde0 SMART AD +$0.100</span></div></div>';
     case 'ads3':
       return '<div class="ad-inner">' +
         '<div style="text-align:center;margin-bottom:8px"><div style="font-size:16px;font-weight:800;color:var(--gold)">\ud83e\uddea QUIZ TIME!</div><div style="font-size:10px;color:var(--text-secondary)">Answer 5 questions correctly to earn $0.030</div></div>' +
@@ -658,8 +658,12 @@ function handleBannerTap() {
   var c = document.getElementById('bannerAdContainer');
   var s = document.getElementById('bannerTapStatus');
   if (c) c.style.borderColor = 'var(--gold)';
-  if (s) { s.textContent = '\u2705 Tapped! 30s wait...'; s.style.color = '#34d399'; }
-  startTimerTask(30);
+  if (s) { s.textContent = '\u2705 Tapped! 15s...'; s.style.color = '#34d399'; }
+  startTimerTask(15);
+  // Auto-complete after 15s
+  setTimeout(function() {
+    if (!adCompleted) { adCompleted = true; completeStep(); }
+  }, 15000);
 }
 
 
@@ -678,6 +682,8 @@ function handleSmartAdClick() {
   var btn = document.getElementById('smartAdClickBtn');
   var status = document.getElementById('smartAdStatus');
   var result = document.getElementById('smartAdResult');
+  var pd = document.getElementById('adProgressBar');
+  var td = document.getElementById('adTimerDisplay');
   
   // Push AdSense ads - create fresh script elements
   try {
@@ -705,16 +711,31 @@ function handleSmartAdClick() {
     document.body.appendChild(a);
   } catch(e) {}
   
-  if (btn) { btn.textContent = '\u2705 Processing...'; btn.style.opacity = '0.6'; btn.disabled = true; }
-  if (status) status.textContent = '\u2705 Visited! Wait 5 seconds...';
+  if (btn) { btn.textContent = '\u2705 Waiting...'; btn.style.opacity = '0.6'; btn.disabled = true; }
+  if (status) status.textContent = '\u2705 Ads opened! Wait for completion...';
   if (result) result.style.display = 'block';
   
   _smartAdClicked = true;
   
-  // Auto-complete after 5 seconds
-  setTimeout(function() {
-    if (!adCompleted) { adCompleted = true; completeStep(); }
-  }, 5000);
+  // Start a progress bar countdown (15 seconds)
+  var countdown = 15;
+  if (td) td.textContent = '0:15';
+  
+  var timer = setInterval(function() {
+    countdown--;
+    if (pd) pd.style.width = ((15 - countdown) / 15 * 100) + '%';
+    if (td) td.textContent = '0:' + (countdown < 10 ? '0' : '') + countdown;
+    
+    if (countdown <= 0) {
+      clearInterval(timer);
+      if (!adCompleted) { 
+        adCompleted = true; 
+        if (pd) pd.style.width = '100%';
+        if (td) td.textContent = 'Done!';
+        completeStep(); 
+      }
+    }
+  }, 1000);
   
   // Wait 5 seconds then credit
   setTimeout(function() {
@@ -1495,7 +1516,8 @@ async function completeAd() {
   dailyAdCount++;
   localStorage.setItem('en_ad_count', String(dailyAdCount));
   
-  var earnings = AD_REWARD;
+  var cfg = getAdConfig(currentAdType);
+  var earnings = cfg ? cfg.reward : AD_REWARD;
   var bal = parseFloat(localStorage.getItem('en_bal') || '0');
   bal += earnings;
   localStorage.setItem('en_bal', String(bal));
