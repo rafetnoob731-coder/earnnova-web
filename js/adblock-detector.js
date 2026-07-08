@@ -26,11 +26,8 @@ var EN_adblockDetected = false;
 
   // ===== PUBLIC CLOSE FUNCTION (accessible from inline onclick) =====
   window.closeAdblockWarning = function() {
-    _warningActive = false;
-    var modal = document.querySelector('[id^="adb-modal-"]');
-    if (modal) modal.remove();
-    var banner = document.getElementById('adb-top-banner');
-    if (banner) banner.remove();
+    // WARNING: AdBlock must be disabled first. Refresh page.
+    location.reload();
   };
 
   window.recheckAdblock = function() {
@@ -344,8 +341,7 @@ var EN_adblockDetected = false;
           '<div style="font-size:10px;color:rgba(255,255,255,0.4);line-height:1.6">1️⃣ Click the adblock icon in your browser toolbar<br>2️⃣ Select "Pause on this site" or "Disable"<br>3️⃣ Refresh the page to start earning</div>' +
         '</div>' +
         '<div style="display:flex;gap:8px">' +
-          '<button onclick="closeAdblockWarning()" style="flex:1;padding:12px;border-radius:12px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.08);font-size:13px;cursor:pointer">Later ✕</button>' +
-          '<button onclick="location.reload()" style="flex:1;padding:12px;border-radius:12px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer">Refresh 🔄</button>' +
+          '<button onclick="location.reload()" style="flex:1;padding:12px;border-radius:12px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer">Disable AdBlock & Refresh 🔄</button>' +
         '</div>' +
       '</div>';
 
