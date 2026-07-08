@@ -176,6 +176,8 @@ EN_GAMES.flappy = {
     gc.ctx.textAlign = 'center';
     gc.ctx.fillText('Tap to Start! 🐦', gc.canvas.width/2, gc.canvas.height/2 + 5);
   }
+,
+  restart: function(container) { this.start(container); }
 };
 
 // ===== 2. SNAKE =====
