@@ -197,36 +197,59 @@ setTimeout(function() {
     <!-- POPULAR GAMES SECTION -->
     <div class="section-title" style="margin-top:16px">🎮 Popular Games</div>
     <div class="text-sm text-muted mb-3">Play games, earn rewards! Each game shows an ad and rewards based on your score.</div>
+    <style>
+      .game-card{position:relative;overflow:hidden;border-radius:14px;cursor:pointer;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);padding:14px 10px;text-align:center}
+      .game-card:hover{transform:translateY(-4px);border-color:rgba(212,175,55,0.2);box-shadow:0 8px 32px rgba(212,175,55,0.08)}
+      .game-card:active{transform:scale(0.96)}
+      .game-icon{font-size:34px;margin-bottom:6px;display:block;transition:transform 0.3s}
+      .game-card:hover .game-icon{transform:scale(1.15) rotate(-5deg)}
+      .game-name{font-size:12px;font-weight:700;color:var(--gold);margin-bottom:2px}
+      .game-desc{font-size:9px;color:var(--text-muted)}
+      .game-reward{position:absolute;top:6px;right:6px;padding:2px 8px;border-radius:6px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.15);font-size:8px;font-weight:700;color:var(--emerald)}
+      .game-badge{position:absolute;top:6px;left:6px;padding:2px 6px;border-radius:4px;background:rgba(212,175,55,0.1);font-size:7px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.5px}
+    </style>
     <div id="gamesGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">
-      <div class="glass-card" style="padding:12px;text-align:center;cursor:pointer" onclick="openGame('flappy')">
-        <div style="font-size:32px;margin-bottom:4px">🐦</div>
-        <div style="font-size:12px;font-weight:700;color:var(--gold)">Flappy Bird</div>
-        <div style="font-size:9px;color:var(--text-muted)">Tap to fly +$0.020+</div>
+      <div class="game-card" onclick="openGame('flappy')">
+        <span class="game-badge">🐦 Fly</span>
+        <span class="game-icon">🐦</span>
+        <div class="game-name">Flappy Bird</div>
+        <div class="game-desc">Tap to fly through pipes</div>
+        <span class="game-reward">+$0.020</span>
       </div>
-      <div class="glass-card" style="padding:12px;text-align:center;cursor:pointer" onclick="openGame('snake')">
-        <div style="font-size:32px;margin-bottom:4px">🐍</div>
-        <div style="font-size:12px;font-weight:700;color:var(--gold)">Snake</div>
-        <div style="font-size:9px;color:var(--text-muted)">Eat & grow +$0.020+</div>
+      <div class="game-card" onclick="openGame('snake')">
+        <span class="game-badge">🐍 Classic</span>
+        <span class="game-icon">🐍</span>
+        <div class="game-name">Snake</div>
+        <div class="game-desc">Eat food, grow longer</div>
+        <span class="game-reward">+$0.020</span>
       </div>
-      <div class="glass-card" style="padding:12px;text-align:center;cursor:pointer" onclick="openGame('game2048')">
-        <div style="font-size:32px;margin-bottom:4px">🧩</div>
-        <div style="font-size:12px;font-weight:700;color:var(--gold)">2048</div>
-        <div style="font-size:9px;color:var(--text-muted)">Merge tiles +$0.025+</div>
+      <div class="game-card" onclick="openGame('game2048')">
+        <span class="game-badge">🧩 Puzzle</span>
+        <span class="game-icon">🧩</span>
+        <div class="game-name">2048</div>
+        <div class="game-desc">Merge tiles to 2048</div>
+        <span class="game-reward">+$0.025</span>
       </div>
-      <div class="glass-card" style="padding:12px;text-align:center;cursor:pointer" onclick="openGame('target')">
-        <div style="font-size:32px;margin-bottom:4px">🎯</div>
-        <div style="font-size:12px;font-weight:700;color:var(--gold)">Target Rush</div>
-        <div style="font-size:9px;color:var(--text-muted)">Click targets +$0.015+</div>
+      <div class="game-card" onclick="openGame('target')">
+        <span class="game-badge">🎯 Fast</span>
+        <span class="game-icon">🎯</span>
+        <div class="game-name">Target Rush</div>
+        <div class="game-desc">Click targets quickly</div>
+        <span class="game-reward">+$0.015</span>
       </div>
-      <div class="glass-card" style="padding:12px;text-align:center;cursor:pointer" onclick="openGame('color')">
-        <div style="font-size:32px;margin-bottom:4px">🎨</div>
-        <div style="font-size:12px;font-weight:700;color:var(--gold)">Color Clash</div>
-        <div style="font-size:9px;color:var(--text-muted)">Match the color +$0.015+</div>
+      <div class="game-card" onclick="openGame('color')">
+        <span class="game-badge">🎨 Brain</span>
+        <span class="game-icon">🎨</span>
+        <div class="game-name">Color Clash</div>
+        <div class="game-desc">Match text to color</div>
+        <span class="game-reward">+$0.015</span>
       </div>
-      <div class="glass-card" style="padding:12px;text-align:center;cursor:pointer" onclick="openGame('memory')">
-        <div style="font-size:32px;margin-bottom:4px">🧠</div>
-        <div style="font-size:12px;font-weight:700;color:var(--gold)">Memory Match</div>
-        <div style="font-size:9px;color:var(--text-muted)">Match pairs +$0.020+</div>
+      <div class="game-card" onclick="openGame('memory')">
+        <span class="game-badge">🧠 Pairs</span>
+        <span class="game-icon">🧠</span>
+        <div class="game-name">Memory Match</div>
+        <div class="game-desc">Match all 6 pairs</div>
+        <span class="game-reward">+$0.020</span>
       </div>
     </div>
     <!-- Game Modal -->
