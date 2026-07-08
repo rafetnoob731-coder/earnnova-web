@@ -482,7 +482,16 @@ function openGame(gameId) {
   var content = document.getElementById('gameModalContent');
   if (!modal || !content || !EN_GAMES[gameId]) return;
   var game = EN_GAMES[gameId];
+  // Save current game ID for restart
+  content.dataset.gameId = gameId;
   game.start(content);
+  // Add restart + close buttons
+  var btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:6px;margin-top:8px';
+  btnRow.innerHTML = 
+    '<button onclick="EN_GAMES[document.getElementById(\'gameModalContent\').dataset.gameId].start(document.getElementById(\'gameModalContent\'))" style="flex:1;padding:8px;border-radius:8px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--emerald);font-size:12px;font-weight:600;cursor:pointer">🔄 Play Again</button>' +
+    '<button onclick="closeGame()" style="flex:1;padding:8px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:var(--text-muted);font-size:12px;cursor:pointer">✕ Close</button>';
+  content.appendChild(btnRow);
   modal.classList.add('show');
 }
 function closeGame() {
