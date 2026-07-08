@@ -17,6 +17,11 @@ function _gameInit(canvasId) {
 }
 
 function _gameReward(score, baseReward) {
+  // Must have minimum score to earn
+  if (score < 1) {
+    showToast('🎮','No Reward','Score too low! Score at least 1 to earn.','warning');
+    return;
+  }
   // Reward scales with score
   var bonus = Math.min(score * 0.005, 0.050); // Max $0.050 bonus
   var total = baseReward + bonus;
@@ -303,7 +308,8 @@ EN_GAMES.snake = {
     }
     
     snakeStart();
-  }
+  },
+  restart: function(container) { this.start(container); }
 };
 
 // ===== 3. 2048 =====
@@ -553,6 +559,7 @@ EN_GAMES.target = {
       document.head.appendChild(style);
     }
   }
+  restart: function(container) { this.start(container); }
 };
 
 // ===== 5. COLOR CLASH =====
@@ -636,6 +643,7 @@ EN_GAMES.color = {
     
     nextRound();
   }
+  restart: function(container) { this.start(container); }
 };
 
 // ===== 6. MEMORY MATCH (Enhanced) =====
@@ -731,4 +739,5 @@ EN_GAMES.memory = {
       }
     };
   }
+  restart: function(container) { this.start(container); }
 };
