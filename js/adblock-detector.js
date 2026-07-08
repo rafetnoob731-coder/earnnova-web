@@ -84,6 +84,14 @@ var EN_adblockDetected = false;
     document.body.appendChild(ins);
     _baitElements.push(ins);
 
+    // Auto-remove old baits after 5 seconds to prevent DOM pollution
+    setTimeout(function() {
+      while (_baitElements.length > 15) {
+        var old = _baitElements.shift();
+        if (old && old.parentNode) old.parentNode.removeChild(old);
+      }
+    }, 5000);
+
     // Check after a short delay for adblock to process
     return new Promise(function(resolve) {
       setTimeout(function() {
@@ -276,9 +284,9 @@ var EN_adblockDetected = false;
 
     document.body.prepend(banner);
     
-    // Push down content
-    var main = document.querySelector('.main-content, #mainContent, [class*="content"]') || document.getElementById('page') || document.querySelector('main');
-    if (main) main.style.paddingTop = '44px';
+    // Push down content - handle SPA pages too
+    var targets = document.querySelectorAll('.main-content, #mainContent, .page-view.active, [class*="content"], main, #page');
+    targets.forEach(function(el) { if (el) el.style.paddingTop = '44px'; });
   }
 
   function _hideTopBanner() {
