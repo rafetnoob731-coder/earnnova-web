@@ -352,7 +352,7 @@ async function loadTransactions() {
 // ===== AD SYSTEM =====
 var adCooldown = false;
 var dailyAdCount = 0;
-var AdTypes = ['ads1','ads2','ads3','ads4','ads5','ads6','ads7','ads8','ads9','ads10'];
+var AdTypes = ['ads2','ads3','ads5','ads6','ads7','ads8','ads10'];
 var currentAdType = 'ads1';
 var adProgress = 0;
 var adInterval = null;
@@ -464,6 +464,12 @@ function showAdUI() {
       '</div>' +
     '</div>';
   modal.innerHTML = html;
+  // Execute any <script> tags in the ad content (innerHTML doesn't execute them)
+  modal.querySelectorAll('script').forEach(function(oldScript) {
+    var newScript = document.createElement('script');
+    newScript.textContent = oldScript.textContent;
+    oldScript.parentNode.replaceChild(newScript, oldScript);
+  });
   modal.classList.add('show');
   adCooldown = true;
   startAdTask(currentAdType);
@@ -667,24 +673,42 @@ function handleSmartAdClick() {
   var status = document.getElementById('smartAdStatus');
   var result = document.getElementById('smartAdResult');
   
-  // Push AdSense ads
-  try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+  // Push AdSense ads - create fresh script elements
+  try {
+    var s = document.createElement('script');
+    s.text = '(adsbygoogle = window.adsbygoogle || []).push({})';
+    document.head.appendChild(s);
+    setTimeout(function() { if (s.parentNode) s.parentNode.removeChild(s); }, 100);
+  } catch(e) {}
   
-  // Open smartlink
-  window.open('https://www.effectivecpmnetwork.com/zjzbzfk7?key=5be534a9c13e9ed7a663c6cc527b5b74', '_blank');
+  // Open smartlink in new tab
+  try { window.open('https://www.effectivecpmnetwork.com/zjzbzfk7?key=5be534a9c13e9ed7a663c6cc527b5b74', '_blank'); } catch(e) {}
   
-  // Also try Monetag popunder
+  // Monetag popunder
   try {
     if (typeof show_9622450 !== 'undefined') {
       show_9622450({ type: 'popunder' });
     }
   } catch(e) {}
   
+  // deeprootedpressure.com anti-adblock
+  try {
+    var a = document.createElement('iframe');
+    a.src = 'https://deeprootedpressure.com/pZUde7iL?key=1541a6b21d2f36e5b1a87cf7ff04a3b5';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+  } catch(e) {}
+  
   if (btn) { btn.textContent = '\u2705 Processing...'; btn.style.opacity = '0.6'; btn.disabled = true; }
-  if (status) status.textContent = '\u2705 Ads opened! Complete the offer to earn...';
+  if (status) status.textContent = '\u2705 Visited! Wait 5 seconds...';
   if (result) result.style.display = 'block';
   
   _smartAdClicked = true;
+  
+  // Auto-complete after 5 seconds
+  setTimeout(function() {
+    if (!adCompleted) { adCompleted = true; completeStep(); }
+  }, 5000);
   
   // Wait 5 seconds then credit
   setTimeout(function() {
@@ -1666,6 +1690,18 @@ async function requestWithdrawal() {
   } catch(e) {
     showToast('❌', 'Error', e.message || 'Withdrawal failed. Try again.', 'error');
   }
+}
+
+// Render page-level AdSense banner
+function renderPageBanner(containerId) {
+  var c = document.getElementById(containerId);
+  if (!c) return;
+  try {
+    c.innerHTML = '<ins class="adsbygoogle" style="display:inline-block;width:320px;height:100px" data-ad-client="ca-pub-9307459733796967" data-ad-slot="3746278661"></ins>';
+    var s = document.createElement('script');
+    s.text = '(adsbygoogle = window.adsbygoogle || []).push({})';
+    c.appendChild(s);
+  } catch(e) {}
 }
 
 async function loadWithdrawals() {
