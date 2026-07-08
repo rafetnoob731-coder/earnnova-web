@@ -61,11 +61,17 @@ async function loadUserData(uid) {
     var doc = await fbTimeout(usersRef.doc(uid).get());
     if (doc.exists) {
       currentUserData = { id: uid, ...doc.data() };
-      // Check if user is banned
-      if (currentUserData.isActive === false) {
+      // Check if user is banned (skip for owner)
+      if (currentUserData.isActive === false && currentUser.email !== ADMIN_EMAIL) {
         showToast('🚫', 'Account Banned', 'Your account has been banned. Contact support.', 'error');
         setTimeout(function() { auth.signOut(); localStorage.clear(); window.location.href = 'login.html'; }, 2000);
         return;
+      }
+      // Auto-unban owner if somehow banned
+      if (currentUser.email === ADMIN_EMAIL && currentUserData.isActive === false) {
+        usersRef.doc(uid).update({ isActive: true });
+        currentUserData.isActive = true;
+        console.log('[OWNER] Auto-unban triggered');
       }
       localStorage.setItem('en_bal', String(currentUserData.balance || 0));
       localStorage.setItem('en_earned', String(currentUserData.totalEarned || 0));
