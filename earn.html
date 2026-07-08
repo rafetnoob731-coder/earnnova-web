@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>EARNNOVA -- Earn Money</title>
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dark-mode">
+
+<nav class="top-nav">
+  <div class="nav-inner">
+    <div class="nav-logo" onclick="location.href='dashboard.html'">EARNNOVA</div>
+    <div class="nav-right">
+      <div class="nav-balance" id="navBalance">$0.00</div>
+    </div>
+  </div>
+</nav>
+
+<nav class="bottom-nav">
+  <div class="nav-item" data-page="dashboard" onclick="location.href='dashboard.html'"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+  <div class="nav-item active" data-page="earn" onclick="location.href='earn.html'"><div class="nav-icon">📺</div><div class="nav-label">Earn</div></div>
+  <div class="nav-item" data-page="withdraw" onclick="location.href='withdraw.html'"><div class="nav-icon">💳</div><div class="nav-label">Cashout</div></div>
+  <div class="nav-item" data-page="referrals" onclick="location.href='referrals.html'"><div class="nav-icon">👥</div><div class="nav-label">Refer</div></div>
+  <div class="nav-item" data-page="profile" onclick="location.href='profile.html'"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+</nav>
+<div class="main-content" id="mainContent">
+  <!-- PAGE: EARN -->
+  <div class="page-view" id="pageEarn">
+    <div class="section-title" style="margin-top:0">📺 Watch & Earn</div>
+    <div class="section-subtitle">Earn up to $0.05 per ad • 100 ads daily • Smart Ads + Monetag</div>
+
+    <div class="glass-card text-center" style="padding:28px 16px;margin-top:12px">
+      <div style="font-size:48px;margin-bottom:8px">📺</div>
+      <div class="text-lg fw-700">Ready to Earn?</div>
+      <div class="text-sm text-muted mt-1">Each ad is just 60 seconds</div>
+      <div class="ad-progress" style="margin:16px 0 8px"><div class="ad-progress-fill" id="adProgress"></div></div>
+      <div class="text-xs text-muted mb-3" id="adCountdown">0 remaining</div>
+      <button class="btn-ad" onclick="watchAd()">
+        <i class="fas fa-play"></i> Watch Ad — Earn Now
+      </button>
+    </div>
+
+    <div class="glass-card">
+      <div class="fw-600 text-sm mb-3">📈 Today's Statistics</div>
+      <div style="display:flex;justify-content:space-around;text-align:center">
+        <div><div class="text-lg fw-800 text-gold" data-ad-count>0/30</div><div class="text-xs text-muted mt-1">Ads Watched</div></div>
+        <div><div class="text-lg fw-800 text-gold" id="todayEarnings">$0.00</div><div class="text-xs text-muted mt-1">Earned Today</div></div>
+        <div><div class="text-lg fw-800 text-emerald" data-watched>0</div><div class="text-xs text-muted mt-1">All Time</div></div>
+      </div>
+    </div>
+
+    <!-- POPULAR GAMES SECTION -->
+    <div class="section-title" style="margin-top:16px">🎮 Popular Games</div>
+    <div class="text-sm text-muted mb-3">Play games, earn rewards! Each game shows an ad and rewards based on your score.</div>
+    <div id="gamesGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">
+      <div class="glass-card" style="padding:12px;text-align:center;cursor:pointer" onclick="openGame('flappy')">
+        <div style="font-size:32px;margin-bottom:4px">🐦</div>
+        <div style="font-size:12px;font-weight:700;color:var(--gold)">Flappy Bird</div>
+        <div style="font-size:9px;color:var(--text-muted)">Tap to fly +$0.020+</div>
+      </div>
+      <div class="glass-card" style="padding:12px;text-align:center;cursor:pointer" onclick="openGame('snake')">
+        <div style="font-size:32px;margin-bottom:4px">🐍</div>
+        <div style="font-size:12px;font-weight:700;color:var(--gold)">Snake</div>
+        <div style="font-size:9px;color:var(--text-muted)">Eat & grow +$0.020+</div>
+      </div>
+      <div class="glass-card" style="padding:12px;text-align:center;cursor:pointer" onclick="openGame('game2048')">
+        <div style="font-size:32px;margin-bottom:4px">🧩</div>
+        <div style="font-size:12px;font-weight:700;color:var(--gold)">2048</div>
+        <div style="font-size:9px;color:var(--text-muted)">Merge tiles +$0.025+</div>
+      </div>
+      <div class="glass-card" style="padding:12px;text-align:center;cursor:pointer" onclick="openGame('target')">
+        <div style="font-size:32px;margin-bottom:4px">🎯</div>
+        <div style="font-size:12px;font-weight:700;color:var(--gold)">Target Rush</div>
+        <div style="font-size:9px;color:var(--text-muted)">Click targets +$0.015+</div>
+      </div>
+      <div class="glass-card" style="padding:12px;text-align:center;cursor:pointer" onclick="openGame('color')">
+        <div style="font-size:32px;margin-bottom:4px">🎨</div>
+        <div style="font-size:12px;font-weight:700;color:var(--gold)">Color Clash</div>
+        <div style="font-size:9px;color:var(--text-muted)">Match the color +$0.015+</div>
+      </div>
+      <div class="glass-card" style="padding:12px;text-align:center;cursor:pointer" onclick="openGame('memory')">
+        <div style="font-size:32px;margin-bottom:4px">🧠</div>
+        <div style="font-size:12px;font-weight:700;color:var(--gold)">Memory Match</div>
+        <div style="font-size:9px;color:var(--text-muted)">Match pairs +$0.020+</div>
+      </div>
+    </div>
+    <!-- Game Modal -->
+    <div class="modal-overlay" id="gameModal" onclick="if(event.target===this)closeGame()">
+      <div class="modal-content" style="max-width:380px;padding:16px;border-radius:16px">
+        <div id="gameModalContent"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<button class="fab" onclick="location.href='earn.html'" title="Watch Ad">📺</button>
+<div id="toast" class="toast"></div>
+<div class="modal-overlay" id="userDetailModal" onclick="if(event.target===this)this.classList.remove('show')"><div class="modal-content" style="max-width:380px;padding:16px;border-radius:16px" id="userDetailContent"></div></div>
+<div class="modal-overlay" id="adModal" onclick="if(event.target===this)closeAd()"><div class="ad-modal-content" id="adModalContent"></div></div>
+
+<script>
+var EN_PAGE = 'earn';
+function navigate(page) {
+  if (page === 'admin') { document.getElementById('adminPanel')?.classList.add('show'); return; }
+  location.href = page + '.html';
+}
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.highperformanceformat.com/679c41f5cd1133dfcfb8ddd3254605d4/invoke.js"></script>
+<script src="https://www.highperformanceformat.com/11127fe81ff9922c5ece58925c849fd8/invoke.js"></script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9307459733796967" crossorigin="anonymous"></script>
+<script src="https://quge5.com/88/tag.min.js" data-zone="255448" async data-cfasync="false"></script>
+<script src="//libtl.com/sdk.js" data-zone="9622450" data-sdk="show_9622450"></script>
+<script src="https://pl29828447.effectivecpmnetwork.com/fc/ac/01/fcac01bcf8a7bc1e80bbba3ba4a24fed.js"></script>
+<script src="https://pl29828442.effectivecpmnetwork.com/2e/83/ea/2e83eab240b4afc016ede828af8a897a.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/app.js"></script>
+<script src="js/ads.js"></script>
+<script src="js/games.js"></script>
+<script src="js/adblock-detector.js"></script>
+</body>
+</html>
