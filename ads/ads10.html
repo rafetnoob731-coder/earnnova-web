@@ -2,41 +2,75 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>Mega Quiz | EARNNOVA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🧠 ADS10 Mega Quiz | EARN NOVA</title>
+<meta name="description" content="Answer 50 quiz questions and earn rewards!">
+<meta name="theme-color" content="#0A0E1A">
+<link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0F172A;--bg2:#0A0E1A;--card:rgba(255,255,255,0.03);--gold:#d4af37;--emerald:#10B981;--text:#F0F0F4;--text-muted:rgba(240,240,244,0.4);--font:'Segoe UI',system-ui,sans-serif;--radius:12px}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
-.ad-header{display:flex;align-items:center;padding:10px 14px;gap:10px;background:rgba(15,23,42,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.04);position:sticky;top:0;z-index:100}
-.ad-header .back{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:0.2s;text-decoration:none;color:var(--text-muted)}
-.ad-header .back:hover{background:rgba(255,255,255,0.08)}
-.ad-header .title{flex:1;font-size:13px;font-weight:700;color:var(--gold)}
-.ad-header .reward-badge{padding:4px 10px;border-radius:6px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.12);font-size:11px;font-weight:700;color:var(--emerald)}
-.ad-body{flex:1;display:flex;flex-direction:column;align-items:center;padding:14px;position:relative}
-.ad-content-wrap{width:100%;max-width:400px}
-.ad-timer{text-align:center;padding:10px 0}
-.ad-timer .timer-circle{width:56px;height:56px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;font-family:monospace;position:relative}
-.ad-timer .timer-circle svg{position:absolute;top:0;left:0;width:56px;height:56px;transform:rotate(-90deg)}
-.ad-timer .timer-circle svg circle{fill:none;stroke-width:3;stroke:rgba(255,255,255,0.06)}
-.ad-timer .timer-circle svg circle.progress{stroke:var(--gold);stroke-dasharray:157;stroke-dashoffset:0;transition:stroke-dashoffset 0.3s linear}
-.ad-progress{height:4px;border-radius:2px;background:rgba(255,255,255,0.04);margin:8px 0;overflow:hidden}
-.ad-progress .fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--emerald));width:0%;transition:width 0.3s linear}
-.ad-status{text-align:center;font-size:13px;color:var(--text-muted);margin:8px 0;min-height:24px}
-.ad-footer{padding:12px 14px;border-top:1px solid rgba(255,255,255,0.04);background:rgba(15,23,42,0.8);backdrop-filter:blur(12px);display:flex;gap:8px;justify-content:center}
-.ad-footer button{flex:1;padding:10px;border-radius:8px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:0.2s}
-.btn-primary{background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A}
-.btn-primary:hover{opacity:0.9;transform:translateY(-1px)}
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0A0E1A;--card:rgba(15,23,42,0.7);--gold:#d4af37;--emerald:#10B981;--amber:#F59E0B;--text:#e2e8f0;--text-muted:#64748b;--danger:#EF4444}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(ellipse at 20% 50%,rgba(212,175,55,0.03) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(16,185,129,0.02) 0%,transparent 60%);pointer-events:none;z-index:0}
+.container{max-width:480px;margin:0 auto;padding:12px;position:relative;z-index:1}
+.ad-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(15,23,42,0.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:12px;border:1px solid rgba(212,175,55,0.08);margin-bottom:10px}
+.ad-header .title{font-size:14px;font-weight:700;color:var(--gold);letter-spacing:0.02em}
+.ad-header .badge{font-size:10px;padding:3px 8px;border-radius:20px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.15);color:var(--emerald)}
+.ad-progress{width:100%;height:4px;background:rgba(255,255,255,0.04);border-radius:4px;overflow:hidden;margin-bottom:8px}
+.ad-progress-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--emerald));border-radius:4px;transition:width 0.3s ease;width:0%}
+.ad-content{width:100%;border-radius:12px;background:rgba(16,185,129,0.03);border:1px solid rgba(16,185,129,0.08);padding:12px;margin-bottom:8px;min-height:200px}
+.ad-timer{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--text-muted);margin-bottom:6px}
+.ad-timer circle{transition:stroke-dashoffset 0.5s linear}
+.ad-status{text-align:center;font-size:12px;color:var(--text-muted);padding:6px;margin-bottom:6px}
+.ad-footer{display:flex;gap:8px;margin-top:6px}
+.ad-footer button{flex:1;padding:10px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btn-success{background:linear-gradient(135deg,var(--emerald),#059669);color:#fff}
+.btn-success:hover{opacity:0.9;transform:translateY(-1px)}
 .btn-secondary{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:var(--text-muted)}
-.btn-secondary:hover{border-color:rgba(255,255,255,0.1)}
-.btn-success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.15);color:var(--emerald)}
-.btn-success:hover{background:rgba(16,185,129,0.15)}
-.btn-complete{background:var(--emerald);color:#fff;font-weight:700}
-.btn-complete:hover{opacity:0.9}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:8px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.15);font-size:12px;font-weight:600;color:var(--emerald);backdrop-filter:blur(16px);z-index:999;display:none;white-space:nowrap;animation:toastIn 0.3s ease}
-@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.btn-secondary:hover{background:rgba(255,255,255,0.08)}
 .hidden{display:none!important}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:10px;background:rgba(15,23,42,0.9);backdrop-filter:blur(12px);border:1px solid rgba(212,175,55,0.1);color:var(--text);font-size:12px;font-weight:500;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;text-align:center}
+.toast.show{opacity:1}
+.reward-badge{display:inline-block;padding:2px 8px;border-radius:20px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.12);color:var(--gold);font-size:10px;font-weight:600}
+.quiz-btn{padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:var(--text);font-size:12px;cursor:pointer;transition:all 0.2s;width:100%;margin:3px 0;text-align:left}
+.quiz-btn:hover{background:rgba(212,175,55,0.06);border-color:rgba(212,175,55,0.1)}
+.quiz-btn.correct{background:rgba(16,185,129,0.1);border-color:var(--emerald);color:var(--emerald)}
+.quiz-btn.wrong{background:rgba(239,68,68,0.1);border-color:var(--danger);color:var(--danger)}
+.ad-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.ad-banner{width:100%;min-height:60px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.ad-label{font-size:8px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);text-align:center;margin:2px 0}
+.network-tag{font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.08);color:var(--gold);display:inline-block;margin:2px}
 </style>
+
+<!-- ===== HIGH AD NETWORKS ===== -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://effectivecpm.com/display/network.js?pub=effectivecpm_pub_id"></script>
+<script type="text/javascript" src="https://highperformance.com/display/network.js?pub=highperformance_pub_id"></script>
+<script type="text/javascript" src="https://adsterra.com/display/network.js?pub=adsterra_pub_id"></script>
+<script src="https://cdn.monetag.com/sdk.js?pub=monetag_pub_id"></script>
+<script>
+// ===== AD NETWORK FALLBACKS =====
+function loadHighNetworkAds() {
+  try {
+    // AdSense
+    if (typeof adsbygoogle !== 'undefined') {
+      try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+    }
+  } catch(e) { console.log('Ad networks loading...'); }
+}
+
+// Monetag high-CPU ad
+function show_9622450() {
+  try {
+    if (typeof window.monetag !== 'undefined' && window.monetag.show) {
+      window.monetag.show({zone: '9622450'});
+    }
+  } catch(e) {}
+}
+
+setTimeout(loadHighNetworkAds, 1000);
+</script>
 </head>
 <body>
 <div class="ad-header">
@@ -161,6 +195,28 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   </div>
 </div>
 
+    <!-- HIGH ADS BANNER BOTTOM -->
+    <div style="margin-top:8px">
+      <div class="ad-label">— More Ads —</div>
+      <div class="ad-grid">
+        <div class="ad-banner" style="min-height:60px" id="adBannerLeft">
+          <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXX" data-ad-format="auto"></ins>
+          <div style="font-size:8px;color:var(--text-muted)">AdSense</div>
+        </div>
+        <div class="ad-banner" style="min-height:60px" id="adBannerRight">
+          <div style="font-size:8px;color:var(--text-muted)">Monetag • EffectiveCPM</div>
+          <script>
+          try {
+            if (typeof window.monetag !== 'undefined' && window.monetag.show) {
+              window.monetag.show({zone: '9622450'});
+            }
+          } catch(e) {}
+          </script>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <div class="ad-footer" id="adFooter">
   <button class="btn-success hidden" id="completeBtn" onclick="completeAdTask()">✅ Complete & Earn</button>
   <button class="btn-secondary" id="skipBtn" onclick="skipAd()">✕ Skip</button>
@@ -173,7 +229,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 var urlParams = new URLSearchParams(window.location.search);
 var token = urlParams.get('token') || '';
 var userId = urlParams.get('uid') || '';
-var adReward = 0.1;
+var adReward = 0.200;
+var HIGH_ADS_REWARD = 0.200;
 var adDuration = 60;
 var timerSeconds = adDuration;
 var adCompleted = false;
