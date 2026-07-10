@@ -2350,6 +2350,56 @@ function verifyOTPCode(code, callback) {
     });
 }
 
+
+// ===== SHORTLINK SYSTEM =====
+var VPLLINK_API = "a6e0be57ade7b64c335c47b1e46ae6d9b085257f";
+var ANTI_BYPASS = "1afc548813e7d554c47f8aa940e974b14662c247af4cdc353f31a205e0fa78b1";
+
+function createShortLink(url, alias) {
+  var apiUrl = 'https://vplink.in/api?api=' + VPLLINK_API + '&url=' + encodeURIComponent(url);
+  if (alias) apiUrl += '&alias=' + encodeURIComponent(alias);
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', apiUrl, true);
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        try { var d = JSON.parse(xhr.responseText); console.log('🔗 Shortlink:', d.shorturl || d.url); } catch(e) {}
+      }
+    };
+    xhr.send();
+  } catch(e) {}
+}
+
+function loadLinkvertise() {
+  var s = document.createElement('script');
+  s.src = 'https://publisher.linkvertise.com/cdn/linkvertise.js';
+  s.onload = function() { try { linkvertise(1424242, {whitelist:[], blacklist:[""]}); } catch(e) {} };
+  document.head.appendChild(s);
+}
+
+function openLinkvertise(url) {
+  var gateUrl = 'https://link-to.net/1424242/' + Math.random()*1000 + '/?href=' + encodeURIComponent(url);
+  window.open(gateUrl, '_blank');
+}
+
+function getAntiBypassToken() { return ANTI_BYPASS; }
+
+function addAntiBypass(url) {
+  var sep = url.includes('?') ? '&' : '?';
+  return url + sep + 'ab_token=' + ANTI_BYPASS;
+}
+
+function getEarnLink(type) {
+  var baseUrl = window.location.origin;
+  var earnUrl = baseUrl + '/earn.html?ad=' + type + '&uid=' + (currentUser ? currentUser.uid : 'guest');
+  return addAntiBypass(earnUrl);
+}
+
+// Load linkvertise on earn page
+if (window.location.pathname.includes('earn') || window.location.pathname.includes('home')) {
+  setTimeout(loadLinkvertise, 2000);
+}
+
 function logout() {
   if (auth) {
     auth.signOut().then(function() {
