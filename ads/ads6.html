@@ -65,8 +65,92 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <div style="margin-top:6px;font-size:12px;color:var(--gold)" id="wheelResult">Tap to spin!</div>
 </div>
 <script>
-(function(){var ca=document.getElementById('wheelCanvas');var cx=ca.getContext('2d');var angle=0;// Random rewards each spin
-  var secs=['$0.010','$0.020','$0.030','$0.050','$0.080','$0.100','$0.150','$0.200'];var sp=false;function drawWheel(){cx.clearRect(0,0,200,200);for(var i=0;i<6;i++){cx.beginPath();cx.moveTo(100,100);cx.arc(100,100,90,angle+i*Math.PI/3,angle+(i+1)*Math.PI/3);cx.fillStyle=i%2===0?'rgba(212,175,55,0.08)':'rgba(212,175,55,0.15)';cx.fill();cx.strokeStyle='rgba(212,175,55,0.2)';cx.lineWidth=1;cx.stroke();cx.save();cx.translate(100,100);cx.rotate(angle+i*Math.PI/3+Math.PI/6);cx.fillStyle='#d4af37';cx.font='9px sans-serif';cx.textAlign='center';cx.fillText(secs[i],0,40);cx.restore()}}drawWheel();var spinInt=null;window.spinWheel=function(){if(sp)return;sp=true;var spins=5+Math.random()*3;var totalAngle=spins*2*Math.PI;var dur=2000;var start=performance.now();function doSpin(now){var el=now-start;var p=Math.min(el/dur,1);var eased=1-Math.pow(1-p,3);var curAngle=angle+totalAngle*eased;angle=curAngle;drawWheel();if(p<1){requestAnimationFrame(doSpin)}else{sp=false;var winIdx=Math.floor(((angle%(2*Math.PI))/(2*Math.PI)*6))%6;var reward=parseFloat(secs[winIdx].replace('$',''));document.getElementById('wheelResult').textContent='🎉 You won $'+reward.toFixed(3)+'!';document.getElementById('adStatus').textContent='✅ Wheel: +$'+reward.toFixed(3);setTimeout(function(){adReward=reward;adCompleted=true;document.getElementById('completeBtn').classList.remove('hidden');document.getElementById('skipBtn').textContent='✕ Done'},1000)}}requestAnimationFrame(doSpin)};drawWheel()})();
+(function(){
+var ca=document.getElementById('wheelCanvas');
+var cx=ca.getContext('2d');
+var angle=0;
+var segments = 8;
+var sp=false;
+
+function genRewards() {
+  var r = [];
+  for (var i = 0; i < segments; i++) {
+    r.push(Math.random() * 0.240 + 0.010);
+  }
+  r.sort(function(a,b){return a-b});
+  for (var i = r.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = r[i]; r[i] = r[j]; r[j] = t;
+  }
+  return r;
+}
+
+var rewards = genRewards();
+
+function drawWheel(){
+  cx.clearRect(0,0,200,200);
+  for(var i=0;i<segments;i++){
+    cx.beginPath();
+    cx.moveTo(100,100);
+    cx.arc(100,100,90,angle+i*Math.PI/(segments/2),angle+(i+1)*Math.PI/(segments/2));
+    cx.fillStyle=i%2===0?'rgba(16,185,129,0.08)':'rgba(212,175,55,0.12)';
+    cx.fill();
+    cx.strokeStyle='rgba(212,175,55,0.15)';
+    cx.lineWidth=1;
+    cx.stroke();
+    cx.save();
+    cx.translate(100,100);
+    cx.rotate(angle+i*Math.PI/(segments/2)+Math.PI/segments);
+    cx.fillStyle='#d4af37';
+    cx.font='7px sans-serif';
+    cx.textAlign='center';
+    cx.fillText('$'+rewards[i].toFixed(3),0,40);
+    cx.restore();
+  }
+}
+drawWheel();
+
+window.spinWheel=function(){
+  if(sp) return;
+  sp=true;
+  rewards = genRewards();
+  drawWheel();
+  
+  var spins=5+Math.random()*4;
+  var totalAngle=spins*2*Math.PI;
+  var dur=2500;
+  var start=performance.now();
+  document.getElementById('spinBtn').disabled = true;
+  document.getElementById('wheelResult').textContent = '🎡 Spinning...';
+  
+  function doSpin(now){
+    var el=now-start;
+    var p=Math.min(el/dur,1);
+    var eased=1-Math.pow(1-p,3);
+    var curAngle=angle+totalAngle*eased;
+    angle=curAngle;
+    drawWheel();
+    if(p<1){
+      requestAnimationFrame(doSpin);
+    } else {
+      sp=false;
+      document.getElementById('spinBtn').disabled = false;
+      var winIdx=Math.floor(((angle%(2*Math.PI))/(2*Math.PI)*segments))%segments;
+      var reward=rewards[winIdx];
+      document.getElementById('wheelResult').innerHTML = '🎉 You won <strong style="color:#10B981">$' + reward.toFixed(3) + '</strong>!';
+      document.getElementById('adStatus').textContent = '✅ Wheel: +$' + reward.toFixed(3);
+      setTimeout(function(){
+        adReward = reward;
+        adCompleted = true;
+        document.getElementById('completeBtn').classList.remove('hidden');
+        document.getElementById('skipBtn').textContent = '✕ Done';
+      }, 1000);
+    }
+  }
+  requestAnimationFrame(doSpin);
+};
+drawWheel();
+})();
 </script>
 
     </div>
