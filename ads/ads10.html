@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Mega Quiz | EARNNOVA</title>
+<style>
+:root{--bg:#0F172A;--bg2:#0A0E1A;--card:rgba(255,255,255,0.03);--gold:#d4af37;--emerald:#10B981;--text:#F0F0F4;--text-muted:rgba(240,240,244,0.4);--font:'Segoe UI',system-ui,sans-serif;--radius:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+.ad-header{display:flex;align-items:center;padding:10px 14px;gap:10px;background:rgba(15,23,42,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.04);position:sticky;top:0;z-index:100}
+.ad-header .back{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:0.2s;text-decoration:none;color:var(--text-muted)}
+.ad-header .back:hover{background:rgba(255,255,255,0.08)}
+.ad-header .title{flex:1;font-size:13px;font-weight:700;color:var(--gold)}
+.ad-header .reward-badge{padding:4px 10px;border-radius:6px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.12);font-size:11px;font-weight:700;color:var(--emerald)}
+.ad-body{flex:1;display:flex;flex-direction:column;align-items:center;padding:14px;position:relative}
+.ad-content-wrap{width:100%;max-width:400px}
+.ad-timer{text-align:center;padding:10px 0}
+.ad-timer .timer-circle{width:56px;height:56px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;font-family:monospace;position:relative}
+.ad-timer .timer-circle svg{position:absolute;top:0;left:0;width:56px;height:56px;transform:rotate(-90deg)}
+.ad-timer .timer-circle svg circle{fill:none;stroke-width:3;stroke:rgba(255,255,255,0.06)}
+.ad-timer .timer-circle svg circle.progress{stroke:var(--gold);stroke-dasharray:157;stroke-dashoffset:0;transition:stroke-dashoffset 0.3s linear}
+.ad-progress{height:4px;border-radius:2px;background:rgba(255,255,255,0.04);margin:8px 0;overflow:hidden}
+.ad-progress .fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--emerald));width:0%;transition:width 0.3s linear}
+.ad-status{text-align:center;font-size:13px;color:var(--text-muted);margin:8px 0;min-height:24px}
+.ad-footer{padding:12px 14px;border-top:1px solid rgba(255,255,255,0.04);background:rgba(15,23,42,0.8);backdrop-filter:blur(12px);display:flex;gap:8px;justify-content:center}
+.ad-footer button{flex:1;padding:10px;border-radius:8px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:0.2s}
+.btn-primary{background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A}
+.btn-primary:hover{opacity:0.9;transform:translateY(-1px)}
+.btn-secondary{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:var(--text-muted)}
+.btn-secondary:hover{border-color:rgba(255,255,255,0.1)}
+.btn-success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.15);color:var(--emerald)}
+.btn-success:hover{background:rgba(16,185,129,0.15)}
+.btn-complete{background:var(--emerald);color:#fff;font-weight:700}
+.btn-complete:hover{opacity:0.9}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:8px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.15);font-size:12px;font-weight:600;color:var(--emerald);backdrop-filter:blur(16px);z-index:999;display:none;white-space:nowrap;animation:toastIn 0.3s ease}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="ad-header">
+  <a href="../earn.html" class="back">✕</a>
+  <span class="title">🏆 Mega Quiz</span>
+  <span class="reward-badge">+$0.1</span>
+</div>
+<div class="ad-body">
+  <div class="ad-content-wrap">
+    <div class="ad-timer">
+      <div class="timer-circle">
+        <svg viewBox="0 0 56 56"><circle cx="28" cy="28" r="25"/><circle class="progress" id="timerProgress" cx="28" cy="28" r="25"/></svg>
+        <span id="timerDisplay">60</span>
+      </div>
+    </div>
+    <div class="ad-progress"><div class="fill" id="progressFill"></div></div>
+    <div class="ad-status" id="adStatus">⏳ Ready...</div>
+    
+    <!-- AD CONTENT -->
+    <div id="adContent" style="width:100%;min-height:200px;border-radius:12px;background:var(--card);border:1px solid rgba(255,255,255,0.04);padding:12px;margin:8px 0;display:flex;align-items:center;justify-content:center;flex-direction:column">
+
+<div style="width:100%">
+<div style="font-size:14px;font-weight:700;color:var(--gold);text-align:center;margin-bottom:8px">🏆 MEGA QUIZ — 10 Mixed Questions!</div>
+<div id="megaContainer" style="width:100%;min-height:180px">
+<div id="megaQ" style="font-size:13px;color:var(--text);margin-bottom:8px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);text-align:center"></div>
+<div id="megaOpts" style="display:grid;grid-template-columns:1fr 1fr;gap:6px"></div>
+<div id="megaRes" style="text-align:center;margin-top:6px;font-size:12px;color:var(--text-muted)"></div>
+<div id="megaScore" style="text-align:center;font-size:11px;color:var(--gold);margin-top:4px"></div>
+</div>
+</div>
+<script>
+(function(){var mq=[{q:'What is the capital of France?',o:['London','Paris','Berlin','Madrid'],a:1},{q:'Which animal is known as the king of the jungle?',o:['Tiger','Elephant','Lion','Bear'],a:2},{q:'What color are bananas?',o:['Red','Blue','Yellow','Green'],a:2},{q:'How many days in a week?',o:['5','6','7','8'],a:2},{q:'Which is a programming language?',o:['Snake','Python','Turtle','Lizard'],a:1},{q:'What is 5x5?',o:['10','15','20','25'],a:3},{q:'Which planet is closest to the sun?',o:['Venus','Mercury','Earth','Mars'],a:1},{q:'What do bees produce?',o:['Milk','Honey','Sugar','Wax'],a:1},{q:'How many colors in a rainbow?',o:['5','6','7','8'],a:2},{q:'Which continent is the largest?',o:['Africa','Asia','Europe','America'],a:1}];var mi=0,ms=0;function showM(){if(mi>=mq.length){document.getElementById('megaRes').innerHTML='🏆 Mega Quiz done! Score: '+ms+'/10';document.getElementById('adStatus').textContent='✅ Mega Quiz: +$'+adReward.toFixed(3);return}var q=mq[mi];document.getElementById('megaQ').textContent=(mi+1)+'/10. '+q.q;var h='';for(var i=0;i<q.o.length;i++){h+='<button onclick="answerMega('+i+')" style="padding:8px;border-radius:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:var(--text);font-size:12px;cursor:pointer">'+q.o[i]+'</button>'}document.getElementById('megaOpts').innerHTML=h}window.answerMega=function(i){var q=mq[mi];if(i===q.a){ms++;document.getElementById('megaRes').innerHTML='✅ Correct!'}else{document.getElementById('megaRes').innerHTML='❌ Wrong! Answer: '+q.o[q.a]}mi++;document.getElementById('megaScore').textContent='Score: '+ms+'/10';setTimeout(showM,600)};showM()})();
+</script>
+
+    </div>
+  </div>
+</div>
+
+<div class="ad-footer" id="adFooter">
+  <button class="btn-success hidden" id="completeBtn" onclick="completeAdTask()">✅ Complete & Earn</button>
+  <button class="btn-secondary" id="skipBtn" onclick="skipAd()">✕ Skip</button>
+</div>
+
+<div class="toast" id="toastMsg"></div>
+
+<script>
+// ===== TOKEN & REWARD SYSTEM =====
+var urlParams = new URLSearchParams(window.location.search);
+var token = urlParams.get('token') || '';
+var userId = urlParams.get('uid') || '';
+var adReward = 0.1;
+var adDuration = 60;
+var timerSeconds = adDuration;
+var adCompleted = false;
+var timerInterval = null;
+var progressCircle = document.getElementById('timerProgress');
+var timerDisplay = document.getElementById('timerDisplay');
+var progressFill = document.getElementById('progressFill');
+
+function showToast(msg, type) {
+  var t = document.getElementById('toastMsg');
+  t.textContent = msg;
+  t.style.display = 'block';
+  t.style.background = type === 'error' ? 'rgba(239,68,68,0.12)' : type === 'success' ? 'rgba(16,185,129,0.12)' : 'rgba(212,175,55,0.12)';
+  t.style.borderColor = type === 'error' ? 'rgba(239,68,68,0.15)' : type === 'success' ? 'rgba(16,185,129,0.15)' : 'rgba(212,175,55,0.15)';
+  t.style.color = type === 'error' ? '#EF4444' : type === 'success' ? 'var(--emerald)' : 'var(--gold)';
+  setTimeout(function(){t.style.display='none'}, 3000);
+}
+
+function startTimer() {
+  timerSeconds = adDuration;
+  adCompleted = false;
+  document.getElementById('skipBtn').textContent = '⏳ Watching...';
+  document.getElementById('skipBtn').disabled = true;
+  document.getElementById('skipBtn').style.opacity = '0.5';
+  document.getElementById('adStatus').textContent = '⏳ Watching ad... ' + timerSeconds + 's';
+  
+  var total = adDuration;
+  var circumference = 157;
+  
+  timerInterval = setInterval(function() {
+    timerSeconds--;
+    if (timerSeconds <= 0) {
+      clearInterval(timerInterval);
+      timerSeconds = 0;
+      adCompleted = true;
+      document.getElementById('adStatus').textContent = '✅ Ad complete! Tap to earn +$' + adReward.toFixed(3);
+      document.getElementById('skipBtn').textContent = '✕ Close';
+      document.getElementById('skipBtn').disabled = false;
+      document.getElementById('skipBtn').style.opacity = '1';
+      document.getElementById('completeBtn').classList.remove('hidden');
+      return;
+    }
+    timerDisplay.textContent = timerSeconds;
+    var progress = (total - timerSeconds) / total;
+    progressCircle.style.strokeDashoffset = circumference * (1 - progress);
+    progressFill.style.width = (progress * 100) + '%';
+    document.getElementById('adStatus').textContent = '⏳ ' + timerSeconds + 's remaining...';
+  }, 1000);
+}
+
+function completeAdTask() {
+  if (!adCompleted) {
+    showToast('⏳ Please wait for the timer to finish', 'error');
+    return;
+  }
+  
+  // Credit reward
+  var bal = parseFloat(localStorage.getItem('en_bal') || '0');
+  bal += adReward;
+  localStorage.setItem('en_bal', String(bal));
+  
+  var earned = parseFloat(localStorage.getItem('en_earned') || '0');
+  earned += adReward;
+  localStorage.setItem('en_earned', String(earned));
+  localStorage.setItem('en_today', String((parseFloat(localStorage.getItem('en_today')||'0') + adReward)));
+  localStorage.setItem('en_watched', String((parseInt(localStorage.getItem('en_watched')||'0') + 1)));
+  
+  document.getElementById('adStatus').textContent = '🎉 +$' + adReward.toFixed(3) + ' credited!';
+  document.getElementById('completeBtn').textContent = '✅ Done! +$' + adReward.toFixed(3);
+  document.getElementById('completeBtn').disabled = true;
+  showToast('🎉 +$' + adReward.toFixed(3) + ' earned!', 'success');
+  
+  // Update Firestore via token if available
+  if (token) {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', 'https://earnnova-web.vercel.app/api/credit', true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.send(JSON.stringify({token: token, reward: adReward, type: 'ads10'}));
+    } catch(e) {}
+  }
+  
+  // Update UI
+  setTimeout(function() { window.location.href = '../earn.html'; }, 2000);
+}
+
+function skipAd() {
+  if (!adCompleted && timerSeconds > 0 && timerSeconds < adDuration) {
+    showToast('⏳ Ad not complete yet! Wait ' + timerSeconds + 's', 'error');
+    return;
+  }
+  window.location.href = '../earn.html';
+}
+
+// Initialize - show start button
+document.getElementById('adStatus').textContent = '🎬 Tap Start to begin';
+document.getElementById('skipBtn').textContent = '✕ Cancel';
+document.getElementById('skipBtn').onclick = function() { window.location.href = '../earn.html'; };
+
+// Auto-start timer
+document.getElementById('adStatus').textContent = '⏳ Loading...';
+setTimeout(startTimer, 1000);
+
+console.log('EARNNOVA Ad | Type: ads10 | Reward: $' + adReward + ' | Token: ' + token);
+</script>
+</body>
+</html>
