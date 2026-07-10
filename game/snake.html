@@ -100,7 +100,10 @@ function loadUserData(uid) {
 }
 
 function updateUI() {
-  var bal = currentUserData?.balance || 0;
+  var bal = parseFloat(localStorage.getItem('en_bal') || '0');
+  if (currentUserData && currentUserData.balance !== undefined) {
+    bal = currentUserData.balance;
+  }
   document.getElementById('balanceDisplay').textContent = '$' + bal.toFixed(2);
   document.getElementById('gamesPlayed').textContent = currentUserData?.gamesPlayed || 0;
 }
@@ -301,6 +304,41 @@ snakeLoop(snake.lastMove);
 }
 
 function rewardGame(score) {
+  // 🎉 Celebration animation
+  triggerCelebration(score);
+}
+
+function triggerCelebration(score) {
+  if (score < 1) return;
+  var emojis = ['🎉','🎊','✨','⭐','💰','🌟','💫','🏆'];
+  for (var i = 0; i < 30; i++) {
+    (function(idx) {
+      setTimeout(function() {
+        var el = document.createElement('div');
+        el.style.cssText = 'position:fixed;font-size:' + (12+Math.random()*16) + 'px;pointer-events:none;z-index:99999;left:' + (10+Math.random()*80) + '%;top:' + (40+Math.random()*20) + '%;opacity:1;transform:scale(1);transition:all 0.8s ease-out';
+        el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        document.body.appendChild(el);
+        requestAnimationFrame(function() {
+          el.style.transform = 'translateY(-' + (80+Math.random()*120) + 'px) scale(0.2)';
+          el.style.opacity = '0';
+        });
+        setTimeout(function() { if (el.parentNode) el.remove(); }, 900);
+      }, idx * 60);
+    })(i);
+  }
+  
+  // Flash effect on page
+  var flash = document.createElement('div');
+  flash.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle,rgba(212,175,55,0.1),transparent 70%);pointer-events:none;z-index:99998;opacity:1;transition:opacity 0.8s ease-out';
+  document.body.appendChild(flash);
+  requestAnimationFrame(function() { flash.style.opacity = '0'; });
+  setTimeout(function() { if (flash.parentNode) flash.remove(); }, 900);
+  
+  console.log('🎉 Celebration! Score: ' + score);
+}
+
+function 
+
   if (score < 1) {
     document.getElementById('gameStatus').innerHTML = 'Score: <span id="scoreDisplay">0</span> | ❌ No reward (score too low)';
     return;
