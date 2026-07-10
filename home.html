@@ -207,44 +207,44 @@ setTimeout(function() {
       .game-desc{font-size:9px;color:var(--text-muted)}
       .game-reward{position:absolute;top:6px;right:6px;padding:2px 8px;border-radius:6px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.15);font-size:8px;font-weight:700;color:var(--emerald)}
       .game-badge{position:absolute;top:6px;left:6px;padding:2px 6px;border-radius:4px;background:rgba(212,175,55,0.1);font-size:7px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.5px}
-    </style>
+    </style><a href="game/index.html" style="display:block;padding:10px;border-radius:10px;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.08);text-align:center;font-size:12px;font-weight:600;color:var(--gold);text-decoration:none;margin-bottom:12px">🎮 Open Game Lobby →</a>
     <div id="gamesGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">
-      <div class="game-card" onclick="openGame('flappy')">
+      <div class="game-card" onclick="location.href='game/flappy.html'">
         <span class="game-badge">🐦 Fly</span>
         <span class="game-icon">🐦</span>
         <div class="game-name">Flappy Bird</div>
         <div class="game-desc">Tap to fly through pipes</div>
         <span class="game-reward">+$0.020</span>
       </div>
-      <div class="game-card" onclick="openGame('snake')">
+      <div class="game-card" onclick="location.href='game/snake.html'">
         <span class="game-badge">🐍 Classic</span>
         <span class="game-icon">🐍</span>
         <div class="game-name">Snake</div>
         <div class="game-desc">Eat food, grow longer</div>
         <span class="game-reward">+$0.020</span>
       </div>
-      <div class="game-card" onclick="openGame('game2048')">
+      <div class="game-card" onclick="location.href='game/game2048.html'">
         <span class="game-badge">🧩 Puzzle</span>
         <span class="game-icon">🧩</span>
         <div class="game-name">2048</div>
         <div class="game-desc">Merge tiles to 2048</div>
         <span class="game-reward">+$0.025</span>
       </div>
-      <div class="game-card" onclick="openGame('target')">
+      <div class="game-card" onclick="location.href='game/target.html'">
         <span class="game-badge">🎯 Fast</span>
         <span class="game-icon">🎯</span>
         <div class="game-name">Target Rush</div>
         <div class="game-desc">Click targets quickly</div>
         <span class="game-reward">+$0.015</span>
       </div>
-      <div class="game-card" onclick="openGame('color')">
+      <div class="game-card" onclick="location.href='game/color.html'">
         <span class="game-badge">🎨 Brain</span>
         <span class="game-icon">🎨</span>
         <div class="game-name">Color Clash</div>
         <div class="game-desc">Match text to color</div>
         <span class="game-reward">+$0.015</span>
       </div>
-      <div class="game-card" onclick="openGame('memory')">
+      <div class="game-card" onclick="location.href='game/memory.html'">
         <span class="game-badge">🧠 Pairs</span>
         <span class="game-icon">🧠</span>
         <div class="game-name">Memory Match</div>
