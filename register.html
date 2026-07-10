@@ -579,28 +579,30 @@ function backToForm() {
     }
   }
   
-  // If verify flag is in URL, show the OTP step (OTP is NOT in URL for security)
-  if (verifyFlag === '1' || verifyCode === 'true' || params.get('verify') === '') {
-    // Just a flag — OTP was sent to email. User must type it manually.
-    var storedEmail = emailFromUrl || localStorage.getItem('en_otp_email') || '';
-    var storedUserId = localStorage.getItem('en_otp_userId') || '';
-    var storedName = localStorage.getItem('en_otp_name') || '';
-    
-    if (storedEmail) {
-      regEmail = storedEmail;
-      regUserId = storedUserId;
-      regName = storedName;
-      
-      document.getElementById('otpEmailDisplay').textContent = regEmail;
-      showStep('otp');
-      showAlert('📨 OTP sent to ' + regEmail + '. Enter the 6-digit code below.', 'info', 'otpAlert');
-      document.getElementById('otp1')?.focus();
+  // Handle ?auth=verify.html&send=otp
+  if (params.get('auth') === 'verify.html' && params.get('send') === 'otp') {
+    var e = params.get('email') || localStorage.getItem('en_otp_email') || '';
+    var u = params.get('uid') || localStorage.getItem('en_otp_userId') || '';
+    var n = params.get('name') || localStorage.getItem('en_otp_name') || '';
+    var r = params.get('ref') || localStorage.getItem('en_otp_ref') || '';
+    var isNew = params.get('new') === '1';
+    if (e) {
+      var url = 'verify.html?email=' + encodeURIComponent(e) + '&uid=' + encodeURIComponent(u) + '&name=' + encodeURIComponent(n) + '&new=1';
+      if (r) url += '&ref=' + encodeURIComponent(r);
+      window.location.href = url;
     } else {
-      showAlert('📨 OTP sent! Please enter your email to complete verification.', 'info');
-      document.getElementById('regEmail').focus();
+      showAlert('📨 OTP sent! Check your email.', 'info');
     }
   }
-  
+  // If verify flag, redirect to verify.html
+  if (verifyFlag === '1' || verifyFlag === 'true' || params.get('verify') === '') {
+    var e = emailFromUrl || localStorage.getItem('en_otp_email') || '';
+    var u = localStorage.getItem('en_otp_userId') || '';
+    var n = localStorage.getItem('en_otp_name') || '';
+    if (e) { window.location.href = 'verify.html?email=' + encodeURIComponent(e) + '&uid=' + encodeURIComponent(u) + '&name=' + encodeURIComponent(n) + '&new=1'; }
+    else { showAlert('📨 OTP sent! Check your email.', 'info'); }
+  }
+
   // Handle auth=redirect
   if (params.get('auth') === 'redirect') {
     console.log('🔄 Auth redirect mode');
