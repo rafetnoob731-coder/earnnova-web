@@ -2273,6 +2273,83 @@ function adminShowRoleBadge() {
 }
 
 // ===== LOGOUT =====
+
+
+// ===== OTP SYSTEM =====
+function generateOTP() {
+  var code = '';
+  for (var i = 0; i < 6; i++) code += Math.floor(Math.random() * 10).toString();
+  return code;
+}
+
+function sendOTP(email, callback) {
+  if (!db) { if (callback) callback('Database not ready'); return; }
+  var code = generateOTP();
+  var expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+  
+  db.collection('otp_codes').add({
+    code: code, used: false, email: email || '',
+    userId: currentUser ? currentUser.uid : '',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    expiresAt: expiresAt
+  }).then(function() {
+    console.log('📱 OTP for ' + email + ': ' + code);
+    localStorage.setItem('en_last_otp', code);
+    localStorage.setItem('en_otp_expires', expiresAt.getTime().toString());
+    if (callback) callback(null, code);
+  }).catch(function(err) {
+    if (callback) callback(err.message);
+  });
+}
+
+function requestOTP(type, callback) {
+  // type: 'withdraw', 'login', 'reset', 'verify'
+  var email = currentUserData?.email || '';
+  sendOTP(email, function(err, code) {
+    if (err) {
+      showToast('❌','Failed to send OTP: ' + err, 'error');
+      if (callback) callback(err);
+      return;
+    }
+    showToast('📨','OTP sent! Check console or below','success');
+    console.log('📱 OTP Code: ' + code + ' (for: ' + type + ')');
+    if (callback) callback(null, code);
+    
+    // Redirect to verify page
+    var redirectUrl = window.location.pathname.replace(/\/[^\/]*$/, '/') + 'verify.html';
+    var mode = type || 'verify';
+    var redir = window.location.href;
+    window.location.href = redirectUrl + '?mode=' + mode + '&redirect=' + encodeURIComponent(redir) + '&uid=' + (currentUser ? currentUser.uid : '');
+  });
+}
+
+function verifyOTPCode(code, callback) {
+  if (!db) { if (callback) callback('Database not ready'); return; }
+  db.collection('otp_codes').where('code', '==', code).where('used', '==', false).get()
+    .then(function(snap) {
+      if (snap.empty) {
+        if (callback) callback('Invalid or expired OTP');
+        return;
+      }
+      var doc = snap.docs[0];
+      var data = doc.data();
+      var expiry = data.expiresAt ? data.expiresAt.toDate() : new Date();
+      if (Date.now() > expiry.getTime()) {
+        db.collection('otp_codes').doc(doc.id).update({ used: true });
+        if (callback) callback('OTP expired');
+        return;
+      }
+      // Mark as used
+      db.collection('otp_codes').doc(doc.id).update({
+        used: true, verifiedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      localStorage.setItem('en_otp_verified', 'true');
+      if (callback) callback(null, data);
+    }).catch(function(err) {
+      if (callback) callback(err.message);
+    });
+}
+
 function logout() {
   if (auth) {
     auth.signOut().then(function() {
