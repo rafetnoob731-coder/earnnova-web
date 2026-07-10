@@ -124,6 +124,36 @@ async function createUserDoc(user) {
 }
 
 // ===== INIT APP =====
+
+// ===== AD TOKEN SYSTEM =====
+function generateAdToken(type) {
+  var uid = currentUser ? currentUser.uid : 'guest';
+  var ts = Date.now().toString(36);
+  var rnd = Math.random().toString(36).substr(2, 6);
+  return uid.slice(-8) + '-' + ts + '-' + rnd + '-' + type;
+}
+
+function openAdPage(type) {
+  var token = generateAdToken(type);
+  window.location.href = 'ads/' + type + '.html?token=' + token + '&uid=' + (currentUser ? currentUser.uid : '');
+}
+
+// Add "ADS={token}" URL param support
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var adsParam = params.get('ADS');
+  if (adsParam) {
+    // Parse ADS token and redirect to appropriate ad
+    var parts = adsParam.split('-');
+    var adType = parts.length > 0 ? parts[0] : 'ads2';
+    if (adType.startsWith('ads') || parseInt(adType) >= 1) {
+      var adName = adType.startsWith('ads') ? adType : 'ads' + adType;
+      var token = generateAdToken(adName);
+      setTimeout(function() { window.location.href = 'ads/' + adName + '.html?token=' + token + '&uid=' + (currentUser ? currentUser.uid : ''); }, 500);
+    }
+  }
+})();
+
 function initApp() {
   try {
     $('appPage')?.classList.remove('hidden');
