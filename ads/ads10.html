@@ -71,6 +71,103 @@ function show_9622450() {
 
 setTimeout(loadHighNetworkAds, 1000);
 </script>
+
+<!-- ====== HIGH AD NETWORKS ====== -->
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+<!-- EffectiveCPM Popunder -->
+<script type="text/javascript">
+(function() {
+  var s = document.createElement('script');
+  s.type = 'text/javascript';
+  s.src = 'https://effectivecpm.com/display/network.js?pub=effectivecpm_pub_id';
+  s.async = true;
+  document.head.appendChild(s);
+})();
+</script>
+
+<!-- HighPerformance Display -->
+<script type="text/javascript">
+(function() {
+  var s = document.createElement('script');
+  s.type = 'text/javascript';
+  s.src = 'https://highperformance.com/display/network.js?pub=highperformance_pub_id';
+  s.async = true;
+  document.head.appendChild(s);
+})();
+</script>
+
+<!-- Adsterra Banner -->
+<script type="text/javascript">
+(function() {
+  var s = document.createElement('script');
+  s.type = 'text/javascript';
+  s.src = 'https://adsterra.com/display/network.js?pub=adsterra_pub_id';
+  s.async = true;
+  document.head.appendChild(s);
+})();
+</script>
+
+<!-- Monetag SDK -->
+<script src="https://cdn.monetag.com/sdk.js?pub=monetag_pub_id"></script>
+
+<script>
+// ===== AD NETWORK LOADERS =====
+var AD_NETWORKS = {
+  adsense: function() {
+    try {
+      if (typeof adsbygoogle !== 'undefined') {
+        (adsbygoogle = window.adsbygoogle || []).push({});
+        console.log('📢 AdSense pushed');
+      }
+    } catch(e) {}
+  },
+  effectivecpm: function() {
+    try {
+      if (typeof window.effectivecpm_network !== 'undefined') {
+        window.effectivecpm_network.display();
+        console.log('📢 EffectiveCPM displayed');
+      }
+    } catch(e) {}
+  },
+  highperformance: function() {
+    try {
+      if (typeof window.highperformance_network !== 'undefined') {
+        window.highperformance_network.display();
+        console.log('📢 HighPerformance displayed');
+      }
+    } catch(e) {}
+  },
+  adsterra: function() {
+    try {
+      if (typeof window.adsterra_network !== 'undefined') {
+        window.adsterra_network.display();
+        console.log('📢 Adsterra displayed');
+      }
+    } catch(e) {}
+  },
+  monetag: function() {
+    try {
+      if (typeof window.monetag !== 'undefined' && window.monetag.show) {
+        window.monetag.show({zone: '9622450'});
+        console.log('📢 Monetag shown');
+      }
+    } catch(e) {}
+  },
+  loadAll: function() {
+    this.adsense();
+    this.effectivecpm();
+    this.highperformance();
+    this.adsterra();
+    this.monetag();
+    console.log('📢 All high ad networks loaded!');
+  }
+};
+
+// Load ads when page ready
+setTimeout(function() { AD_NETWORKS.loadAll(); }, 1500);
+</script>
 </head>
 <body>
 <div class="ad-header">
@@ -195,25 +292,42 @@ setTimeout(loadHighNetworkAds, 1000);
   </div>
 </div>
 
-    <!-- HIGH ADS BANNER BOTTOM -->
+    <!-- BOTTOM ADS GRID -->
     <div style="margin-top:8px">
-      <div class="ad-label">— More Ads —</div>
+      <div class="ad-label">— More Networks —</div>
       <div class="ad-grid">
-        <div class="ad-banner" style="min-height:60px" id="adBannerLeft">
-          <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXX" data-ad-format="auto"></ins>
-          <div style="font-size:8px;color:var(--text-muted)">AdSense</div>
+        <div class="ad-banner" style="min-height:90px;flex-direction:column" id="adBannerLeft">
+          <div style="font-size:9px;color:var(--gold);margin-bottom:4px">EffectiveCPM</div>
+          <div id="effectivecpmContainer" style="width:100%;height:60px;background:rgba(16,185,129,0.02);border-radius:4px;display:flex;align-items:center;justify-content:center">
+            <span style="font-size:8px;color:var(--text-muted)">EffectiveCPM Ad</span>
+          </div>
+          <script>setTimeout(function(){AD_NETWORKS.effectivecpm()},2000);</script>
         </div>
-        <div class="ad-banner" style="min-height:60px" id="adBannerRight">
-          <div style="font-size:8px;color:var(--text-muted)">Monetag • EffectiveCPM</div>
-          <script>
-          try {
-            if (typeof window.monetag !== 'undefined' && window.monetag.show) {
-              window.monetag.show({zone: '9622450'});
-            }
-          } catch(e) {}
-          </script>
+        <div class="ad-banner" style="min-height:90px;flex-direction:column" id="adBannerRight">
+          <div style="font-size:9px;color:var(--gold);margin-bottom:4px">Monetag</div>
+          <div id="monetagContainer" style="width:100%;height:60px;background:rgba(16,185,129,0.02);border-radius:4px;display:flex;align-items:center;justify-content:center">
+            <span style="font-size:8px;color:var(--text-muted)">Monetag Ad</span>
+          </div>
+          <script>setTimeout(function(){AD_NETWORKS.monetag()},2500);</script>
         </div>
-      </div>
+      
+      <!-- Row 2: HighPerformance + Adsterra -->
+      <div class="ad-grid" style="margin-top:6px">
+        <div class="ad-banner" style="min-height:60px;flex-direction:column" id="adBannerHighPerf">
+          <div style="font-size:9px;color:var(--gold);margin-bottom:2px">HighPerformance</div>
+          <div id="highperformanceContainer" style="width:100%;height:40px;background:rgba(16,185,129,0.02);border-radius:4px;display:flex;align-items:center;justify-content:center">
+            <span style="font-size:8px;color:var(--text-muted)">HighPerformance Ad</span>
+          </div>
+          <script>setTimeout(function(){AD_NETWORKS.highperformance()},3000);</script>
+        </div>
+        <div class="ad-banner" style="min-height:60px;flex-direction:column" id="adBannerAdsterra">
+          <div style="font-size:9px;color:var(--gold);margin-bottom:2px">Adsterra</div>
+          <div id="adsterraContainer" style="width:100%;height:40px;background:rgba(16,185,129,0.02);border-radius:4px;display:flex;align-items:center;justify-content:center">
+            <span style="font-size:8px;color:var(--text-muted)">Adsterra Ad</span>
+          </div>
+          <script>setTimeout(function(){AD_NETWORKS.adsterra()},3500);</script>
+        </div>
+      </div></div>
     </div>
   </div>
 
@@ -229,7 +343,7 @@ setTimeout(loadHighNetworkAds, 1000);
 var urlParams = new URLSearchParams(window.location.search);
 var token = urlParams.get('token') || '';
 var userId = urlParams.get('uid') || '';
-var adReward = 0.200;
+var adReward = 0.250;
 var HIGH_ADS_REWARD = 0.200;
 var adDuration = 60;
 var timerSeconds = adDuration;
