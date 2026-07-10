@@ -325,7 +325,8 @@ function sendOTPEmail(email, code, name) {
   console.log('📧 EMAIL OTP TO: ' + email);
   console.log('   Name: ' + (name || 'User'));
   console.log('   OTP Code: ' + code);
-  console.log('   Verify: ' + window.location.origin + '/register.html?verify=' + code + '&email=' + encodeURIComponent(email));
+  console.log('   Verify page: ' + window.location.origin + '/register.html?verify=1&email=' + encodeURIComponent(email));
+  console.log('   ⚠️ OTP is NOT in URL — user must type it manually for security');
   console.log('   Expires: 10 minutes');
   console.log('========================================');
   
@@ -547,8 +548,10 @@ function backToForm() {
 // ===== HANDLE ?verify=OTP FROM URL =====
 (function() {
   var params = new URLSearchParams(window.location.search);
-  var verifyCode = params.get('verify');
+  var verifyFlag = params.get('verify');
   var emailFromUrl = params.get('email');
+  // SECURITY: OTP is NEVER in URL. User types 6-digit code manually.
+  // ?verify=1 just flags that OTP was sent to email.
   
   // Auto-fill referral from ?ref=
   var refCode = params.get('ref');
@@ -574,38 +577,24 @@ function backToForm() {
     }
   }
   
-  // If verify code is in URL, auto-start verification flow
-  if (verifyCode && verifyCode.length >= 6) {
-    // Try to find the email from localStorage or URL
+  // If verify flag is in URL, show the OTP step (OTP is NOT in URL for security)
+  if (verifyFlag === '1' || verifyCode === 'true' || params.get('verify') === '') {
+    // Just a flag — OTP was sent to email. User must type it manually.
     var storedEmail = emailFromUrl || localStorage.getItem('en_otp_email') || '';
+    var storedUserId = localStorage.getItem('en_otp_userId') || '';
+    var storedName = localStorage.getItem('en_otp_name') || '';
     
     if (storedEmail) {
       regEmail = storedEmail;
-      regName = localStorage.getItem('en_otp_name') || 'User';
+      regUserId = storedUserId;
+      regName = storedName;
       
       document.getElementById('otpEmailDisplay').textContent = regEmail;
-      
-      // Auto-fill OTP
-      for (var i = 0; i < 6 && i < verifyCode.length; i++) {
-        var inp = document.getElementById('otp' + (i+1));
-        if (inp) {
-          inp.value = verifyCode[i];
-          inp.classList.add('filled');
-        }
-      }
-      
-      // Show OTP step
       showStep('otp');
-      showAlert('📨 OTP code detected! Verifying...', 'info', 'otpAlert');
-      
-      // Try to get userId
-      regUserId = localStorage.getItem('en_otp_userId') || '';
-      
-      // Auto-verify
-      setTimeout(verifyRegistrationOTP, 800);
+      showAlert('📨 OTP sent to ' + regEmail + '. Enter the 6-digit code below.', 'info', 'otpAlert');
+      document.getElementById('otp1')?.focus();
     } else {
-      // No email stored, show form with notice
-      showAlert('📨 OTP detected! Please enter your email to complete verification.', 'info');
+      showAlert('📨 OTP sent! Please enter your email to complete verification.', 'info');
       document.getElementById('regEmail').focus();
     }
   }
