@@ -99,7 +99,7 @@ body{margin:0;background:#080A12;display:flex;align-items:center;justify-content
     </button>
 
     <div class="auth-footer">
-      Don't have an account? <a href="register.html">Sign Up</a>
+      Don't have an account? <a href="register.html" id="registerLink">Sign Up</a>
     </div>
   </div>
   <div style="text-align:center;margin-top:16px;font-size:11px;color:rgba(255,255,255,0.15)">
@@ -200,9 +200,43 @@ function googleSignIn() {
 }
 
 // ===== AUTH STATE =====
-auth.onAuthStateChanged(function(user) {
-  if (user) window.location.href = 'home.html';
-});
+// Auth state redirect — supports auth=redirect & token params
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var authMode = params.get('auth');
+  var redirUrl = params.get('redirect') || 'home.html';
+  var token = params.get('token');
+
+  if (token) {
+    console.log('🔑 Login token:', token);
+    localStorage.setItem('en_login_token', token);
+  }
+
+  if (authMode === 'redirect') {
+    console.log('🔄 Auth redirect mode →', redirUrl);
+  }
+
+  auth.onAuthStateChanged(function(user) {
+    if (user) {
+      window.location.href = authMode === 'redirect' ? redirUrl : 'home.html';
+    }
+  });
+})();
 </script>
-</body>
+
+<script>
+// Preserve URL params to register
+(function() {
+  var regLink = document.getElementById('registerLink');
+  if (regLink) {
+    var p = new URLSearchParams(window.location.search);
+    var parts = [];
+    if (p.get('auth')) parts.push('auth=' + p.get('auth'));
+    if (p.get('redirect')) parts.push('redirect=' + encodeURIComponent(p.get('redirect')));
+    if (p.get('token')) parts.push('token=' + p.get('token'));
+    if (p.get('ref')) parts.push('ref=' + p.get('ref'));
+    if (parts.length > 0) regLink.href = 'register.html?' + parts.join('&');
+  }
+})();
+</script></body>
 </html>
