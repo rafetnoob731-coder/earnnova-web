@@ -2351,37 +2351,83 @@ function verifyOTPCode(code, callback) {
 }
 
 
-// ===== SHORTLINK SYSTEM =====
+// ===== VPLINK SHORTLINK + LINKVERTISE REWARD FLOW =====
 var VPLLINK_API = "a6e0be57ade7b64c335c47b1e46ae6d9b085257f";
 var ANTI_BYPASS = "1afc548813e7d554c47f8aa940e974b14662c247af4cdc353f31a205e0fa78b1";
+var _vplinkPending = false;
+var _vplinkType = '';
 
-function createShortLink(url, alias) {
+// 🔗 Create VPLink shortlink
+// VPLink: https://vplink.in/api?api=KEY&url=URL&alias=ALIAS
+function createVPLink(url, alias) {
   var apiUrl = 'https://vplink.in/api?api=' + VPLLINK_API + '&url=' + encodeURIComponent(url);
   if (alias) apiUrl += '&alias=' + encodeURIComponent(alias);
+  
   try {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', apiUrl, true);
-    xhr.onload = function() {
-      if (xhr.status === 200) {
-        try { var d = JSON.parse(xhr.responseText); console.log('🔗 Shortlink:', d.shorturl || d.url); } catch(e) {}
-      }
-    };
+    xhr.open('GET', apiUrl, false); // sync for immediate use
     xhr.send();
+    if (xhr.status === 200) {
+      try {
+        var d = JSON.parse(xhr.responseText);
+        console.log('🔗 VPLink created:', d.shorturl || d.url);
+        return d.shorturl || d.url || url;
+      } catch(e) { return url; }
+    }
   } catch(e) {}
+  return url;
 }
 
+// 🔗 Open ad via VPLink shortlink (same flow as Linkvertise)
+// User clicks → VPLink redirects → lands on ad page → completes → reward
+function openVPLink(type) {
+  if (_vplinkPending) return;
+  _vplinkPending = true;
+  _vplinkType = type;
+  
+  // Step 1: Build the destination URL (the ad page)
+  var uid = currentUser ? currentUser.uid : 'guest';
+  var token = generateAdToken(type);
+  var destUrl = window.location.origin + '/ads/' + type + '.html?token=' + token + '&uid=' + uid;
+  
+  // Step 2: Create VPLink shortlink for the destination
+  var shortlink = createVPLink(destUrl, 'earn-' + type + '-' + uid.slice(-4));
+  
+  // Step 3: Also wrap in Linkvertise for double gateway
+  var gateUrl = 'https://link-to.net/1424242/' + Math.random()*1000 + '/?href=' + encodeURIComponent(shortlink);
+  
+  console.log('🔗 VPLink → Linkvertise → ' + type);
+  console.log('   Dest: ' + destUrl);
+  console.log('   Short: ' + shortlink);
+  console.log('   Gate: ' + gateUrl);
+  
+  // Step 4: Open the gateway (new tab)
+  var win = window.open(gateUrl, '_blank');
+  
+  // Step 5: Track when user completes (they come back to this page)
+  _vplinkPending = false;
+  
+  // Show toast
+  showToast('🔗', 'Opening VPLink → Complete ad to earn!', 'info');
+  
+  // The reward happens on the ad page itself (completeAdTask)
+  return shortlink;
+}
+
+// 🔗 Load Linkvertise on earn/home pages
 function loadLinkvertise() {
   var s = document.createElement('script');
   s.src = 'https://publisher.linkvertise.com/cdn/linkvertise.js';
-  s.onload = function() { try { linkvertise(1424242, {whitelist:[], blacklist:[""]}); } catch(e) {} };
+  s.onload = function() {
+    try {
+      linkvertise(1424242, {whitelist: [], blacklist: [""]});
+      console.log('🔗 Linkvertise loaded');
+    } catch(e) {}
+  };
   document.head.appendChild(s);
 }
 
-function openLinkvertise(url) {
-  var gateUrl = 'https://link-to.net/1424242/' + Math.random()*1000 + '/?href=' + encodeURIComponent(url);
-  window.open(gateUrl, '_blank');
-}
-
+// 🔗 Get anti-bypass protected earn link
 function getAntiBypassToken() { return ANTI_BYPASS; }
 
 function addAntiBypass(url) {
@@ -2389,13 +2435,15 @@ function addAntiBypass(url) {
   return url + sep + 'ab_token=' + ANTI_BYPASS;
 }
 
-function getEarnLink(type) {
-  var baseUrl = window.location.origin;
-  var earnUrl = baseUrl + '/earn.html?ad=' + type + '&uid=' + (currentUser ? currentUser.uid : 'guest');
-  return addAntiBypass(earnUrl);
+// 🔗 Override ad opening to use VPLink + Linkvertise
+var _origOpenAd = typeof openAdPage === 'function' ? openAdPage : null;
+
+function openAdPage(type) {
+  // Use VPLink + Linkvertise gateway
+  openVPLink(type);
 }
 
-// Load linkvertise on earn page
+// Load linkvertise
 if (window.location.pathname.includes('earn') || window.location.pathname.includes('home')) {
   setTimeout(loadLinkvertise, 2000);
 }
