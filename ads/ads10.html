@@ -124,7 +124,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   var mi=0,ms=0;
   function showM(){
     if(mi>=mq.length){
-      document.getElementById('megaRes').innerHTML='🏆 Mega Quiz done! Score: '+ms+'/10';
+      document.getElementById('megaRes').innerHTML='🏆 Mega Quiz done! Score: '+ms+'/50';
       document.getElementById('adStatus').textContent='✅ Quiz complete! +$'+adReward.toFixed(3);
       // *** FIX: Set completed flag & show complete button ***
       adCompleted=true;
@@ -134,7 +134,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       return;
     }
     var q=mq[mi];
-    document.getElementById('megaQ').textContent=(mi+1)+'/10. '+q.q;
+    document.getElementById('megaQ').textContent=(mi+1)+'/50. '+q.q;
     var h='';
     for(var i=0;i<q.o.length;i++){
       h+='<button onclick="answerMega('+i+')" style="padding:8px;border-radius:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:var(--text);font-size:12px;cursor:pointer;margin:3px;transition:all 0.2s">'+q.o[i]+'</button>';
@@ -150,7 +150,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       document.getElementById('megaRes').innerHTML='❌ Wrong! Answer: '+q.o[q.a];
     }
     mi++;
-    document.getElementById('megaScore').textContent='Score: '+ms+'/10';
+    document.getElementById('megaScore').textContent='Score: '+ms+'/50';
     setTimeout(showM,500);
   };
   showM();
