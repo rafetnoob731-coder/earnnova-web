@@ -352,71 +352,85 @@ function restartGame() {
 }
 
 function rewardGame(score) {
-  // 🎉 Celebration animation
-  triggerCelebration(score);
-}
-
-function triggerCelebration(score) {
-  if (score < 1) return;
-  var emojis = ['🎉','🎊','✨','⭐','💰','🌟','💫','🏆'];
-  for (var i = 0; i < 30; i++) {
-    (function(idx) {
-      setTimeout(function() {
-        var el = document.createElement('div');
-        el.style.cssText = 'position:fixed;font-size:' + (12+Math.random()*16) + 'px;pointer-events:none;z-index:99999;left:' + (10+Math.random()*80) + '%;top:' + (40+Math.random()*20) + '%;opacity:1;transform:scale(1);transition:all 0.8s ease-out';
-        el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
-        document.body.appendChild(el);
-        requestAnimationFrame(function() {
-          el.style.transform = 'translateY(-' + (80+Math.random()*120) + 'px) scale(0.2)';
-          el.style.opacity = '0';
-        });
-        setTimeout(function() { if (el.parentNode) el.remove(); }, 900);
-      }, idx * 60);
-    })(i);
-  }
-  
-  // Flash effect on page
-  var flash = document.createElement('div');
-  flash.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle,rgba(212,175,55,0.1),transparent 70%);pointer-events:none;z-index:99998;opacity:1;transition:opacity 0.8s ease-out';
-  document.body.appendChild(flash);
-  requestAnimationFrame(function() { flash.style.opacity = '0'; });
-  setTimeout(function() { if (flash.parentNode) flash.remove(); }, 900);
-  
-  console.log('🎉 Celebration! Score: ' + score);
-}
-
-function 
-
   if (score < 1) {
-    document.getElementById('gameStatus').innerHTML = 'Score: <span id="scoreDisplay">0</span> | ❌ No reward (score too low)';
+    document.getElementById('gamePlayStatus').textContent = '❌ No reward (score too low)';
+    document.getElementById('gamePlayStatus').style.color = '#EF4444';
     return;
   }
+  
+  var total = gameReward;
   var bonus = Math.min(score * 0.005, 0.050);
-  var total = 0.02 + bonus;
+  total += bonus;
   totalEarned += total;
+  
+  // Update display
   document.getElementById('scoreDisplay').textContent = score;
   document.getElementById('rewardDisplay').textContent = '$' + total.toFixed(3);
+  document.getElementById('gamePlayStatus').textContent = '🎉 +$' + total.toFixed(3) + ' earned!';
+  document.getElementById('gamePlayStatus').style.color = '#10B981';
   
   // Credit balance
   var bal = parseFloat(localStorage.getItem('en_bal') || '0');
+  if (typeof currentUserData !== 'undefined' && currentUserData && currentUserData.balance !== undefined) {
+    bal = currentUserData.balance;
+  }
   bal += total;
   localStorage.setItem('en_bal', String(bal));
+  document.getElementById('balanceDisplay').textContent = '$' + bal.toFixed(2);
   
   // Update Firestore
-  if (currentUser) {
-    db.collection('users').doc(currentUser.uid).update({
-      balance: firebase.firestore.FieldValue.increment(total),
-      gamesPlayed: firebase.firestore.FieldValue.increment(1),
-      totalGamesEarned: firebase.firestore.FieldValue.increment(total)
-    }).catch(function(e) { console.warn(e); });
-  }
+  try {
+    if (typeof db !== 'undefined' && typeof currentUser !== 'undefined' && currentUser) {
+      db.collection('users').doc(currentUser.uid).update({
+        balance: firebase.firestore.FieldValue.increment(total),
+        totalGamesEarned: firebase.firestore.FieldValue.increment(total)
+      }).catch(function(e){});
+    }
+  } catch(e) {}
   
-  document.getElementById('gamesPlayed').textContent = parseInt(document.getElementById('gamesPlayed').textContent || '0') + 1;
-  document.getElementById('gameStatus').innerHTML = 'Score: <span id="scoreDisplay">' + score + '</span> | 🎉 Earned: <span class="earned">$' + total.toFixed(3) + '</span> | Bonus: $' + bonus.toFixed(3);
-  document.getElementById('balanceDisplay').textContent = '$' + bal.toFixed(2);
+  // Save earned
+  var earned = parseFloat(localStorage.getItem('en_earned') || '0');
+  earned += total;
+  localStorage.setItem('en_earned', String(earned));
+  localStorage.setItem('en_today', String((parseFloat(localStorage.getItem('en_today')||'0') + total)));
+  
+  // 🎉 Celebration!
+  triggerCelebration(score, total);
 }
 
-function restartGame() {
+function triggerCelebration(score, reward) {
+  if (score < 1) return;
+  
+  // Confetti emojis
+  var emojis = ['🎉','🎊','✨','⭐','💰','🌟','💫','🏆','💎','🔥'];
+  for (var i = 0; i < 35; i++) {
+    setTimeout(function() {
+      var el = document.createElement('div');
+      el.style.cssText = 'position:fixed;font-size:' + (10+Math.random()*18) + 'px;pointer-events:none;z-index:99999;left:' + (5+Math.random()*90) + '%;top:' + (50+Math.random()*30) + '%;opacity:1;transform:scale(1);transition:all 1s cubic-bezier(0.25,0.46,0.45,0.94)';
+      el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+      document.body.appendChild(el);
+      requestAnimationFrame(function() {
+        el.style.transform = 'translateY(-' + (100+Math.random()*150) + 'px) translateX(' + (Math.random()*40-20) + 'px) scale(0.2) rotate(' + Math.random()*360 + 'deg)';
+        el.style.opacity = '0';
+      });
+      setTimeout(function() { if (el.parentNode) el.remove(); }, 1100);
+    }, i * 50);
+  }
+  
+  // Gold flash effect
+  var flash = document.createElement('div');
+  flash.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at 50% 50%, rgba(212,175,55,0.15), transparent 70%);pointer-events:none;z-index:99998;opacity:1;transition:opacity 0.8s ease-out';
+  document.body.appendChild(flash);
+  requestAnimationFrame(function() { flash.style.opacity = '0'; });
+  setTimeout(function() { if (flash.parentNode) flash.remove(); }, 1000);
+  
+  // Toast notification
+  showToast('🎉', '+' + (reward || 0).toFixed(3), 'money');
+  
+  console.log('🎉 Game reward! Score: ' + score + ' | +$' + (reward || 0).toFixed(3));
+}
+
+// ===== RESTART GAME =====function restartGame() {
   gameRunning = false;
   document.getElementById('startBtn').style.display = 'inline-block';
   document.getElementById('restartBtn').style.display = 'none';
