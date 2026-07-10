@@ -41,7 +41,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   font-size:10px;color:var(--text-muted);white-space:nowrap;z-index:50;
 }
 .ip-info strong{color:var(--gold)}
-@media(max-width:400px){.header .ip-badge{display:none}}
+@media(max-width:400px){.header .ip-badge{display:none}
 </style>
 </head>
 <body>
@@ -176,16 +176,16 @@ var canvas = document.getElementById('gameCanvas');
 var ctx = canvas.getContext('2d');
 canvas.width = 320; canvas.height = 480;
 
-function spawnTarget() {{
-  targets.push({{
+function spawnTarget() {
+  targets.push({
     x: 30 + Math.random() * 260,
     y: 30 + Math.random() * 420,
     r: 16 + Math.random() * 10,
     life: 1
-  }});
-}}
+  });
+}
 
-function targetLoop() {{
+function targetLoop() {
   if (!gameRunning) return;
   
   ctx.fillStyle = '#0A0E1A';
@@ -202,9 +202,9 @@ function targetLoop() {{
   ctx.fillText('Score: ' + targetRushScore, 160, 48);
   
   // Targets
-  targets.forEach(function(t, i) {{
+  targets.forEach(function(t, i) {
     t.life -= 0.005;
-    if (t.life <= 0) {{ targets.splice(i,1); return; }}
+    if (t.life <= 0) { targets.splice(i,1); return; }
     // Shrink effect
     var r = t.r * t.life;
     ctx.beginPath();
@@ -223,13 +223,13 @@ function targetLoop() {{
     ctx.arc(t.x, t.y, r * 0.3, 0, Math.PI * 2);
     ctx.fillStyle = '#fff';
     ctx.fill();
-  }});
+  });
   
   requestAnimationFrame(targetLoop);
-}}
+}
 
 // Click on target
-canvas.onclick = function(e) {{
+canvas.onclick = function(e) {
   if (!gameRunning) return;
   var rect = canvas.getBoundingClientRect();
   var scaleX = canvas.width / rect.width;
@@ -237,23 +237,23 @@ canvas.onclick = function(e) {{
   var mx = (e.clientX - rect.left) * scaleX;
   var my = (e.clientY - rect.top) * scaleY;
   
-  for (var i = targets.length - 1; i >= 0; i--) {{
+  for (var i = targets.length - 1; i >= 0; i--) {
     var t = targets[i];
     var dx = mx - t.x;
     var dy = my - t.y;
     var dist = Math.sqrt(dx*dx + dy*dy);
-    if (dist < t.r * t.life) {{
+    if (dist < t.r * t.life) {
       targets.splice(i,1);
       targetRushScore++;
       break;
-    }}
-  }}
-}};
+    }
+  }
+};
 
 spawnTarget();
-targetTimer = setInterval(function() {{
+targetTimer = setInterval(function() {
   timeLeft--;
-  if (timeLeft <= 0) {{
+  if (timeLeft <= 0) {
     clearInterval(targetTimer);
     gameRunning = false;
     gameScore = targetRushScore;
@@ -261,9 +261,9 @@ targetTimer = setInterval(function() {{
     document.getElementById('startBtn').style.display = 'inline-block';
     document.getElementById('startBtn').textContent = '▶ Play Again';
     document.getElementById('restartBtn').style.display = 'inline-block';
-  }}
+  }
   if (gameRunning && Math.random() < 0.4) spawnTarget();
-}}, 1000);
+}, 1000);
 
 targetLoop();
 
