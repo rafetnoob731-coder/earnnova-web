@@ -319,7 +319,7 @@ function resendAndGo() {
     regName = localStorage.getItem('en_otp_name') || '';
     regRef = localStorage.getItem('en_otp_ref') || '';
   }
-  var url = 'verify.html?email=' + encodeURIComponent(regEmail) + '&uid=' + encodeURIComponent(regUserId) + '&name=' + encodeURIComponent(regName) + '&new=1&resend=1';
+  var url = 'register.html?auth=verify.html&send=otp&email=' + encodeURIComponent(regEmail) + '&uid=' + encodeURIComponent(regUserId) + '&name=' + encodeURIComponent(regName) + '&new=1';
   if (regRef) url += '&ref=' + encodeURIComponent(regRef);
   window.location.href = url;
 }
@@ -603,7 +603,20 @@ function backToForm() {
     else { showAlert('📨 OTP sent! Check your email.', 'info'); }
   }
 
-  // Handle auth=redirect
+  
+  // Handle ?auth=verify.html&send=otp
+  if (params.get('auth') === 'verify.html' && params.get('send') === 'otp') {
+    var e = params.get('email') || localStorage.getItem('en_otp_email') || '';
+    var u = params.get('uid') || localStorage.getItem('en_otp_userId') || '';
+    var n = params.get('name') || localStorage.getItem('en_otp_name') || '';
+    var r = params.get('ref') || localStorage.getItem('en_otp_ref') || '';
+    if (e) {
+      var url = 'verify.html?email=' + encodeURIComponent(e) + '&uid=' + encodeURIComponent(u) + '&name=' + encodeURIComponent(n) + '&new=1';
+      if (r) url += '&ref=' + encodeURIComponent(r);
+      window.location.href = url;
+    }
+  }
+// Handle auth=redirect
   if (params.get('auth') === 'redirect') {
     console.log('🔄 Auth redirect mode');
   }
