@@ -83,7 +83,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 var urlParams = new URLSearchParams(window.location.search);
 var token = urlParams.get('token') || '';
 var userId = urlParams.get('uid') || '';
-var adReward = 0.06;
+var urlParams = new URLSearchParams(window.location.search);
+var isVPLink = urlParams.get('vplink') === '1';
+var vplinkReward = parseFloat(urlParams.get('reward')) || 0.500;
+var adReward = isVPLink ? vplinkReward : 0.06;
 var adDuration = 40;
 var timerSeconds = adDuration;
 var adCompleted = false;
