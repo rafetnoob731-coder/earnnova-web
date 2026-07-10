@@ -174,113 +174,178 @@ var word = {
   started: false, pipeCount: 0
 };
 
-var canvas = document.getElementById('gameCanvas');
-var ctx = canvas.getContext('2d');
 
-function wordLoop() {
-  if (!gameRunning) return;
-  
-  // Gravity
-  word.birdVY += word.gravity;
-  word.birdY += word.birdVY;
-  
-  // Pipes
-  if (word.started) {
-    word.pipeCount++;
-    if (word.pipeCount % 60 === 0) {
-      var gapY = 80 + Math.random() * 200;
-      word.pipes.push({ x: 320, gapY: gapY, scored: false });
-    }
+// ===== GAME VARIABLES =====
+var canvas = null;
+var gameRunning = false;
+var gameOver = false;
+var gameScore = 0;
+var gameReward = 0.020;
+var totalEarned = 0;
+
+// Word Scramble vars
+var wordList = [
+  { word: 'NEXUS', hint: '🔗 Platform name' },
+  { word: 'EARN', hint: '💰 What you do here' },
+  { word: 'MONEY', hint: '💵 Digital currency' },
+  { word: 'GAMES', hint: '🎮 Fun activities' },
+  { word: 'SCORE', hint: '📊 Your points' },
+  { word: 'REWARD', hint: '🎁 What you get' },
+  { word: 'TOKEN', hint: '🔑 Digital asset' },
+  { word: 'BONUS', hint: '🎯 Extra reward' },
+  { word: 'LEVEL', hint: '📈 Game stage' },
+  { word: 'POWER', hint: '⚡ Energy' },
+  { word: 'NOVA', hint: '⭐ Star explosion' },
+  { word: 'GOLD', hint: '🥇 Precious metal' },
+  { word: 'GEMS', hint: '💎 Precious stones' },
+  { word: 'STAR', hint: '⭐ Celestial body' },
+  { word: 'VIP', hint: '👑 Special member' },
+  { word: 'DARK', hint: '🌑 Opposite of light' },
+  { word: 'LIGHT', hint: '☀️ Makes things visible' },
+  { word: 'SPEED', hint: '🏃 Fastness' },
+  { word: 'BRAIN', hint: '🧠 Thinking organ' },
+  { word: 'SMART', hint: '🧠 Intelligent' }
+];
+
+var currentWordIdx = 0;
+var totalWords = 5;
+var wordQueue = [];
+var correctAnswers = 0;
+var currentQuestion = null;
+var scrambledWord = '';
+
+function shuffleStr(str) {
+  var arr = str.split('');
+  for (var i = arr.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
   }
-  
-  // Move pipes + collision
-  var alive = true;
-  for (var i = word.pipes.length - 1; i >= 0; i--) {
-    var p = word.pipes[i];
-    p.x -= 3;
-    if (p.x + word.pipeWidth < 0) { word.pipes.splice(i, 1); continue; }
-    
-    // Collision
-    var bx = word.birdX, by = word.birdY, r = 12;
-    if (bx + r > p.x && bx - r < p.x + word.pipeWidth) {
-      if (by - r < p.gapY || by + r > p.gapY + word.pipeGap) alive = false;
-    }
-    
-    // Score
-    if (!p.scored && p.x + word.pipeWidth < word.birdX) {
-      p.scored = true;
-      gameScore++;
-    }
+  return arr.join('');
+}
+
+function pickWords() {
+  wordQueue = [];
+  var pool = wordList.slice();
+  for (var i = 0; i < totalWords && pool.length > 0; i++) {
+    var idx = Math.floor(Math.random() * pool.length);
+    wordQueue.push(pool[idx]);
+    pool.splice(idx, 1);
   }
+  currentWordIdx = 0;
+  correctAnswers = 0;
+}
+
+function showWordQuestion() {
+  var container = document.getElementById('wordGameContainer');
+  if (!container) return;
   
-  // Boundaries
-  if (word.birdY < 0 || word.birdY > 480) alive = false;
-  
-  // Draw
-  ctx.fillStyle = '#0A0E1A';
-  ctx.fillRect(0, 0, 320, 480);
-  
-  // Pipes
-  ctx.fillStyle = '#10B981';
-  word.pipes.forEach(function(p) {
-    ctx.fillRect(p.x, 0, word.pipeWidth, p.gapY - 20);
-    ctx.fillRect(p.x, p.gapY + word.pipeGap + 20, word.pipeWidth, 480);
-    // Pipe caps
-    ctx.fillStyle = '#059669';
-    ctx.fillRect(p.x - 3, p.gapY - 26, word.pipeWidth + 6, 8);
-    ctx.fillRect(p.x - 3, p.gapY + word.pipeGap + 18, word.pipeWidth + 6, 8);
-    ctx.fillStyle = '#10B981';
-  });
-  
-  // Bird
-  ctx.fillStyle = '#F59E0B';
-  ctx.beginPath();
-  ctx.arc(word.birdX, word.birdY, 12, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#d4af37';
-  ctx.beginPath();
-  ctx.arc(word.birdX + 5, word.birdY - 4, 4, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#000';
-  ctx.beginPath();
-  ctx.arc(word.birdX + 6, word.birdY - 4, 2, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // Score
-  ctx.fillStyle = '#d4af37';
-  ctx.font = 'bold 20px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(gameScore.toString(), 160, 30);
-  
-  if (!alive) {
+  if (currentWordIdx >= wordQueue.length) {
+    // Game complete!
+    gameOver = true;
     gameRunning = false;
-    rewardGame(gameScore);
-    document.getElementById('startBtn').style.display = 'inline-block';
-    document.getElementById('startBtn').textContent = '▶ Play Again';
-    document.getElementById('restartBtn').style.display = 'inline-block';
+    gameScore = correctAnswers;
+    rewardGame(correctAnswers);
     return;
   }
   
-  word.frameId = requestAnimationFrame(wordLoop);
+  currentQuestion = wordQueue[currentWordIdx];
+  scrambledWord = shuffleStr(currentQuestion.word);
+  
+  var html = '';
+  html += '<div style="text-align:center;padding:16px 8px">';
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Word ' + (currentWordIdx + 1) + '/' + totalWords + '</div>';
+  html += '<div style="font-size:36px;font-weight:800;letter-spacing:10px;font-family:monospace;padding:20px 12px;background:rgba(212,175,55,0.04);border-radius:12px;border:1px solid rgba(212,175,55,0.08);margin:8px 0;text-transform:uppercase;color:var(--gold);word-break:break-all" id="scrambledWord">' + scrambledWord + '</div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">' + currentQuestion.hint + '</div>';
+  html += '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">';
+  html += '<input type="text" id="wordAnswer" placeholder="Type the word..." style="padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.06);color:#fff;font-size:16px;text-transform:uppercase;width:160px;outline:none;text-align:center;font-weight:600;font-family:monospace" maxlength="10" autocomplete="off">';
+  html += '<button onclick="checkWordAnswer()" style="padding:10px 20px;border-radius:8px;background:linear-gradient(135deg,var(--emerald),#059669);border:none;color:#fff;font-size:14px;font-weight:600;cursor:pointer">✅ Check</button>';
+  html += '</div>';
+  html += '<div id="wordFeedback" style="margin-top:12px;font-size:14px;font-weight:600;min-height:24px"></div>';
+  html += '<div style="margin-top:8px;display:flex;gap:8px;justify-content:center">';
+  html += '<span style="font-size:11px;color:var(--text-muted)">Score: <strong id="wordScoreDisplay" style="color:var(--gold)">' + correctAnswers + '</strong>/' + totalWords + '</span>';
+  html += '</div>';
+  html += '</div>';
+  
+  container.innerHTML = html;
+  
+  // Focus input
+  setTimeout(function() {
+    var input = document.getElementById('wordAnswer');
+    if (input) input.focus();
+  }, 100);
 }
 
-// Click/tap to flap
-canvas.onclick = function() {
-  if (!gameRunning && !document.getElementById('startBtn').style.display) return;
-  if (!word.started) { word.started = true; }
-  word.birdVY = word.jump;
-};
-document.addEventListener('keydown', function(e) {
-  if (e.code === 'Space') {
-    e.preventDefault();
-    if (!gameRunning) return;
-    if (!word.started) { word.started = true; }
-    word.birdVY = word.jump;
+window.checkWordAnswer = function() {
+  var input = document.getElementById('wordAnswer');
+  var feedback = document.getElementById('wordFeedback');
+  if (!input || !feedback || !currentQuestion) return;
+  
+  var answer = input.value.trim().toUpperCase();
+  if (answer === currentQuestion.word.toUpperCase()) {
+    correctAnswers++;
+    feedback.innerHTML = '✅ <span style="color:#10B981">Correct! +1</span>';
+    feedback.style.color = '#10B981';
+    document.getElementById('wordScoreDisplay').textContent = correctAnswers;
+    // Celebrate!
+    triggerMiniConfetti();
+  } else {
+    feedback.innerHTML = '❌ <span style="color:#EF4444">Wrong! Answer: <strong>' + currentQuestion.word + '</strong></span>';
+    feedback.style.color = '#EF4444';
   }
-});
+  
+  currentWordIdx++;
+  
+  // Next word after delay
+  setTimeout(function() {
+    showWordQuestion();
+  }, 1200);
+};
 
-wordLoop();
+function triggerMiniConfetti() {
+  // Simple confetti burst
+  var container = document.getElementById('wordGameContainer');
+  if (!container) return;
+  var colors = ['#d4af37','#10B981','#F59E0B','#3B82F6','#EC4899','#A855F7'];
+  for (var i = 0; i < 20; i++) {
+    var el = document.createElement('div');
+    el.style.cssText = 'position:fixed;width:6px;height:6px;border-radius:50%;background:' + colors[Math.floor(Math.random()*colors.length)] + ';pointer-events:none;z-index:9999;left:' + (50 + Math.random()*30) + '%;top:' + (30 + Math.random()*20) + '%;opacity:1';
+    document.body.appendChild(el);
+    el.animate([
+      { transform: 'translateY(0px) scale(1)', opacity: 1 },
+      { transform: 'translateY(-' + (50+Math.random()*80) + 'px) scale(0.3)', opacity: 0 }
+    ], { duration: 600 + Math.random()*400, easing: 'ease-out' }).onfinish = function() { el.remove(); };
+  }
+}
 
+function startGame() {
+  if (gameRunning) return;
+  gameRunning = true;
+  gameOver = false;
+  gameScore = 0;
+  correctAnswers = 0;
+  totalEarned = 0;
+  pickWords();
+  document.getElementById('gamePlayStatus').textContent = '🎮 Playing...';
+  document.getElementById('gamePlayStatus').style.color = '#10B981';
+  showWordQuestion();
+}
+
+function restartGame() {
+  gameRunning = false;
+  gameOver = false;
+  gameScore = 0;
+  correctAnswers = 0;
+  totalEarned = 0;
+  currentWordIdx = 0;
+  wordQueue = [];
+  document.getElementById('rewardDisplay').textContent = '$0.000';
+  document.getElementById('scoreDisplay').textContent = '0';
+  document.getElementById('gamePlayStatus').textContent = '🔄 Press Start';
+  document.getElementById('gamePlayStatus').style.color = '';
+  var container = document.getElementById('wordGameContainer');
+  if (container) {
+    container.innerHTML = '<div style="text-align:center;padding:40px 16px;color:var(--text-muted);font-size:14px">🔤 Press <strong style="color:var(--gold)">Start</strong> to play Word Scramble!</div>';
+  }
 }
 
 function rewardGame(score) {
