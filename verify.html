@@ -9,29 +9,29 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .auth-wrap{width:100%;max-width:400px}
-.auth-card{background:rgba(255,255,255,0.03);backdrop-filter:blur(24px) saturate(140%);border:1px solid rgba(255,255,255,0.06);border-radius:24px;padding:32px 24px;box-shadow:0 16px 80px rgba(0,0,0,0.3)}
+.auth-card{background:rgba(255,255,255,0.03);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.06);border-radius:24px;padding:32px 24px;box-shadow:0 16px 80px rgba(0,0,0,0.3)}
 .auth-logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#10B981,#059669);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;margin:0 auto 16px;box-shadow:0 8px 32px rgba(16,185,129,0.2)}
 .auth-title{font-size:20px;font-weight:800;text-align:center;margin-bottom:4px}
 .auth-subtitle{font-size:12px;color:rgba(255,255,255,0.4);text-align:center;margin:4px 0 20px;line-height:1.5}
 .auth-subtitle strong{color:var(--gold)}
-.otp-input-group{display:flex;gap:6px;justify-content:center;margin:16px 0}
-.otp-input{width:44px;height:50px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#fff;font-size:22px;font-weight:700;text-align:center;outline:none;transition:0.2s;font-family:monospace}
-.otp-input:focus{border-color:#10B981;box-shadow:0 0 0 3px rgba(16,185,129,0.1)}
-.otp-input.filled{border-color:rgba(16,185,129,0.2);background:rgba(16,185,129,0.04)}
+.otp-group{display:flex;gap:6px;justify-content:center;margin:16px 0}
+.otp-box{width:44px;height:50px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#fff;font-size:22px;font-weight:700;text-align:center;outline:none;transition:0.2s;font-family:monospace}
+.otp-box:focus{border-color:#10B981;box-shadow:0 0 0 3px rgba(16,185,129,0.1)}
+.otp-box.filled{border-color:rgba(16,185,129,0.2);background:rgba(16,185,129,0.04)}
 .btn-auth{width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;transition:0.25s;margin-top:8px}
 .btn-auth:hover{opacity:0.9;transform:translateY(-1px)}
-.btn-auth:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.btn-auth:disabled{opacity:0.5;cursor:not-allowed}
 .btn-outline{width:100%;padding:12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);font-size:13px;cursor:pointer;transition:0.2s;margin-top:6px}
 .btn-outline:hover{border-color:rgba(255,255,255,0.1);color:#fff}
-.auth-alert{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:12px;display:none;text-align:center}
-.auth-alert.show{display:block}
-.auth-alert.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#FCA5A5}
-.auth-alert.success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#6EE7B7}
-.auth-alert.info{background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.2);color:#FCD34D}
-.auth-footer{text-align:center;margin-top:20px;font-size:13px;color:rgba(255,255,255,0.3)}
-.auth-footer a{color:#10B981;text-decoration:none;font-weight:600}
-.timer-text{text-align:center;font-size:12px;color:rgba(255,255,255,0.3);margin-top:8px}
-.timer-text strong{color:#d4af37}
+.alert{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:12px;display:none;text-align:center}
+.alert.show{display:block}
+.alert.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#FCA5A5}
+.alert.success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#6EE7B7}
+.alert.info{background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.2);color:#FCD34D}
+.footer{text-align:center;margin-top:20px;font-size:13px;color:rgba(255,255,255,0.3)}
+.footer a{color:#10B981;text-decoration:none;font-weight:600}
+.timer{text-align:center;font-size:12px;color:rgba(255,255,255,0.3);margin-top:8px}
+.timer strong{color:#d4af37}
 </style>
 </head>
 <body>
@@ -39,26 +39,24 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div class="auth-card">
     <div class="auth-logo">E</div>
     <div class="auth-title">📨 Verify Email</div>
-    <div class="auth-subtitle">Enter the 6-digit code sent to<br><strong id="otpEmailDisplay">your email</strong></div>
+    <div class="auth-subtitle">Enter the 6-digit code sent to<br><strong id="emailDisplay">your email</strong></div>
     
-    <div id="otpAlert" class="auth-alert"></div>
+    <div id="alertBox" class="alert"></div>
     
-    <div class="otp-input-group">
-      <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp1" oninput="otpMove(this,2)" onkeydown="otpBack(event,1)" autofocus>
-      <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp2" oninput="otpMove(this,3)" onkeydown="otpBack(event,2)">
-      <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp3" oninput="otpMove(this,4)" onkeydown="otpBack(event,3)">
-      <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp4" oninput="otpMove(this,5)" onkeydown="otpBack(event,4)">
-      <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp5" oninput="otpMove(this,6)" onkeydown="otpBack(event,5)">
-      <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp6" oninput="otpMove(this,7)" onkeydown="otpBack(event,6)">
+    <div class="otp-group">
+      <input class="otp-box" maxlength="1" inputmode="numeric" id="o1" oninput="next(this,2)" onkeydown="prev(event,1)" autofocus>
+      <input class="otp-box" maxlength="1" inputmode="numeric" id="o2" oninput="next(this,3)" onkeydown="prev(event,2)">
+      <input class="otp-box" maxlength="1" inputmode="numeric" id="o3" oninput="next(this,4)" onkeydown="prev(event,3)">
+      <input class="otp-box" maxlength="1" inputmode="numeric" id="o4" oninput="next(this,5)" onkeydown="prev(event,4)">
+      <input class="otp-box" maxlength="1" inputmode="numeric" id="o5" oninput="next(this,6)" onkeydown="prev(event,5)">
+      <input class="otp-box" maxlength="1" inputmode="numeric" id="o6" oninput="next(this,7)" onkeydown="prev(event,6)">
     </div>
     
-    <button class="btn-auth" id="verifyOTPBtn" onclick="verifyOTP()">✅ Verify & Complete</button>
-    <button class="btn-outline" id="resendOTPBtn" onclick="resendOTP()">🔄 Resend Code</button>
-    <div class="timer-text" id="otpTimer"></div>
+    <button class="btn-auth" id="verifyBtn" onclick="doVerify()">✅ Verify & Complete</button>
+    <button class="btn-outline" id="resendBtn" onclick="doResend()">🔄 Resend Code</button>
+    <div class="timer" id="timerDisplay"></div>
     
-    <div class="auth-footer">
-      <a href="register.html">← Back to Register</a>
-    </div>
+    <div class="footer"><a href="register.html">← Back to Register</a></div>
   </div>
 </div>
 
@@ -66,7 +64,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script>
-// Firebase
+// Config
 firebase.initializeApp({
   apiKey: "AIzaSyAoo2-X5ILICXR2mFAyUhqJYpvScChlsOc",
   authDomain: "earnnovabeta.firebaseapp.com",
@@ -77,229 +75,195 @@ firebase.initializeApp({
 });
 var db = firebase.firestore();
 var auth = firebase.auth();
+var currentUser = null;
 
-// ===== GET DATA FROM URL / SESSION =====
-var params = new URLSearchParams(window.location.search);
-var email = params.get('email') || localStorage.getItem('en_otp_email') || '';
-var userId = params.get('uid') || localStorage.getItem('en_otp_userId') || '';
-var userName = params.get('name') || localStorage.getItem('en_otp_name') || '';
-var referralCode = params.get('ref') || localStorage.getItem('en_otp_ref') || '';
-var isNewUser = params.get('new') === '1';
+// Params
+var p = new URLSearchParams(window.location.search);
+var email = p.get('email') || localStorage.getItem('en_otp_email') || '';
+var uid = p.get('uid') || localStorage.getItem('en_otp_userId') || '';
+var name = p.get('name') || localStorage.getItem('en_otp_name') || '';
+var refCode = p.get('ref') || localStorage.getItem('en_otp_ref') || '';
+var isNew = p.get('new') === '1';
+var shouldResend = p.get('resend') === '1';
 
-if (email) document.getElementById('otpEmailDisplay').textContent = email;
+if (email) document.getElementById('emailDisplay').textContent = email;
 
-// ===== OTP INPUT NAVIGATION =====
-function otpMove(current, nextId) {
-  if (current.value.length >= 1) {
-    current.classList.add('filled');
-    if (nextId <= 6) document.getElementById('otp' + nextId)?.focus();
-  }
-  var full = '';
-  for (var i = 1; i <= 6; i++) {
-    var v = document.getElementById('otp' + i)?.value || '';
-    if (!v) return;
-    full += v;
-  }
+// OTP nav
+function next(el, n) {
+  if (el.value) { el.classList.add('filled'); if (n <= 6) document.getElementById('o' + n)?.focus(); }
+}
+function prev(e, n) {
+  if (e.key === 'Backspace' && !e.target.value && n > 1) document.getElementById('o' + (n-1))?.focus();
 }
 
-function otpBack(event, prevId) {
-  if (event.key === 'Backspace' && !event.target.value && prevId > 1) {
-    document.getElementById('otp' + (prevId-1))?.focus();
-  }
+function getCode() {
+  var c = '';
+  for (var i = 1; i <= 6; i++) c += document.getElementById('o' + i)?.value || '';
+  return c;
 }
 
-// ===== ALERT =====
-function showAlert(msg, type) {
-  var el = document.getElementById('otpAlert');
+function showAlert(msg, t) {
+  var el = document.getElementById('alertBox');
   el.textContent = msg;
-  el.className = 'auth-alert show ' + (type || 'error');
+  el.className = 'alert show ' + (t || 'error');
 }
 
-function clearAlert() {
-  document.getElementById('otpAlert').className = 'auth-alert';
-}
+function clearAlert() { document.getElementById('alertBox').className = 'alert'; }
 
 // ===== VERIFY OTP =====
-function verifyOTP() {
+function doVerify() {
   clearAlert();
+  var code = getCode();
+  if (code.length !== 6) { showAlert('⚠️ Enter the complete 6-digit code', 'error'); return; }
   
-  var otpCode = '';
-  for (var i = 1; i <= 6; i++) {
-    otpCode += document.getElementById('otp' + i)?.value || '';
-  }
-  
-  if (otpCode.length !== 6) {
-    showAlert('⚠️ Enter the complete 6-digit code', 'error');
-    return;
-  }
-  
-  var btn = document.getElementById('verifyOTPBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Verifying...';
-  
+  var btn = document.getElementById('verifyBtn');
+  btn.disabled = true; btn.textContent = '⏳ Verifying...';
   showAlert('🔍 Checking OTP...', 'info');
   
-  // Build query
-  var query = db.collection('otp_codes')
-    .where('code', '==', otpCode)
-    .where('used', '==', false);
+  var q = db.collection('otp_codes').where('code', '==', code).where('used', '==', false);
+  if (email) q = q.where('email', '==', email);
+  if (uid) q = q.where('userId', '==', uid);
   
-  if (email) query = query.where('email', '==', email);
-  if (userId) query = query.where('userId', '==', userId);
-  
-  query.get().then(function(snap) {
+  q.get().then(function(snap) {
     if (snap.empty) {
-      showAlert('❌ Invalid OTP code. Check and try again.', 'error');
-      btn.disabled = false;
-      btn.textContent = '✅ Verify & Complete';
+      showAlert('❌ Invalid OTP code. Try again.', 'error');
+      btn.disabled = false; btn.textContent = '✅ Verify & Complete';
       return;
     }
-    
-    var doc = snap.docs[0];
-    var data = doc.data();
-    var expiry = data.expiresAt ? data.expiresAt.toDate() : new Date();
-    
-    if (Date.now() > expiry.getTime()) {
-      showAlert('⏰ OTP expired! Request a new one.', 'error');
+    var doc = snap.docs[0], d = doc.data();
+    var exp = d.expiresAt ? d.expiresAt.toDate() : new Date();
+    if (Date.now() > exp.getTime()) {
+      showAlert('⏰ OTP expired! Resend a new one.', 'error');
       db.collection('otp_codes').doc(doc.id).update({ used: true });
-      btn.disabled = false;
-      btn.textContent = '✅ Verify & Complete';
+      btn.disabled = false; btn.textContent = '✅ Verify & Complete';
       return;
     }
     
-    // ✅ OTP VALID
-    // Mark as used
-    db.collection('otp_codes').doc(doc.id).update({
-      used: true,
-      verifiedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(function() {
-      localStorage.setItem('en_otp_verified', 'true');
-      localStorage.removeItem('en_otp_email');
-      localStorage.removeItem('en_otp_userId');
-      localStorage.removeItem('en_otp_name');
+    // ✅ OTP valid — create user doc for new registration
+    if (isNew && uid) {
+      var refCodeGen = Math.random().toString(36).substring(2, 10).toUpperCase();
+      var userData = {
+        uid: uid, email: email, name: name || '', photo: '', phone: '',
+        balance: 0, totalEarned: 0, totalWithdrawn: 0,
+        adsWatched: 0, todayAds: 0, lastAdDate: '',
+        referralCode: refCodeGen, referredBy: '', referralBonusPaid: false,
+        regIp: '0.0.0.0', isActive: true, emailVerified: true, otpVerified: true,
+        isAdmin: email === 'owner@nova.com',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+      };
       
-      btn.textContent = '✅ Verified!';
-      showAlert('✅ Email verified!', 'success');
-      
-      // For new registration: redirect to home
-      if (isNewUser && userId) {
-        setTimeout(function() { window.location.href = 'home.html'; }, 1500);
-      } else {
-        // For existing users: redirect based on mode
-        var mode = params.get('mode') || 'home';
-        setTimeout(function() { window.location.href = mode + '.html'; }, 1500);
-      }
-    });
+      // IP
+      try { fetch('https://api.ipify.org?format=json').then(function(r){return r.json()}).then(function(ipd){userData.regIp=ipd.ip; saveAndFinish(doc.id, userData, refCodeGen);}).catch(function(){saveAndFinish(doc.id, userData, refCodeGen);}); } catch(e){saveAndFinish(doc.id, userData, refCodeGen);}
+    } else {
+      // Just mark OTP used
+      db.collection('otp_codes').doc(doc.id).update({ used: true, verifiedAt: firebase.firestore.FieldValue.serverTimestamp() }).then(function() {
+        finish();
+      });
+    }
   }).catch(function(err) {
     showAlert('❌ Error: ' + err.message, 'error');
-    btn.disabled = false;
-    btn.textContent = '✅ Verify & Complete';
+    btn.disabled = false; btn.textContent = '✅ Verify & Complete';
   });
+}
+
+function saveAndFinish(docId, userData, refCodeGen) {
+  // Handle referral
+  var saveUser = function() { return db.collection('users').doc(uid).set(userData); };
+  
+  saveUser().then(function() {
+    return db.collection('otp_codes').doc(docId).update({ used: true, verifiedAt: firebase.firestore.FieldValue.serverTimestamp() });
+  }).then(function() {
+    if (refCode) {
+      return db.collection('users').where('referralCode', '==', refCode).get().then(function(rs) {
+        if (!rs.empty) {
+          var r = rs.docs[0];
+          return db.collection('users').doc(r.id).update({ referralCount: firebase.firestore.FieldValue.increment(1) }).then(function() {
+            return db.collection('referrals').add({ referrerId: r.id, referredId: uid, referredName: name || '', bonus: 0.50, bonusPaid: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+          });
+        }
+      });
+    }
+  }).then(function() { finish(); }).catch(function(err) {
+    showAlert('❌ Error creating account: ' + err.message, 'error');
+    document.getElementById('verifyBtn').disabled = false; document.getElementById('verifyBtn').textContent = '✅ Verify & Complete';
+  });
+}
+
+function finish() {
+  localStorage.setItem('en_otp_verified', 'true');
+  localStorage.removeItem('en_otp_email');
+  localStorage.removeItem('en_otp_userId');
+  localStorage.removeItem('en_otp_name');
+  localStorage.removeItem('en_otp_ref');
+  
+  document.getElementById('verifyBtn').textContent = '✅ Verified!';
+  showAlert('✅ Email verified successfully!', 'success');
+  
+  setTimeout(function() { window.location.href = 'home.html'; }, 1500);
 }
 
 // ===== RESEND OTP =====
-var otpCooldown = 0;
-var otpTimerInterval = null;
+var cooldown = 0, timerInt = null;
 
-function resendOTP() {
-  if (otpCooldown > 0 && otpCooldown < 60) {
-    showAlert('⏳ Please wait ' + otpCooldown + 's', 'error');
-    return;
-  }
+function doResend() {
+  if (cooldown > 0 && cooldown < 60) { showAlert('⏳ Wait ' + cooldown + 's', 'error'); return; }
+  if (!email) { showAlert('⚠️ No email found', 'error'); return; }
   
-  if (!email) {
-    showAlert('⚠️ No email found. Please register again.', 'error');
-    return;
-  }
+  document.getElementById('resendBtn').disabled = true;
+  document.getElementById('resendBtn').textContent = '⏳ Sending...';
   
-  document.getElementById('resendOTPBtn').disabled = true;
-  document.getElementById('resendOTPBtn').textContent = '⏳ Sending...';
-  
-  var otpCode = String(Math.floor(100000 + Math.random() * 900000));
-  var expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-  
+  var code = String(Math.floor(100000 + Math.random() * 900000));
   db.collection('otp_codes').add({
-    code: otpCode, used: false, email: email,
-    userId: userId || '',
-    name: userName || '',
-    referralCode: referralCode || '',
+    code: code, used: false, email: email, userId: uid || '',
+    name: name || '', referralCode: refCode || '',
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    expiresAt: expiresAt
+    expiresAt: new Date(Date.now() + 10 * 60 * 1000)
   }).then(function() {
-    // Log to console (simulated email)
-    console.log('========================================');
-    console.log('📧 EMAIL OTP TO: ' + email);
-    console.log('   OTP Code: ' + otpCode);
-    console.log('   ⚠️ SECURITY: OTP is NOT in URL');
-    console.log('   User must type it manually');
-    console.log('========================================');
-    
-    localStorage.setItem('en_last_otp', otpCode);
-    
+    console.log('📧 OTP to ' + email + ': ' + code + ' (NOT in URL - security)');
     showAlert('📨 New OTP sent to ' + email, 'info');
-    document.getElementById('resendOTPBtn').disabled = false;
-    document.getElementById('resendOTPBtn').textContent = '🔄 Resend Code';
-    startCooldown();
-    
-    // Clear inputs
-    for (var i = 1; i <= 6; i++) {
-      var inp = document.getElementById('otp' + i);
-      if (inp) { inp.value = ''; inp.classList.remove('filled'); }
-    }
-    document.getElementById('otp1')?.focus();
+    document.getElementById('resendBtn').disabled = false;
+    document.getElementById('resendBtn').textContent = '🔄 Resend Code';
+    startTimer();
+    for (var i = 1; i <= 6; i++) { var el = document.getElementById('o' + i); if (el) { el.value = ''; el.classList.remove('filled'); } }
+    document.getElementById('o1')?.focus();
   }).catch(function(err) {
-    showAlert('❌ Error: ' + err.message, 'error');
-    document.getElementById('resendOTPBtn').disabled = false;
-    document.getElementById('resendOTPBtn').textContent = '🔄 Resend Code';
+    showAlert('❌ ' + err.message, 'error');
+    document.getElementById('resendBtn').disabled = false;
+    document.getElementById('resendBtn').textContent = '🔄 Resend Code';
   });
 }
 
-function startCooldown() {
-  otpCooldown = 60;
-  if (otpTimerInterval) clearInterval(otpTimerInterval);
-  document.getElementById('otpTimer').innerHTML = 'Resend in <strong>' + otpCooldown + 's</strong>';
-  otpTimerInterval = setInterval(function() {
-    otpCooldown--;
-    if (otpCooldown <= 0) {
-      clearInterval(otpTimerInterval);
-      document.getElementById('otpTimer').innerHTML = 'You can resend now';
-    } else {
-      document.getElementById('otpTimer').innerHTML = 'Resend in <strong>' + otpCooldown + 's</strong>';
-    }
+function startTimer() {
+  cooldown = 60;
+  if (timerInt) clearInterval(timerInt);
+  document.getElementById('timerDisplay').innerHTML = 'Resend in <strong>' + cooldown + 's</strong>';
+  timerInt = setInterval(function() {
+    cooldown--;
+    document.getElementById('timerDisplay').innerHTML = cooldown > 0 ? 'Resend in <strong>' + cooldown + 's</strong>' : '';
+    if (cooldown <= 0) clearInterval(timerInt);
   }, 1000);
 }
 
-// ===== AUTO GENERATE OTP FOR TESTING =====
-setTimeout(function() {
-  if (!email) {
-    // Try from login state
-    var user = auth.currentUser;
-    if (user) {
-      email = user.email;
-      userId = user.uid;
-      document.getElementById('otpEmailDisplay').textContent = email;
-    }
-  }
-  // Auto-generate OTP for demo if none exists
-  var stored = localStorage.getItem('en_last_otp');
-  if (!stored) {
-    var code = String(Math.floor(100000 + Math.random() * 900000));
-    var expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-    db.collection('otp_codes').add({
-      code: code, used: false, email: email || 'demo@earnnova.com',
-      userId: userId || 'demo',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      expiresAt: expiresAt
-    }).then(function() {
-      console.log('📱 DEMO OTP Code: ' + code + ' (valid 10 min)');
-      localStorage.setItem('en_last_otp', code);
-      startCooldown();
-    });
-  }
-}, 500);
+// Auto-resend if ?resend=1
+if (shouldResend && email) { setTimeout(doResend, 500); }
 
-console.log('📧 EARN NOVA OTP Verification');
-console.log('🔒 OTP is NEVER in URL - manual entry only');
+// Demo OTP generation
+if (email && !localStorage.getItem('en_last_otp_' + email)) {
+  var demoCode = String(Math.floor(100000 + Math.random() * 900000));
+  db.collection('otp_codes').add({
+    code: demoCode, used: false, email: email, userId: uid || 'demo',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+  }).then(function() {
+    console.log('📱 OTP: ' + demoCode + ' (for ' + email + ')');
+    localStorage.setItem('en_last_otp_' + email, demoCode);
+    showAlert('📨 OTP sent! Check console for code.', 'info');
+    startTimer();
+  });
+}
+
+console.log('EARN NOVA — OTP Verify (secure: no code in URL)');
 </script>
 </body>
 </html>
