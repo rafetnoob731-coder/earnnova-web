@@ -104,7 +104,7 @@ body{margin:0;background:#080A12;display:flex;align-items:center;justify-content
     <!-- ===== STEP 1: Registration Form ===== -->
     <div id="stepForm">
       <div class="auth-title">Create Account</div>
-      <div class="auth-subtitle">Enter details → verify via email OTP</div>
+      <div class="auth-subtitle">Create your account • verify via email</div>
       
       <div id="alertBox" class="auth-alert"></div>
       
@@ -211,7 +211,7 @@ function clearAlert(targetId) {
 
 function showStep(step) {
   document.getElementById('stepForm').style.display = step === 'form' ? 'block' : 'none';
-  document.getElementById('stepOTP').style.display = step === 'otp' ? 'block' : 'none';
+  // OTP step moved to verify.html
   document.getElementById('stepSuccess').style.display = step === 'success' ? 'block' : 'none';
 }
 
