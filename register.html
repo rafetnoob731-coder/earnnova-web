@@ -112,7 +112,8 @@ body{margin:0;background:#080A12;display:flex;align-items:center;justify-content
 
     <div class="auth-alert" id="alertBox"></div>
 
-    <form id="registerForm">
+    <form id="registerForm" action="/register.html" method="GET">
+      <input type="hidden" id="tokenInput" name="token" value="">
       <div class="auth-input-group">
         <label>Full Name</label>
         <div class="auth-input-wrap">
@@ -151,7 +152,7 @@ body{margin:0;background:#080A12;display:flex;align-items:center;justify-content
     </form>
 
     <div class="auth-footer">
-      Already have an account? <a href="login.html">Sign In</a>
+      Already have an account? <a href="login.html" id="loginLink">Sign In</a>
     </div>
   </div>
   <div style="text-align:center;margin-top:16px;font-size:11px;color:rgba(255,255,255,0.15)">
@@ -256,6 +257,16 @@ document.getElementById('registerForm').addEventListener('submit', async functio
 
     await usersRef.doc(user.uid).set(userData);
     btn.textContent = '✅ Account created!';
+    
+    // Redirect if auth=redirect mode
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('auth') === 'redirect') {
+      var redir = params.get('redirect') || 'home.html';
+      setTimeout(function() { window.location.href = redir; }, 1500);
+    } else {
+      setTimeout(function() { window.location.href = 'home.html'; }, 1500);
+    }
+    return; // Prevent catch from running
 
   } catch(err) {
     showAlert(getAuthError(err), 'error');
@@ -264,10 +275,58 @@ document.getElementById('registerForm').addEventListener('submit', async functio
   }
 });
 
-// Auth state redirect
-auth.onAuthStateChanged(function(user) {
-  if (user) window.location.href = 'home.html';
-});
+// Auth state redirect — supports auth=redirect & token params
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var authMode = params.get('auth');
+  var redirUrl = params.get('redirect') || 'home.html';
+  var token = params.get('token');
+
+  // Handle token — decode if present
+  if (token) {
+    console.log('🔑 Registration token:', token);
+    // Store token for post-registration flow
+    localStorage.setItem('en_reg_token', token);
+    
+    // If token looks like a referral code (uppercase alphanumeric 6-10 chars), prefill it
+    if (/^[A-Z0-9]{6,10}$/.test(token)) {
+      var refInput = document.getElementById('regReferral');
+      if (refInput && !refInput.value) {
+        refInput.value = token;
+        refInput.style.borderColor = '#10B981';
+        refInput.style.boxShadow = '0 0 0 3px rgba(16,185,129,0.15)';
+      }
+    }
+    
+    // If token contains user data (base64 encoded JSON payload)
+    try {
+      var decoded = atob(token.replace(/-/g, '+').replace(/_/g, '/'));
+      var payload = JSON.parse(decoded);
+      if (payload.email) document.getElementById('regEmail').value = payload.email;
+      if (payload.name) document.getElementById('regName').value = payload.name;
+      if (payload.ref) {
+        var refInput2 = document.getElementById('regReferral');
+        if (refInput2 && !refInput2.value) refInput2.value = payload.ref;
+      }
+    } catch(e) { /* not a JSON token, ignore */ }
+  }
+
+  // auth=redirect mode: after login/register, redirect back
+  if (authMode === 'redirect') {
+    console.log('🔄 Auth redirect mode enabled →', redirUrl);
+  }
+
+  // Override the auth redirect
+  auth.onAuthStateChanged(function(user) {
+    if (user) {
+      if (authMode === 'redirect') {
+        window.location.href = redirUrl;
+      } else {
+        window.location.href = 'home.html';
+      }
+    }
+  });
+})();
 
 // Auto-fill referral code from URL ?ref=CODE
 (function() {
@@ -284,5 +343,22 @@ auth.onAuthStateChanged(function(user) {
   }
 })();
 </script>
-</body>
+
+<script>
+// Preserve URL params when navigating to login
+(function() {
+  var loginLink = document.getElementById('loginLink');
+  if (loginLink) {
+    var params = new URLSearchParams(window.location.search);
+    var auth = params.get('auth');
+    var redirect = params.get('redirect');
+    var token = params.get('token');
+    var qs = [];
+    if (auth) qs.push('auth=' + auth);
+    if (redirect) qs.push('redirect=' + encodeURIComponent(redirect));
+    if (token) qs.push('token=' + token);
+    if (qs.length > 0) loginLink.href = 'login.html?' + qs.join('&');
+  }
+})();
+</script></body>
 </html>
