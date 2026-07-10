@@ -41,7 +41,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   font-size:10px;color:var(--text-muted);white-space:nowrap;z-index:50;
 }
 .ip-info strong{color:var(--gold)}
-@media(max-width:400px){.header .ip-badge{display:none}}
+@media(max-width:400px){.header .ip-badge{display:none}
 </style>
 </head>
 <body>
@@ -179,7 +179,7 @@ var canvas = document.getElementById('gameCanvas');
 var ctx = canvas.getContext('2d');
 canvas.width = 320; canvas.height = 480;
 
-function initMemory() {{
+function initMemory() {
   memCards = [];
   memFlipped = [];
   memMatched = 0;
@@ -188,21 +188,21 @@ function initMemory() {{
   
   // Pick 6 emojis
   var used = [];
-  for (var i = 0; i < memPairs; i++) {{
+  for (var i = 0; i < memPairs; i++) {
     var idx;
-    do {{ idx = Math.floor(Math.random() * memEmojis.length); }} while (used.includes(idx));
+    do { idx = Math.floor(Math.random() * memEmojis.length); } while (used.includes(idx));
     used.push(idx);
-    memCards.push({{emoji: memEmojis[idx], matched: false, flipped: false, id: i*2}});
-    memCards.push({{emoji: memEmojis[idx], matched: false, flipped: false, id: i*2+1}});
-  }}
+    memCards.push({emoji: memEmojis[idx], matched: false, flipped: false, id: i*2});
+    memCards.push({emoji: memEmojis[idx], matched: false, flipped: false, id: i*2+1});
+  }
   // Shuffle
-  for (var i = memCards.length - 1; i > 0; i--) {{
+  for (var i = memCards.length - 1; i > 0; i--) {
     var j = Math.floor(Math.random() * (i + 1));
     var temp = memCards[i]; memCards[i] = memCards[j]; memCards[j] = temp;
-  }}
-}}
+  }
+}
 
-function drawMemory() {{
+function drawMemory() {
   ctx.fillStyle = '#0A0E1A';
   ctx.fillRect(0, 0, 320, 480);
   
@@ -221,13 +221,13 @@ function drawMemory() {{
   var startX = (320 - (cols * cw + (cols-1) * gap)) / 2;
   var startY = 80;
   
-  for (var i = 0; i < memCards.length; i++) {{
+  for (var i = 0; i < memCards.length; i++) {
     var col = i % cols;
     var row = Math.floor(i / cols);
     var x = startX + col * (cw + gap);
     var y = startY + row * (ch + gap);
     
-    if (memCards[i].matched) {{
+    if (memCards[i].matched) {
       ctx.fillStyle = 'rgba(16,185,129,0.1)';
       ctx.fillRect(x, y, cw, ch);
       ctx.fillStyle = '#10B981';
@@ -235,7 +235,7 @@ function drawMemory() {{
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(memCards[i].emoji, x + cw/2, y + ch/2);
-    }} else if (memCards[i].flipped) {{
+    } else if (memCards[i].flipped) {
       ctx.fillStyle = 'rgba(255,255,255,0.06)';
       ctx.fillRect(x, y, cw, ch);
       ctx.strokeStyle = 'rgba(212,175,55,0.2)';
@@ -246,7 +246,7 @@ function drawMemory() {{
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(memCards[i].emoji, x + cw/2, y + ch/2);
-    }} else {{
+    } else {
       ctx.fillStyle = 'rgba(255,255,255,0.03)';
       ctx.fillRect(x, y, cw, ch);
       ctx.strokeStyle = 'rgba(255,255,255,0.06)';
@@ -258,11 +258,11 @@ function drawMemory() {{
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('?', x + cw/2, y + ch/2);
-    }}
+    }
     ctx.textBaseline = 'alphabetic';
-  }}
+  }
   
-  if (memMatched >= memPairs) {{
+  if (memMatched >= memPairs) {
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
     ctx.fillRect(0, 0, 320, 480);
     ctx.fillStyle = '#10B981';
@@ -272,10 +272,10 @@ function drawMemory() {{
     ctx.fillStyle = '#d4af37';
     ctx.font = '18px sans-serif';
     ctx.fillText('Moves: ' + memScore, 160, 240);
-  }}
-}}
+  }
+}
 
-canvas.onclick = function(e) {{
+canvas.onclick = function(e) {
   if (!gameRunning || memLocked || memMatched >= memPairs) return;
   var rect = canvas.getBoundingClientRect();
   var scaleX = canvas.width / rect.width;
@@ -287,51 +287,51 @@ canvas.onclick = function(e) {{
   var startX = (320 - (cols * cw + (cols-1) * gap)) / 2;
   var startY = 80;
   
-  for (var i = 0; i < memCards.length; i++) {{
+  for (var i = 0; i < memCards.length; i++) {
     var col = i % cols;
     var row = Math.floor(i / cols);
     var x = startX + col * (cw + gap);
     var y = startY + row * (ch + gap);
     
-    if (mx >= x && mx <= x + cw && my >= y && my <= y + ch) {{
+    if (mx >= x && mx <= x + cw && my >= y && my <= y + ch) {
       if (memCards[i].matched || memCards[i].flipped) return;
       
       memCards[i].flipped = true;
       memFlipped.push(i);
       memScore++;
       
-      if (memFlipped.length === 2) {{
+      if (memFlipped.length === 2) {
         memLocked = true;
         var a = memFlipped[0], b = memFlipped[1];
-        if (memCards[a].emoji === memCards[b].emoji && a !== b) {{
+        if (memCards[a].emoji === memCards[b].emoji && a !== b) {
           memCards[a].matched = true;
           memCards[b].matched = true;
           memMatched++;
           memFlipped = [];
           memLocked = false;
           
-          if (memMatched >= memPairs) {{
+          if (memMatched >= memPairs) {
             gameRunning = false;
             gameScore = Math.max(0, 12 - memScore);
             rewardGame(gameScore);
             document.getElementById('startBtn').style.display = 'inline-block';
             document.getElementById('startBtn').textContent = '▶ Play Again';
             document.getElementById('restartBtn').style.display = 'inline-block';
-          }}
-        }} else {{
-          setTimeout(function() {{
+          }
+        } else {
+          setTimeout(function() {
             memCards[a].flipped = false;
             memCards[b].flipped = false;
             memFlipped = [];
             memLocked = false;
-          }}, 800);
-        }}
-      }}
+          }, 800);
+        }
+      }
       drawMemory();
       return;
     }
-  }}
-}};
+  }
+};
 
 initMemory();
 drawMemory();
