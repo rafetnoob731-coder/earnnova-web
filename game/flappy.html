@@ -41,7 +41,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   font-size:10px;color:var(--text-muted);white-space:nowrap;z-index:50;
 }
 .ip-info strong{color:var(--gold)}
-@media(max-width:400px){.header .ip-badge{display:none}}
+@media(max-width:400px){.header .ip-badge{display:none}
 </style>
 </head>
 <body>
@@ -167,16 +167,16 @@ function startGame() {
   gameScore = 0;
   document.getElementById('scoreDisplay').textContent = '0';
   
-var flappy = {{
+var flappy = {
   birdX: 60, birdY: 200, birdVY: 0, gravity: 0.5, jump: -8,
   pipes: [], pipeWidth: 40, pipeGap: 140, frameId: null, 
   started: false, pipeCount: 0
-}};
+};
 
 var canvas = document.getElementById('gameCanvas');
 var ctx = canvas.getContext('2d');
 
-function flappyLoop() {{
+function flappyLoop() {
   if (!gameRunning) return;
   
   // Gravity
@@ -184,33 +184,33 @@ function flappyLoop() {{
   flappy.birdY += flappy.birdVY;
   
   // Pipes
-  if (flappy.started) {{
+  if (flappy.started) {
     flappy.pipeCount++;
-    if (flappy.pipeCount % 60 === 0) {{
+    if (flappy.pipeCount % 60 === 0) {
       var gapY = 80 + Math.random() * 200;
-      flappy.pipes.push({{ x: 320, gapY: gapY, scored: false }});
-    }}
-  }}
+      flappy.pipes.push({ x: 320, gapY: gapY, scored: false });
+    }
+  }
   
   // Move pipes + collision
   var alive = true;
-  for (var i = flappy.pipes.length - 1; i >= 0; i--) {{
+  for (var i = flappy.pipes.length - 1; i >= 0; i--) {
     var p = flappy.pipes[i];
     p.x -= 3;
-    if (p.x + flappy.pipeWidth < 0) {{ flappy.pipes.splice(i, 1); continue; }}
+    if (p.x + flappy.pipeWidth < 0) { flappy.pipes.splice(i, 1); continue; }
     
     // Collision
     var bx = flappy.birdX, by = flappy.birdY, r = 12;
-    if (bx + r > p.x && bx - r < p.x + flappy.pipeWidth) {{
+    if (bx + r > p.x && bx - r < p.x + flappy.pipeWidth) {
       if (by - r < p.gapY || by + r > p.gapY + flappy.pipeGap) alive = false;
-    }}
+    }
     
     // Score
-    if (!p.scored && p.x + flappy.pipeWidth < flappy.birdX) {{
+    if (!p.scored && p.x + flappy.pipeWidth < flappy.birdX) {
       p.scored = true;
       gameScore++;
-    }}
-  }}
+    }
+  }
   
   // Boundaries
   if (flappy.birdY < 0 || flappy.birdY > 480) alive = false;
@@ -221,7 +221,7 @@ function flappyLoop() {{
   
   // Pipes
   ctx.fillStyle = '#10B981';
-  flappy.pipes.forEach(function(p) {{
+  flappy.pipes.forEach(function(p) {
     ctx.fillRect(p.x, 0, flappy.pipeWidth, p.gapY - 20);
     ctx.fillRect(p.x, p.gapY + flappy.pipeGap + 20, flappy.pipeWidth, 480);
     // Pipe caps
@@ -229,7 +229,7 @@ function flappyLoop() {{
     ctx.fillRect(p.x - 3, p.gapY - 26, flappy.pipeWidth + 6, 8);
     ctx.fillRect(p.x - 3, p.gapY + flappy.pipeGap + 18, flappy.pipeWidth + 6, 8);
     ctx.fillStyle = '#10B981';
-  }});
+  });
   
   // Bird
   ctx.fillStyle = '#F59E0B';
@@ -251,32 +251,32 @@ function flappyLoop() {{
   ctx.textAlign = 'center';
   ctx.fillText(gameScore.toString(), 160, 30);
   
-  if (!alive) {{
+  if (!alive) {
     gameRunning = false;
     rewardGame(gameScore);
     document.getElementById('startBtn').style.display = 'inline-block';
     document.getElementById('startBtn').textContent = '▶ Play Again';
     document.getElementById('restartBtn').style.display = 'inline-block';
     return;
-  }}
+  }
   
   flappy.frameId = requestAnimationFrame(flappyLoop);
-}}
+}
 
 // Click/tap to flap
-canvas.onclick = function() {{
+canvas.onclick = function() {
   if (!gameRunning && !document.getElementById('startBtn').style.display) return;
-  if (!flappy.started) {{ flappy.started = true; }}
+  if (!flappy.started) { flappy.started = true; }
   flappy.birdVY = flappy.jump;
-}};
-document.addEventListener('keydown', function(e) {{
-  if (e.code === 'Space') {{
+};
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'Space') {
     e.preventDefault();
     if (!gameRunning) return;
-    if (!flappy.started) {{ flappy.started = true; }}
+    if (!flappy.started) { flappy.started = true; }
     flappy.birdVY = flappy.jump;
-  }}
-}});
+  }
+});
 
 flappyLoop();
 
