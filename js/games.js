@@ -742,4 +742,334 @@ EN_GAMES.memory = {
     };
   }
   restart: function(container) { this.start(container); }
+}
+
+// ===== 7. TETRIS =====
+EN_GAMES.tetris = {
+  name: 'Tetris',
+  icon: '🧱',
+  desc: 'Stack blocks, clear lines!',
+  reward: 0.025,
+  start: function(container) {
+    container.innerHTML =
+      '<div style="text-align:center;margin-bottom:6px"><span style="font-size:20px;font-weight:800;color:var(--gold)">🧱 Tetris</span></div>' +
+      '<canvas id="gameTetrisCanvas" style="width:260px;height:400px;margin:0 auto;display:block;border-radius:8px;background:#0A0E1A"></canvas>' +
+      '<div style="text-align:center;margin-top:6px;font-size:12px;color:var(--text-muted)">Score: <strong id="tetrisScore" style="color:var(--gold)">0</strong> | Lines: <strong id="tetrisLines" style="color:var(--emerald)">0</strong></div>' +
+      '<div style="text-align:center;margin-top:4px;font-size:10px;color:var(--text-muted)">← ↑ → ↓ to move & rotate</div>';
+    
+    var canvas = document.getElementById('gameTetrisCanvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    canvas.width = 260;
+    canvas.height = 400;
+    
+    var COLS = 10, ROWS = 20, BLOCK = 20;
+    var board = [];
+    for (var r = 0; r < ROWS; r++) { board[r] = []; for (var c = 0; c < COLS; c++) board[r][c] = 0; }
+    
+    var pieces = [
+      [[1,1,1,1]],
+      [[1,1],[1,1]],
+      [[1,0,0],[1,1,1]],
+      [[0,0,1],[1,1,1]],
+      [[0,1,1],[1,1,0]],
+      [[1,1,0],[0,1,1]],
+      [[0,1,0],[1,1,1]]
+    ];
+    var colors = ['#00F5D4','#F59E0B','#A855F7','#3B82F6','#10B981','#EC4899','#EF4444'];
+    
+    var piece = { shape: pieces[0], color: colors[0], x: 3, y: 0 };
+    var score = 0, lines = 0, gameOver = false;
+    var dropInterval = null;
+    var gameActive = true;
+    
+    function randomPiece() {
+      var idx = Math.floor(Math.random() * pieces.length);
+      return { shape: pieces[idx].map(function(row){return row.slice()}), color: colors[idx], x: 3, y: 0 };
+    }
+    
+    function draw() {
+      ctx.fillStyle = '#0A0E1A';
+      ctx.fillRect(0, 0, 260, 400);
+      
+      // Grid
+      for (var r = 0; r < ROWS; r++) {
+        for (var c = 0; c < COLS; c++) {
+          if (board[r][c]) {
+            ctx.fillStyle = board[r][c];
+            ctx.fillRect(c * BLOCK + 1, r * BLOCK + 1, BLOCK - 2, BLOCK - 2);
+          } else {
+            ctx.fillStyle = 'rgba(255,255,255,0.02)';
+            ctx.fillRect(c * BLOCK + 1, r * BLOCK + 1, BLOCK - 2, BLOCK - 2);
+          }
+        }
+      }
+      
+      // Current piece
+      if (piece && !gameOver) {
+        ctx.fillStyle = piece.color;
+        for (var r = 0; r < piece.shape.length; r++) {
+          for (var c = 0; c < piece.shape[r].length; c++) {
+            if (piece.shape[r][c]) {
+              ctx.fillRect((piece.x + c) * BLOCK + 1, (piece.y + r) * BLOCK + 1, BLOCK - 2, BLOCK - 2);
+            }
+          }
+        }
+      }
+      
+      if (gameOver) {
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(0, 0, 260, 400);
+        ctx.fillStyle = '#d4af37';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('GAME OVER', 130, 180);
+        ctx.fillStyle = '#10B981';
+        ctx.font = '16px sans-serif';
+        ctx.fillText('Score: ' + score, 130, 220);
+      }
+    }
+    
+    function collide(shape, x, y) {
+      for (var r = 0; r < shape.length; r++) {
+        for (var c = 0; c < shape[r].length; c++) {
+          if (shape[r][c]) {
+            var nx = x + c, ny = y + r;
+            if (nx < 0 || nx >= COLS || ny >= ROWS) return true;
+            if (ny >= 0 && board[ny][nx]) return true;
+          }
+        }
+      }
+      return false;
+    }
+    
+    function merge() {
+      for (var r = 0; r < piece.shape.length; r++) {
+        for (var c = 0; c < piece.shape[r].length; c++) {
+          if (piece.shape[r][c]) {
+            var ny = piece.y + r;
+            var nx = piece.x + c;
+            if (ny >= 0) board[ny][nx] = piece.color;
+          }
+        }
+      }
+    }
+    
+    function clearLines() {
+      var cleared = 0;
+      for (var r = ROWS - 1; r >= 0; r--) {
+        var full = true;
+        for (var c = 0; c < COLS; c++) {
+          if (!board[r][c]) { full = false; break; }
+        }
+        if (full) {
+          board.splice(r, 1);
+          board.unshift([]);
+          for (var c = 0; c < COLS; c++) board[0][c] = 0;
+          cleared++;
+          r++;
+        }
+      }
+      if (cleared > 0) {
+        lines += cleared;
+        score += cleared * 10 + (cleared > 1 ? cleared * 5 : 0);
+        document.getElementById('tetrisScore').textContent = score;
+        document.getElementById('tetrisLines').textContent = lines;
+      }
+    }
+    
+    function drop() {
+      if (gameOver || !gameActive) return;
+      if (!collide(piece.shape, piece.x, piece.y + 1)) {
+        piece.y++;
+      } else {
+        merge();
+        clearLines();
+        piece = randomPiece();
+        if (collide(piece.shape, piece.x, piece.y)) {
+          gameOver = true;
+          clearInterval(dropInterval);
+          gameActive = false;
+          if (score >= 1) {
+            var tetrisReward = 0.025 + Math.min(score * 0.001, 0.050);
+            var bal = parseFloat(localStorage.getItem('en_bal') || '0');
+            bal += tetrisReward;
+            localStorage.setItem('en_bal', String(bal));
+            if (currentUserData) { currentUserData.balance = (currentUserData.balance || 0) + tetrisReward; updateUI(); }
+            showToast('🧱', 'Tetris Reward!', '+' + tetrisReward.toFixed(3), 'money');
+            setTimeout(function() { if (typeof show_9622450 === 'function') show_9622450(); }, 500);
+          } else {
+            showToast('🧱', 'No Reward', 'Score at least 1 to earn!', 'warning');
+          }
+        }
+      }
+      draw();
+    }
+    
+    function moveLeft() { if (!gameOver && gameActive && !collide(piece.shape, piece.x - 1, piece.y)) { piece.x--; draw(); } }
+    function moveRight() { if (!gameOver && gameActive && !collide(piece.shape, piece.x + 1, piece.y)) { piece.x++; draw(); } }
+    function rotatePiece() {
+      if (!gameOver && gameActive) {
+        var rotated = piece.shape[0].map(function(_, i) { return piece.shape.map(function(row) { return row[i]; }).reverse(); });
+        if (!collide(rotated, piece.x, piece.y)) piece.shape = rotated;
+        draw();
+      }
+    }
+    function hardDrop() { if (!gameOver && gameActive) { while (!collide(piece.shape, piece.x, piece.y + 1)) piece.y++; drop(); } }
+    
+    // Keyboard
+    window._tetrisKey = function(e) {
+      if (!gameActive) return;
+      switch(e.key) {
+        case 'ArrowLeft': e.preventDefault(); moveLeft(); break;
+        case 'ArrowRight': e.preventDefault(); moveRight(); break;
+        case 'ArrowUp': e.preventDefault(); rotatePiece(); break;
+        case 'ArrowDown': e.preventDefault(); drop(); break;
+        case ' ': e.preventDefault(); hardDrop(); break;
+      }
+    };
+    document.addEventListener('keydown', window._tetrisKey);
+    
+    piece = randomPiece();
+    draw();
+    dropInterval = setInterval(drop, 500);
+    
+    // Cleanup on close
+    var closeBtn = container.querySelector('button:last-child');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function() {
+        clearInterval(dropInterval);
+        document.removeEventListener('keydown', window._tetrisKey);
+      });
+    }
+  }
 };
+
+// ===== 8. WORD SCRAMBLE =====
+EN_GAMES.word = {
+  name: 'Word Scramble',
+  icon: '🔤',
+  desc: 'Unscramble the words!',
+  reward: 0.020,
+  start: function(container) {
+    var words = [
+      { word: 'NEXUS', hint: 'Platform name' },
+      { word: 'EARN', hint: 'What you do here' },
+      { word: 'MONEY', hint: 'Digital currency' },
+      { word: 'GAMES', hint: 'Fun activities' },
+      { word: 'SCORE', hint: 'Your points' },
+      { word: 'REWARD', hint: 'What you get' },
+      { word: 'TOKEN', hint: 'Digital asset' },
+      { word: 'BONUS', hint: 'Extra reward' },
+      { word: 'LEVEL', hint: 'Game stage' },
+      { word: 'POWER', hint: 'Energy / strength' }
+    ];
+    
+    var current = 0;
+    var wordScore = 0;
+    var totalWords = 5;
+    
+    function scramble(word) {
+      var arr = word.split('');
+      for (var i = arr.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+      }
+      return arr.join('');
+    }
+    
+    function showWord() {
+      if (current >= totalWords) {
+        var reward = 0.020 + Math.min(wordScore * 0.005, 0.030);
+        var bal = parseFloat(localStorage.getItem('en_bal') || '0');
+        bal += reward;
+        localStorage.setItem('en_bal', String(bal));
+        if (currentUserData) { currentUserData.balance = (currentUserData.balance || 0) + reward; updateUI(); }
+        container.innerHTML =
+          '<div style="text-align:center;padding:20px">' +
+          '<div style="font-size:40px;margin-bottom:10px">🎉</div>' +
+          '<div style="font-size:16px;font-weight:700;color:var(--gold)">Word Scramble Complete!</div>' +
+          '<div style="font-size:13px;color:var(--emerald);margin-top:8px">Score: ' + wordScore + '/' + totalWords + ' | +$' + reward.toFixed(3) + '</div>' +
+          '<div style="font-size:12px;color:var(--text-muted);margin-top:12px">' + 
+            '<button onclick="EN_GAMES.word.start(this.parentElement.parentElement)" style="padding:8px 20px;border-radius:8px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.15);color:var(--emerald);font-size:12px;font-weight:600;cursor:pointer">🔄 Play Again</button>' +
+          '</div></div>';
+        return;
+      }
+      
+      var w = words[Math.floor(Math.random() * words.length)];
+      var scrambled = scramble(w.word);
+      
+      var html =
+        '<div style="text-align:center;padding:10px">' +
+        '<div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:4px">🔤 Word Scramble</div>' +
+        '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Word ' + (current + 1) + '/' + totalWords + ' | Score: ' + wordScore + '</div>' +
+        '<div style="font-size:32px;font-weight:800;letter-spacing:8px;font-family:monospace;padding:16px;background:rgba(212,175,55,0.06);border-radius:10px;border:1px solid rgba(212,175,55,0.08);margin:8px 0;text-transform:uppercase;color:var(--gold)">' + scrambled + '</div>' +
+        '<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">💡 Hint: ' + w.hint + '</div>' +
+        '<div style="display:flex;gap:6px;justify-content:center">' +
+          '<input type="text" id="wordGuess" placeholder="Your answer..." style="padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;font-size:14px;text-transform:uppercase;width:140px;outline:none;text-align:center">' +
+          '<button onclick="EN_GAMES.word._check(this)" style="padding:8px 16px;border-radius:8px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.15);color:var(--emerald);font-size:12px;font-weight:600;cursor:pointer">✅ Check</button>' +
+        '</div>' +
+        '<div id="wordResult" style="font-size:12px;margin-top:8px;min-height:20px;color:var(--text-muted)"></div>' +
+        '</div>';
+      
+      container.innerHTML = html;
+      
+      // Store the correct word
+      container.dataset.wordAnswer = w.word;
+      container.dataset.wordCurrent = String(current);
+      container.dataset.wordScore = String(wordScore);
+      
+      document.getElementById('wordGuess')?.focus();
+    }
+    
+    container.dataset.wordAnswer = words[0].word;
+    container.dataset.wordCurrent = '0';
+    container.dataset.wordScore = '0';
+    showWord();
+  },
+  _check: function(btn) {
+    var container = btn.closest('[data-word-answer]') || btn.parentElement.parentElement.parentElement;
+    if (!container) return;
+    var guess = document.getElementById('wordGuess');
+    if (!guess) return;
+    var answer = container.dataset.wordAnswer;
+    var current = parseInt(container.dataset.wordCurrent) || 0;
+    var wordScore = parseInt(container.dataset.wordScore) || 0;
+    var result = document.getElementById('wordResult');
+    
+    if (guess.value.trim().toUpperCase() === answer) {
+      wordScore++;
+      if (result) { result.textContent = '✅ Correct!'; result.style.color = '#10B981'; }
+      container.dataset.wordScore = String(wordScore);
+    } else {
+      if (result) { result.textContent = '❌ Wrong! Answer: ' + answer; result.style.color = '#EF4444'; }
+    }
+    
+    current++;
+    container.dataset.wordCurrent = String(current);
+    
+    if (current >= 5) {
+      // Game complete
+      var reward = 0.020 + Math.min(wordScore * 0.005, 0.030);
+      var bal = parseFloat(localStorage.getItem('en_bal') || '0');
+      bal += reward;
+      localStorage.setItem('en_bal', String(bal));
+      if (currentUserData) { currentUserData.balance = (currentUserData.balance || 0) + reward; updateUI(); }
+      
+      container.innerHTML =
+        '<div style="text-align:center;padding:20px">' +
+        '<div style="font-size:40px;margin-bottom:10px">🎉</div>' +
+        '<div style="font-size:16px;font-weight:700;color:var(--gold)">Game Over!</div>' +
+        '<div style="font-size:13px;color:var(--emerald);margin-top:8px">Score: ' + wordScore + '/5 | +$' + reward.toFixed(3) + '</div>' +
+        '<div style="font-size:12px;color:var(--text-muted);margin-top:12px">' +
+          '<button onclick="EN_GAMES.word.start(this.parentElement.parentElement)" style="padding:8px 20px;border-radius:8px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.15);color:var(--emerald);font-size:12px;font-weight:600;cursor:pointer">🔄 Play Again</button>' +
+        '</div></div>';
+    } else {
+      // Next word after delay
+      setTimeout(function() {
+        EN_GAMES.word.start(container);
+      }, 800);
+    }
+  }
+};
+;
