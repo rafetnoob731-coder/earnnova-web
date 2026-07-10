@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>EARNNOVA — Sign Up</title>
+<title>EARN NOVA — Register</title>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -150,29 +150,19 @@ body{margin:0;background:#080A12;display:flex;align-items:center;justify-content
       </div>
     </div>
     
-    <!-- ===== STEP 2: OTP Verification ===== -->
-    <div id="stepOTP" style="display:none">
-      <div class="auth-title">📨 Verify Email</div>
-      <div class="auth-subtitle" id="otpSentText">A 6-digit code was sent to <strong id="otpEmailDisplay"></strong></div>
-      
-      <div class="otp-input-group">
-        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp1" oninput="otpMove(this,2)" onkeydown="otpBack(event,1)" autofocus>
-        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp2" oninput="otpMove(this,3)" onkeydown="otpBack(event,2)">
-        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp3" oninput="otpMove(this,4)" onkeydown="otpBack(event,3)">
-        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp4" oninput="otpMove(this,5)" onkeydown="otpBack(event,4)">
-        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp5" oninput="otpMove(this,6)" onkeydown="otpBack(event,5)">
-        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp6" oninput="otpMove(this,7)" onkeydown="otpBack(event,6)">
+    <!-- ===== STEP 2: Redirect to Verify ===== -->
+    <div id="stepRedirect" style="display:none">
+      <div style="font-size:48px;margin-bottom:12px">📨</div>
+      <div class="auth-title">Check Your Email</div>
+      <div class="auth-subtitle">A 6-digit code was sent to<br><strong id="otpEmailDisplay2"></strong></div>
+      <div style="text-align:center;padding:14px;border-radius:10px;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.1);margin:12px 0">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Open the verify page to enter your OTP</div>
+        <a href="verify.html" id="verifyLink" style="display:inline-block;padding:10px 24px;border-radius:8px;background:linear-gradient(135deg,#10B981,#059669);color:#fff;text-decoration:none;font-weight:700;font-size:14px">🔑 Go to Verify Page</a>
       </div>
-      
-      <div id="otpAlert" class="auth-alert"></div>
-      
-      <button class="btn-auth" id="verifyOTPBtn" onclick="verifyRegistrationOTP()">✅ Verify & Complete</button>
-      <button class="btn-outline" id="resendOTPBtn" onclick="resendRegistrationOTP()">🔄 Resend Code</button>
-      <div class="timer-text" id="otpTimer"></div>
-      <button class="btn-outline" onclick="backToForm()" style="margin-top:6px">← Change Email</button>
-    </div>
-    
-    <!-- ===== STEP 3: Success ===== -->
+      <div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.25)">
+        Didn't receive it? <button onclick="resendAndGo()" style="background:none;border:none;color:#10B981;cursor:pointer;font-size:11px;text-decoration:underline">Resend Code</button>
+      </div>
+    </div><!-- ===== STEP 3: Success ===== -->
     <div id="stepSuccess" style="display:none">
       <div style="font-size:64px;margin-bottom:12px">🎉</div>
       <div class="auth-title">Account Created!</div>
@@ -321,7 +311,19 @@ document.getElementById('registerForm').addEventListener('submit', async functio
 
 // ===== SEND OTP EMAIL (simulated) =====
 function sendOTPEmail(email, code, name) {
-  console.log('========================================');
+  
+function resendAndGo() {
+  if (!regEmail) {
+    regEmail = localStorage.getItem('en_otp_email') || '';
+    regUserId = localStorage.getItem('en_otp_userId') || '';
+    regName = localStorage.getItem('en_otp_name') || '';
+    regRef = localStorage.getItem('en_otp_ref') || '';
+  }
+  var url = 'verify.html?email=' + encodeURIComponent(regEmail) + '&uid=' + encodeURIComponent(regUserId) + '&name=' + encodeURIComponent(regName) + '&new=1&resend=1';
+  if (regRef) url += '&ref=' + encodeURIComponent(regRef);
+  window.location.href = url;
+}
+console.log('========================================');
   console.log('📧 EMAIL OTP TO: ' + email);
   console.log('   Name: ' + (name || 'User'));
   console.log('   OTP Code: ' + code);
@@ -618,7 +620,7 @@ function backToForm() {
   }
 })();
 
-console.log('📧 EARNNOVA Email OTP Registration System');
+console.log('📧 EARN NOVA OTP Registration System');
 
 
 function showAlert(msg, type) {
