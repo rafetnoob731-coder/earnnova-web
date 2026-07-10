@@ -68,7 +68,53 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 </div>
 <script>
-(function(){var mq=[{q:'What is the capital of France?',o:['London','Paris','Berlin','Madrid'],a:1},{q:'Which animal is known as the king of the jungle?',o:['Tiger','Elephant','Lion','Bear'],a:2},{q:'What color are bananas?',o:['Red','Blue','Yellow','Green'],a:2},{q:'How many days in a week?',o:['5','6','7','8'],a:2},{q:'Which is a programming language?',o:['Snake','Python','Turtle','Lizard'],a:1},{q:'What is 5x5?',o:['10','15','20','25'],a:3},{q:'Which planet is closest to the sun?',o:['Venus','Mercury','Earth','Mars'],a:1},{q:'What do bees produce?',o:['Milk','Honey','Sugar','Wax'],a:1},{q:'How many colors in a rainbow?',o:['5','6','7','8'],a:2},{q:'Which continent is the largest?',o:['Africa','Asia','Europe','America'],a:1}];var mi=0,ms=0;function showM(){if(mi>=mq.length){document.getElementById('megaRes').innerHTML='🏆 Mega Quiz done! Score: '+ms+'/10';document.getElementById('adStatus').textContent='✅ Mega Quiz: +$'+adReward.toFixed(3);return}var q=mq[mi];document.getElementById('megaQ').textContent=(mi+1)+'/10. '+q.q;var h='';for(var i=0;i<q.o.length;i++){h+='<button onclick="answerMega('+i+')" style="padding:8px;border-radius:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:var(--text);font-size:12px;cursor:pointer">'+q.o[i]+'</button>'}document.getElementById('megaOpts').innerHTML=h}window.answerMega=function(i){var q=mq[mi];if(i===q.a){ms++;document.getElementById('megaRes').innerHTML='✅ Correct!'}else{document.getElementById('megaRes').innerHTML='❌ Wrong! Answer: '+q.o[q.a]}mi++;document.getElementById('megaScore').textContent='Score: '+ms+'/10';setTimeout(showM,600)};showM()})();
+(function(){
+  var mq=[
+    {q:'What is the capital of France?',o:['London','Paris','Berlin','Madrid'],a:1},
+    {q:'Which animal is known as the king of the jungle?',o:['Tiger','Elephant','Lion','Bear'],a:2},
+    {q:'What color are bananas?',o:['Red','Blue','Yellow','Green'],a:2},
+    {q:'How many days in a week?',o:['5','6','7','8'],a:2},
+    {q:'Which is a programming language?',o:['Snake','Python','Turtle','Lizard'],a:1},
+    {q:'What is 5x5?',o:['10','15','20','25'],a:3},
+    {q:'Which planet is closest to the sun?',o:['Venus','Mercury','Earth','Mars'],a:1},
+    {q:'What do bees produce?',o:['Milk','Honey','Sugar','Wax'],a:1},
+    {q:'How many colors in a rainbow?',o:['5','6','7','8'],a:2},
+    {q:'Which continent is the largest?',o:['Africa','Asia','Europe','America'],a:1}
+  ];
+  var mi=0,ms=0;
+  function showM(){
+    if(mi>=mq.length){
+      document.getElementById('megaRes').innerHTML='🏆 Mega Quiz done! Score: '+ms+'/10';
+      document.getElementById('adStatus').textContent='✅ Quiz complete! +$'+adReward.toFixed(3);
+      // *** FIX: Set completed flag & show complete button ***
+      adCompleted=true;
+      document.getElementById('completeBtn').classList.remove('hidden');
+      document.getElementById('completeBtn').textContent='✅ Claim +$'+adReward.toFixed(3);
+      clearInterval(adInterval);
+      return;
+    }
+    var q=mq[mi];
+    document.getElementById('megaQ').textContent=(mi+1)+'/10. '+q.q;
+    var h='';
+    for(var i=0;i<q.o.length;i++){
+      h+='<button onclick="answerMega('+i+')" style="padding:8px;border-radius:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:var(--text);font-size:12px;cursor:pointer;margin:3px;transition:all 0.2s">'+q.o[i]+'</button>';
+    }
+    document.getElementById('megaOpts').innerHTML=h;
+  }
+  window.answerMega=function(i){
+    var q=mq[mi];
+    if(i===q.a){
+      ms++;
+      document.getElementById('megaRes').innerHTML='✅ Correct! (+1)';
+    }else{
+      document.getElementById('megaRes').innerHTML='❌ Wrong! Answer: '+q.o[q.a];
+    }
+    mi++;
+    document.getElementById('megaScore').textContent='Score: '+ms+'/10';
+    setTimeout(showM,500);
+  };
+  showM();
+})();
 </script>
 
     </div>
@@ -175,8 +221,8 @@ function completeAdTask() {
 }
 
 function skipAd() {
-  if (!adCompleted && timerSeconds > 0 && timerSeconds < adDuration) {
-    showToast('⏳ Ad not complete yet! Wait ' + timerSeconds + 's', 'error');
+  if (!adCompleted) {
+    showToast('⏳ Complete all 10 quiz questions first!', 'error');
     return;
   }
   window.location.href = '../earn.html';
