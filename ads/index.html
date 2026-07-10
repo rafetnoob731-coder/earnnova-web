@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ad Hub | EARNNOVA</title>
+<style>
+:root{--bg:#0F172A;--bg2:#0A0E1A;--card:rgba(255,255,255,0.03);--gold:#d4af37;--emerald:#10B981;--text:#F0F0F4;--text-muted:rgba(240,240,244,0.4);--font:'Segoe UI',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+.header{padding:14px;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:10px;background:rgba(15,23,42,0.9);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
+.header a{color:var(--text-muted);text-decoration:none;font-size:16px;transition:0.2s}
+.header a:hover{color:var(--gold)}
+.header h1{flex:1;font-size:16px;font-weight:800;background:linear-gradient(135deg,#d4af37,#10B981);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;padding:14px;max-width:600px;margin:0 auto}
+.ad-card{background:var(--card);border:1px solid rgba(255,255,255,0.04);border-radius:14px;padding:16px 10px;text-align:center;text-decoration:none;display:block;transition:all 0.3s}
+.ad-card:hover{transform:translateY(-3px);border-color:rgba(212,175,55,0.12);box-shadow:0 6px 24px rgba(212,175,55,0.04)}
+.ad-card .icon{font-size:28px;display:block;margin-bottom:4px}
+.ad-card .name{font-size:11px;font-weight:700;color:var(--gold);margin-bottom:2px}
+.ad-card .reward{font-size:10px;font-weight:600;color:var(--emerald)}
+.ad-card .status{font-size:9px;color:var(--text-muted);margin-top:4px;padding:2px 8px;border-radius:4px;display:inline-block}
+.ad-card .status.active{background:rgba(16,185,129,0.08);color:var(--emerald)}
+.ad-card .status.off{background:rgba(239,68,68,0.08);color:#EF4444}
+.info{text-align:center;font-size:10px;color:var(--text-muted);padding:8px 14px;border-top:1px solid rgba(255,255,255,0.04);margin-top:8px}
+.info a{color:var(--gold);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="header"><a href="../earn.html">‹ Back</a><h1>📺 Ad Hub</h1><a href="../login.html">⏻</a></div>
+<div class="grid">
+  <a href="ads1.html?token=" class="ad-card"><span class="icon">📺</span><div class="name">Monetag</div><div class="reward">+$0.020</div><span class="status active">Active</span></a>
+  <a href="ads2.html?token=" class="ad-card"><span class="icon">🧠</span><div class="name">Smart Ad</div><div class="reward">+$0.100</div><span class="status active">Active</span></a>
+  <a href="ads3.html?token=" class="ad-card"><span class="icon">❓</span><div class="name">Quiz</div><div class="reward">+$0.030</div><span class="status active">Active</span></a>
+  <a href="ads4.html?token=" class="ad-card"><span class="icon">📺</span><div class="name">Monetag x2</div><div class="reward">+$0.035</div><span class="status active">Active</span></a>
+  <a href="ads5.html?token=" class="ad-card"><span class="icon">🪙</span><div class="name">Catch Coins</div><div class="reward">+$0.040</div><span class="status active">Active</span></a>
+  <a href="ads6.html?token=" class="ad-card"><span class="icon">🎡</span><div class="name">Spin Wheel</div><div class="reward">+$0.050</div><span class="status active">Active</span></a>
+  <a href="ads7.html?token=" class="ad-card"><span class="icon">🧠</span><div class="name">Memory Game</div><div class="reward">+$0.060</div><span class="status active">Active</span></a>
+  <a href="ads8.html?token=" class="ad-card"><span class="icon">🧪</span><div class="name">Trivia</div><div class="reward">+$0.070</div><span class="status active">Active</span></a>
+  <a href="ads9.html?token=" class="ad-card"><span class="icon">📺</span><div class="name">Monetag x3</div><div class="reward">+$0.080</div><span class="status active">Active</span></a>
+  <a href="ads10.html?token=" class="ad-card"><span class="icon">🏆</span><div class="name">Mega Quiz</div><div class="reward">+$0.100</div><span class="status active">Active</span></a>
+</div>
+<div class="info">🔑 Token tracking active • All ads reward on completion • <a href="../earn.html">Start Earning</a></div>
+</body>
+</html>
