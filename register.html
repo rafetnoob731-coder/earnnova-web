@@ -98,72 +98,539 @@ body{margin:0;background:#080A12;display:flex;align-items:center;justify-content
 <body>
 
 <div class="auth-wrap">
-  <div class="auth-card">
+  <div class="auth-card" id="registerCard">
     <div class="auth-logo">E</div>
-    <div class="auth-title">Create Account</div>
-    <div class="auth-subtitle">Start earning in minutes</div>
-
-    <div class="benefits">
-      <div class="benefit"><div class="benefit-icon">📺</div><div class="benefit-text">Watch Ads</div></div>
-      <div class="benefit"><div class="benefit-icon">💰</div><div class="benefit-text">Earn Rewards</div></div>
-      <div class="benefit"><div class="benefit-icon">💳</div><div class="benefit-text">Withdraw Anytime</div></div>
-      <div class="benefit"><div class="benefit-icon">👥</div><div class="benefit-text">Refer Friends</div></div>
+    
+    <!-- ===== STEP 1: Registration Form ===== -->
+    <div id="stepForm">
+      <div class="auth-title">Create Account</div>
+      <div class="auth-subtitle">Enter details → verify via email OTP</div>
+      
+      <div id="alertBox" class="auth-alert"></div>
+      
+      <form id="registerForm">
+        <input type="hidden" id="tokenInput" name="token" value="">
+        <div class="auth-input-group">
+          <label>Full Name</label>
+          <div class="auth-input-wrap">
+            <i class="fas fa-user"></i>
+            <input type="text" id="regName" placeholder="John Doe" required>
+          </div>
+        </div>
+        <div class="auth-input-group">
+          <label>Email</label>
+          <div class="auth-input-wrap">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="regEmail" placeholder="your@email.com" required>
+          </div>
+        </div>
+        <div class="auth-input-group">
+          <label>Password</label>
+          <div class="auth-input-wrap">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="regPassword" placeholder="Minimum 6 characters" required minlength="6">
+          </div>
+        </div>
+        <div class="auth-input-group">
+          <label>Referral Code (optional)</label>
+          <div class="auth-input-wrap">
+            <i class="fas fa-gift"></i>
+            <input type="text" id="regReferral" placeholder="Enter referral code">
+          </div>
+        </div>
+        <label class="terms-row">
+          <input type="checkbox" id="agreeTerms" checked>
+          <span>I agree to the <a href="terms.html" target="_blank">Terms</a> & <a href="privacy.html" target="_blank">Privacy</a></span>
+        </label>
+        <button type="submit" id="registerBtn" class="btn-auth">📨 Register & Get OTP</button>
+      </form>
+      
+      <div class="auth-footer">
+        Already have an account? <a href="login.html" id="loginLink">Login</a>
+      </div>
     </div>
-
-    <div class="auth-alert" id="alertBox"></div>
-
-    <form id="registerForm" action="/register.html" method="GET">
-      <input type="hidden" id="tokenInput" name="token" value="">
-      <div class="auth-input-group">
-        <label>Full Name</label>
-        <div class="auth-input-wrap">
-          <i class="fas fa-user"></i>
-          <input type="text" id="regName" placeholder="John Doe" required>
-        </div>
+    
+    <!-- ===== STEP 2: OTP Verification ===== -->
+    <div id="stepOTP" style="display:none">
+      <div class="auth-title">📨 Verify Email</div>
+      <div class="auth-subtitle" id="otpSentText">A 6-digit code was sent to <strong id="otpEmailDisplay"></strong></div>
+      
+      <div class="otp-input-group">
+        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp1" oninput="otpMove(this,2)" onkeydown="otpBack(event,1)" autofocus>
+        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp2" oninput="otpMove(this,3)" onkeydown="otpBack(event,2)">
+        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp3" oninput="otpMove(this,4)" onkeydown="otpBack(event,3)">
+        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp4" oninput="otpMove(this,5)" onkeydown="otpBack(event,4)">
+        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp5" oninput="otpMove(this,6)" onkeydown="otpBack(event,5)">
+        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp6" oninput="otpMove(this,7)" onkeydown="otpBack(event,6)">
       </div>
-      <div class="auth-input-group">
-        <label>Email</label>
-        <div class="auth-input-wrap">
-          <i class="fas fa-envelope"></i>
-          <input type="email" id="regEmail" placeholder="your@email.com" required>
-        </div>
-      </div>
-      <div class="auth-input-group">
-        <label>Password</label>
-        <div class="auth-input-wrap">
-          <i class="fas fa-lock"></i>
-          <input type="password" id="regPassword" placeholder="Minimum 6 characters" required minlength="6">
-        </div>
-      </div>
-      <div class="auth-input-group">
-        <label>Referral Code (optional)</label>
-        <div class="auth-input-wrap">
-          <i class="fas fa-gift"></i>
-          <input type="text" id="regReferral" placeholder="Enter referral code">
-        </div>
-      </div>
-
-      <label class="terms-row">
-        <input type="checkbox" id="agreeTerms" checked>
-        <span>I agree to the <a href="terms.html" target="_blank">Terms of Service</a> and <a href="privacy.html" target="_blank">Privacy Policy</a></span>
-      </label>
-
-      <button type="submit" id="registerBtn" class="btn-auth">Create Account</button>
-    </form>
-
-    <div class="auth-footer">
-      Already have an account? <a href="login.html" id="loginLink">Sign In</a>
+      
+      <div id="otpAlert" class="auth-alert"></div>
+      
+      <button class="btn-auth" id="verifyOTPBtn" onclick="verifyRegistrationOTP()">✅ Verify & Complete</button>
+      <button class="btn-outline" id="resendOTPBtn" onclick="resendRegistrationOTP()">🔄 Resend Code</button>
+      <div class="timer-text" id="otpTimer"></div>
+      <button class="btn-outline" onclick="backToForm()" style="margin-top:6px">← Change Email</button>
     </div>
-  </div>
-  <div style="text-align:center;margin-top:16px;font-size:11px;color:rgba(255,255,255,0.15)">
-    <a href="privacy.html" style="color:rgba(255,255,255,0.15);text-decoration:none">Privacy</a> • 
-    <a href="terms.html" style="color:rgba(255,255,255,0.15);text-decoration:none">Terms</a>
+    
+    <!-- ===== STEP 3: Success ===== -->
+    <div id="stepSuccess" style="display:none">
+      <div style="font-size:64px;margin-bottom:12px">🎉</div>
+      <div class="auth-title">Account Created!</div>
+      <div class="auth-subtitle" id="successText">Redirecting...</div>
+    </div>
   </div>
 </div>
 
-<script src="js/supabase-config.js"></script>
+<style>
+.otp-input-group{display:flex;gap:6px;justify-content:center;margin:16px 0}
+.otp-input{width:44px;height:50px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#fff;font-size:22px;font-weight:700;text-align:center;outline:none;transition:0.2s;font-family:monospace}
+.otp-input:focus{border-color:#10B981;box-shadow:0 0 0 3px rgba(16,185,129,0.1)}
+.otp-input.filled{border-color:rgba(16,185,129,0.2);background:rgba(16,185,129,0.04)}
+.btn-outline{width:100%;padding:12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);font-size:13px;cursor:pointer;transition:0.2s;margin-top:6px}
+.btn-outline:hover{border-color:rgba(255,255,255,0.1);color:#fff}
+.timer-text{text-align:center;font-size:12px;color:rgba(255,255,255,0.3);margin-top:8px}
+.timer-text strong{color:#d4af37}
+.auth-alert{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:12px;display:none;text-align:center}
+.auth-alert.show{display:block}
+.auth-alert.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#FCA5A5}
+.auth-alert.success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#6EE7B7}
+.auth-alert.info{background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.2);color:#FCD34D}
+</style>
 <script>
-var alertBox = document.getElementById('alertBox');
+// ===== STEP MANAGEMENT =====
+var regEmail = '';
+var regName = '';
+var regPassword = '';
+var regRef = '';
+var regUserId = '';
+var otpCooldown = 60;
+var otpTimerInterval = null;
+var pendingOTPData = null;
+
+function showAlert(msg, type, targetId) {
+  var el = document.getElementById(targetId || 'alertBox');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'auth-alert show ' + (type || 'error');
+}
+
+function clearAlert(targetId) {
+  var el = document.getElementById(targetId || 'alertBox');
+  if (el) el.className = 'auth-alert';
+}
+
+function showStep(step) {
+  document.getElementById('stepForm').style.display = step === 'form' ? 'block' : 'none';
+  document.getElementById('stepOTP').style.display = step === 'otp' ? 'block' : 'none';
+  document.getElementById('stepSuccess').style.display = step === 'success' ? 'block' : 'none';
+}
+
+// OTP input navigation
+function otpMove(current, nextId) {
+  if (current.value.length >= 1) {
+    current.classList.add('filled');
+    if (nextId <= 6) document.getElementById('otp' + nextId)?.focus();
+  }
+  // Auto-check if all filled
+  var full = '';
+  for (var i = 1; i <= 6; i++) {
+    var v = document.getElementById('otp' + i)?.value || '';
+    if (!v) return;
+    full += v;
+  }
+}
+
+function otpBack(event, prevId) {
+  if (event.key === 'Backspace' && !event.target.value && prevId > 1) {
+    document.getElementById('otp' + (prevId-1))?.focus();
+  }
+}
+
+// ===== STEP 1: REGISTRATION FORM SUBMIT =====
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  clearAlert();
+  
+  regName = document.getElementById('regName').value.trim();
+  regEmail = document.getElementById('regEmail').value.trim();
+  regPassword = document.getElementById('regPassword').value;
+  regRef = document.getElementById('regReferral').value.trim().toUpperCase();
+  var btn = document.getElementById('registerBtn');
+
+  if (!document.getElementById('agreeTerms').checked) {
+    showAlert('Please agree to the Terms of Service', 'error');
+    return;
+  }
+  if (regPassword.length < 6) { showAlert('Password must be 6+ characters', 'error'); return; }
+  if (regEmail !== ADMIN_EMAIL && isDisposableEmail(regEmail)) { showAlert('Temporary emails not allowed', 'error'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Creating account...';
+
+  try {
+    // 1. Create Firebase Auth user
+    var cred = await auth.createUserWithEmailAndPassword(regEmail, regPassword);
+    var user = cred.user;
+    await user.updateProfile({ displayName: regName });
+    regUserId = user.uid;
+
+    // 2. Generate OTP and store in Firestore
+    var otpCode = String(Math.floor(100000 + Math.random() * 900000));
+    var expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min valid
+    
+    await db.collection('otp_codes').add({
+      code: otpCode,
+      used: false,
+      email: regEmail,
+      userId: user.uid,
+      name: regName,
+      referralCode: regRef || '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      expiresAt: expiresAt
+    });
+    
+    // 3. Send OTP via email (simulated - logs to console, in production use EmailJS/SendGrid)
+    sendOTPEmail(regEmail, otpCode, regName);
+    
+    // 4. Show OTP step
+    document.getElementById('otpEmailDisplay').textContent = regEmail;
+    showAlert('📨 OTP sent to ' + regEmail + ' (check console if not received)', 'info', 'otpAlert');
+    showStep('otp');
+    
+    // 5. Focus first input
+    setTimeout(function() { document.getElementById('otp1')?.focus(); }, 300);
+    
+    // 6. Start cooldown
+    startOTPTimer();
+    
+    btn.textContent = '✅ OTP Sent!';
+    btn.disabled = false;
+    
+  } catch(err) {
+    showAlert(getAuthError(err), 'error');
+    btn.disabled = false;
+    btn.textContent = '📨 Register & Get OTP';
+    
+    // If user was created but error in OTP, clean up
+    if (regUserId) {
+      try { auth.currentUser?.delete(); } catch(e) {}
+      regUserId = '';
+    }
+  }
+});
+
+// ===== SEND OTP EMAIL (simulated) =====
+function sendOTPEmail(email, code, name) {
+  console.log('========================================');
+  console.log('📧 EMAIL OTP TO: ' + email);
+  console.log('   Name: ' + (name || 'User'));
+  console.log('   OTP Code: ' + code);
+  console.log('   Verify: ' + window.location.origin + '/register.html?verify=' + code + '&email=' + encodeURIComponent(email));
+  console.log('   Expires: 10 minutes');
+  console.log('========================================');
+  
+  // Store last OTP in localStorage for convenience
+  localStorage.setItem('en_last_otp', code);
+  localStorage.setItem('en_otp_email', email);
+  localStorage.setItem('en_otp_expires', String(Date.now() + 10 * 60 * 1000));
+  
+  // In production, this would use:
+  // - EmailJS: https://www.emailjs.com/
+  // - SendGrid API
+  // - Firebase Extensions (Trigger Email)
+  // - Your own SMTP server
+  // For now, the code is visible in console and OTP step
+}
+
+// ===== RESEND OTP =====
+function resendRegistrationOTP() {
+  if (otpCooldown > 0 && otpCooldown < 60) {
+    showAlert('⏳ Please wait ' + otpCooldown + 's', 'error', 'otpAlert');
+    return;
+  }
+  
+  if (!regUserId || !regEmail) {
+    showAlert('Session expired. Please register again.', 'error', 'otpAlert');
+    return;
+  }
+  
+  document.getElementById('resendOTPBtn').disabled = true;
+  document.getElementById('resendOTPBtn').textContent = '⏳ Sending...';
+  
+  var otpCode = String(Math.floor(100000 + Math.random() * 900000));
+  var expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+  
+  db.collection('otp_codes').add({
+    code: otpCode, used: false, email: regEmail,
+    userId: regUserId, name: regName,
+    referralCode: regRef || '',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    expiresAt: expiresAt
+  }).then(function() {
+    sendOTPEmail(regEmail, otpCode, regName);
+    showAlert('📨 New OTP sent to ' + regEmail, 'info', 'otpAlert');
+    document.getElementById('resendOTPBtn').disabled = false;
+    document.getElementById('resendOTPBtn').textContent = '🔄 Resend Code';
+    startOTPTimer();
+    
+    // Clear inputs
+    for (var i = 1; i <= 6; i++) {
+      var inp = document.getElementById('otp' + i);
+      if (inp) { inp.value = ''; inp.classList.remove('filled'); }
+    }
+    document.getElementById('otp1')?.focus();
+  }).catch(function(err) {
+    showAlert('Error: ' + err.message, 'error', 'otpAlert');
+    document.getElementById('resendOTPBtn').disabled = false;
+    document.getElementById('resendOTPBtn').textContent = '🔄 Resend Code';
+  });
+}
+
+// ===== OTP TIMER =====
+function startOTPTimer() {
+  otpCooldown = 60;
+  if (otpTimerInterval) clearInterval(otpTimerInterval);
+  
+  document.getElementById('otpTimer').innerHTML = 'Resend in <strong>' + otpCooldown + 's</strong>';
+  
+  otpTimerInterval = setInterval(function() {
+    otpCooldown--;
+    if (otpCooldown <= 0) {
+      clearInterval(otpTimerInterval);
+      document.getElementById('otpTimer').innerHTML = 'You can resend now';
+    } else {
+      document.getElementById('otpTimer').innerHTML = 'Resend in <strong>' + otpCooldown + 's</strong>';
+    }
+  }, 1000);
+}
+
+// ===== STEP 2: VERIFY OTP =====
+function verifyRegistrationOTP() {
+  clearAlert('otpAlert');
+  
+  var otpCode = '';
+  for (var i = 1; i <= 6; i++) {
+    otpCode += document.getElementById('otp' + i)?.value || '';
+  }
+  
+  if (otpCode.length !== 6) {
+    showAlert('⚠️ Enter the complete 6-digit code', 'error', 'otpAlert');
+    return;
+  }
+  
+  var btn = document.getElementById('verifyOTPBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Verifying...';
+  
+  showAlert('🔍 Checking OTP...', 'info', 'otpAlert');
+  
+  // Look up OTP in Firestore
+  db.collection('otp_codes')
+    .where('code', '==', otpCode)
+    .where('used', '==', false)
+    .where('email', '==', regEmail)
+    .get()
+    .then(function(snap) {
+      if (snap.empty) {
+        showAlert('❌ Invalid OTP code. Check and try again.', 'error', 'otpAlert');
+        btn.disabled = false;
+        btn.textContent = '✅ Verify & Complete';
+        return;
+      }
+      
+      var doc = snap.docs[0];
+      var data = doc.data();
+      var expiry = data.expiresAt ? data.expiresAt.toDate() : new Date();
+      
+      if (Date.now() > expiry.getTime()) {
+        showAlert('⏰ OTP expired! Request a new one.', 'error', 'otpAlert');
+        db.collection('otp_codes').doc(doc.id).update({ used: true });
+        btn.disabled = false;
+        btn.textContent = '✅ Verify & Complete';
+        return;
+      }
+      
+      // OTP VALID — Create the user document
+      var refCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+      var userData = {
+        uid: regUserId,
+        email: regEmail,
+        name: regName,
+        photo: '', phone: '',
+        balance: 0, totalEarned: 0, totalWithdrawn: 0,
+        adsWatched: 0, todayAds: 0, lastAdDate: '',
+        referralCode: refCode,
+        referredBy: '',
+        referralBonusPaid: false,
+        regIp: '0.0.0.0',
+        isActive: true,
+        emailVerified: true,
+        otpVerified: true,
+        isAdmin: regEmail === ADMIN_EMAIL,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      
+      // Get IP
+      try {
+        fetch('https://api.ipify.org?format=json').then(function(r) { return r.json(); }).then(function(d) {
+          userData.regIp = d.ip;
+          // Save with IP
+          finalizeRegistration(userData, doc.id, otpCode);
+        }).catch(function() { finalizeRegistration(userData, doc.id, otpCode); });
+      } catch(e) { finalizeRegistration(userData, doc.id, otpCode); }
+    })
+    .catch(function(err) {
+      showAlert('❌ Error: ' + err.message, 'error', 'otpAlert');
+      btn.disabled = false;
+      btn.textContent = '✅ Verify & Complete';
+    });
+}
+
+function finalizeRegistration(userData, otpDocId, otpCode) {
+  // Handle referral if any
+  var ref = regRef || document.getElementById('regReferral')?.value?.trim()?.toUpperCase() || '';
+  
+  var saveUser = function() {
+    return db.collection('users').doc(regUserId).set(userData);
+  };
+  
+  saveUser().then(function() {
+    // Mark OTP as used
+    return db.collection('otp_codes').doc(otpDocId).update({ used: true, verifiedAt: firebase.firestore.FieldValue.serverTimestamp() });
+  }).then(function() {
+    // Handle referral
+    if (ref) {
+      return db.collection('users').where('referralCode', '==', ref).get().then(function(refSnap) {
+        if (!refSnap.empty) {
+          var referrer = refSnap.docs[0];
+          return db.collection('users').doc(referrer.id).update({
+            referralCount: firebase.firestore.FieldValue.increment(1)
+          }).then(function() {
+            return db.collection('referrals').add({
+              referrerId: referrer.id, referredId: regUserId,
+              referredName: regName, bonus: 0.50, bonusPaid: false,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          });
+        }
+      });
+    }
+  }).then(function() {
+    // Success!
+    showAlert('✅ Email verified! Account created!', 'success', 'otpAlert');
+    document.getElementById('verifyOTPBtn').textContent = '✅ Verified!';
+    
+    localStorage.setItem('en_otp_verified', 'true');
+    
+    showStep('success');
+    document.getElementById('successText').innerHTML = 'Welcome, ' + regName + '!<br>Redirecting...';
+    
+    setTimeout(function() {
+      window.location.href = 'home.html';
+    }, 2000);
+  }).catch(function(err) {
+    showAlert('❌ Error creating account: ' + err.message, 'error', 'otpAlert');
+    document.getElementById('verifyOTPBtn').disabled = false;
+    document.getElementById('verifyOTPBtn').textContent = '✅ Verify & Complete';
+  });
+}
+
+// ===== BACK TO FORM =====
+function backToForm() {
+  if (otpTimerInterval) clearInterval(otpTimerInterval);
+  showStep('form');
+  document.getElementById('registerBtn').textContent = '📨 Register & Get OTP';
+  document.getElementById('registerBtn').disabled = false;
+}
+
+// ===== HANDLE ?verify=OTP FROM URL =====
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var verifyCode = params.get('verify');
+  var emailFromUrl = params.get('email');
+  
+  // Auto-fill referral from ?ref=
+  var refCode = params.get('ref');
+  if (refCode) {
+    var input = document.getElementById('regReferral');
+    if (input) {
+      input.value = refCode.toUpperCase();
+      input.style.borderColor = '#10B981';
+      input.style.boxShadow = '0 0 0 3px rgba(16,185,129,0.15)';
+    }
+  }
+  
+  // Handle token param
+  var token = params.get('token');
+  if (token) {
+    localStorage.setItem('en_reg_token', token);
+    if (/^[A-Z0-9]{6,10}$/.test(token)) {
+      var refInput = document.getElementById('regReferral');
+      if (refInput && !refInput.value) {
+        refInput.value = token;
+        refInput.style.borderColor = '#10B981';
+      }
+    }
+  }
+  
+  // If verify code is in URL, auto-start verification flow
+  if (verifyCode && verifyCode.length >= 6) {
+    // Try to find the email from localStorage or URL
+    var storedEmail = emailFromUrl || localStorage.getItem('en_otp_email') || '';
+    
+    if (storedEmail) {
+      regEmail = storedEmail;
+      regName = localStorage.getItem('en_otp_name') || 'User';
+      
+      document.getElementById('otpEmailDisplay').textContent = regEmail;
+      
+      // Auto-fill OTP
+      for (var i = 0; i < 6 && i < verifyCode.length; i++) {
+        var inp = document.getElementById('otp' + (i+1));
+        if (inp) {
+          inp.value = verifyCode[i];
+          inp.classList.add('filled');
+        }
+      }
+      
+      // Show OTP step
+      showStep('otp');
+      showAlert('📨 OTP code detected! Verifying...', 'info', 'otpAlert');
+      
+      // Try to get userId
+      regUserId = localStorage.getItem('en_otp_userId') || '';
+      
+      // Auto-verify
+      setTimeout(verifyRegistrationOTP, 800);
+    } else {
+      // No email stored, show form with notice
+      showAlert('📨 OTP detected! Please enter your email to complete verification.', 'info');
+      document.getElementById('regEmail').focus();
+    }
+  }
+  
+  // Handle auth=redirect
+  if (params.get('auth') === 'redirect') {
+    console.log('🔄 Auth redirect mode');
+  }
+})();
+
+// ===== PRESERVE URL PARAMS ON LOGIN LINK =====
+(function() {
+  var loginLink = document.getElementById('loginLink');
+  if (loginLink) {
+    var p = new URLSearchParams(window.location.search);
+    var qs = [];
+    if (p.get('auth')) qs.push('auth=' + p.get('auth'));
+    if (p.get('redirect')) qs.push('redirect=' + encodeURIComponent(p.get('redirect')));
+    if (p.get('token')) qs.push('token=' + p.get('token'));
+    if (qs.length > 0) loginLink.href = 'login.html?' + qs.join('&');
+  }
+})();
+
+console.log('📧 EARNNOVA Email OTP Registration System');
+
 
 function showAlert(msg, type) {
   alertBox.textContent = msg;
