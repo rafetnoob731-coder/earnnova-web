@@ -2389,7 +2389,7 @@ function openVPLink(type) {
   // vplink=1 signals the ad page to reward $0.500
   var uid = currentUser ? currentUser.uid : 'guest';
   var token = generateAdToken(type);
-  var destUrl = window.location.origin + '/ads/' + type + '.html?token=' + token + '&uid=' + uid + '&vplink=1&reward=0.500';
+  var destUrl = window.location.origin + '/ads/ads11.html?token=' + token + '&uid=' + uid + '&vplink=1&reward=0.500';
   
   // Step 2: Create VPLink shortlink for the destination
   var shortlink = createVPLink(destUrl, 'earn-' + type + '-' + uid.slice(-4));
