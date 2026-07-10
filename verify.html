@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>OTP Verify | EARNNOVA</title>
+<style>
+:root{--bg:#0F172A;--bg2:#0A0E1A;--gold:#d4af37;--emerald:#10B981;--text:#F0F0F4;--text-muted:rgba(240,240,244,0.4);--font:'Segoe UI',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.verify-wrap{max-width:400px;width:100%;text-align:center}
+.verify-card{background:rgba(255,255,255,0.03);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.06);border-radius:24px;padding:32px 24px}
+.logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#10B981,#059669);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;margin:0 auto 16px;box-shadow:0 8px 32px rgba(16,185,129,0.2)}
+.title{font-size:20px;font-weight:800;margin-bottom:4px}
+.subtitle{font-size:12px;color:var(--text-muted);margin-bottom:24px}
+.otp-display{font-size:48px;font-weight:800;font-family:monospace;letter-spacing:12px;background:linear-gradient(135deg,#d4af37,#10B981);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:16px 0;padding:16px;background:rgba(255,255,255,0.02);border-radius:12px;border:1px solid rgba(255,255,255,0.04)}
+.otp-input-group{display:flex;gap:8px;justify-content:center;margin:16px 0}
+.otp-input{width:48px;height:56px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--text);font-size:24px;font-weight:700;text-align:center;outline:none;transition:0.2s;font-family:monospace}
+.otp-input:focus{border-color:var(--emerald);box-shadow:0 0 0 3px rgba(16,185,129,0.1)}
+.otp-input.filled{border-color:rgba(16,185,129,0.2);background:rgba(16,185,129,0.04)}
+.btn-verify{width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;transition:0.25s;margin-top:8px}
+.btn-verify:hover{opacity:0.9;transform:translateY(-1px)}
+.btn-verify:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.btn-verify.sending{background:linear-gradient(135deg,#d4af37,#b8962f)}
+.btn-outline{width:100%;padding:12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:var(--text-muted);font-size:13px;cursor:pointer;transition:0.2s;margin-top:8px}
+.btn-outline:hover{border-color:rgba(255,255,255,0.1);color:var(--text)}
+.status{font-size:13px;min-height:24px;margin:12px 0;padding:8px;border-radius:8px;display:none}
+.status.success{display:block;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.1);color:var(--emerald)}
+.status.error{display:block;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.1);color:#EF4444}
+.status.info{display:block;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.1);color:var(--gold)}
+.timer{font-size:12px;color:var(--text-muted);margin-top:8px}
+.timer strong{color:var(--gold)}
+.hidden{display:none!important}
+.back-link{display:inline-block;margin-top:16px;font-size:12px;color:var(--text-muted);text-decoration:none}
+.back-link:hover{color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="verify-wrap">
+  <div class="verify-card">
+    <div class="logo">🔑</div>
+    <div class="title">OTP Verification</div>
+    <div class="subtitle">Enter the 6-digit code sent to your account</div>
+
+    <!-- OTP from URL display -->
+    <div id="otpFromUrl" class="otp-display hidden"></div>
+
+    <!-- Manual OTP input -->
+    <div class="otp-input-group" id="otpInputGroup">
+      <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code" id="otp1" oninput="moveNext(this,2)" onkeydown="moveBack(event,1)">
+      <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp2" oninput="moveNext(this,3)" onkeydown="moveBack(event,2)">
+      <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp3" oninput="moveNext(this,4)" onkeydown="moveBack(event,3)">
+      <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp4" oninput="moveNext(this,5)" onkeydown="moveBack(event,4)">
+      <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp5" oninput="moveNext(this,6)" onkeydown="moveBack(event,5)">
+      <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" id="otp6" oninput="moveNext(this,7)" onkeydown="moveBack(event,6)">
+    </div>
+
+    <div id="statusMsg" class="status"></div>
+
+    <button class="btn-verify" id="verifyBtn" onclick="verifyOTP()">✅ Verify OTP</button>
+    <button class="btn-outline" id="resendBtn" onclick="resendOTP()">🔄 Resend Code</button>
+    <div class="timer" id="timerDisplay"></div>
+
+    <a href="login.html" class="back-link">← Back to Login</a>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script>
+// Firebase
+firebase.initializeApp({
+  apiKey: "AIzaSyAoo2-X5ILICXR2mFAyUhqJYpvScChlsOc",
+  authDomain: "earnnovabeta.firebaseapp.com",
+  projectId: "earnnovabeta",
+  storageBucket: "earnnovabeta.firebasestorage.app",
+  messagingSenderId: "379345093425",
+  appId: "1:379345093425:web:3b69314491b8db26b71aa3"
+});
+var db = firebase.firestore();
+var auth = firebase.auth();
+var currentUser = null;
+var otpCode = '';
+var otpVerified = false;
+var timerInterval = null;
+var cooldown = 60;
+
+// Check for OTP in URL
+var urlParams = new URLSearchParams(window.location.search);
+var urlOTP = urlParams.get('otp');
+var uid = urlParams.get('uid') || '';
+var mode = urlParams.get('mode') || 'verify';
+var redirect = urlParams.get('redirect') || 'home.html';
+
+// If OTP is in URL, auto-fill and verify
+if (urlOTP) {
+  otpCode = urlOTP.replace(/[^0-9]/g, '').slice(0, 6);
+  var display = document.getElementById('otpFromUrl');
+  display.textContent = otpCode;
+  display.classList.remove('hidden');
+  
+  // Auto-fill input boxes
+  for (var i = 0; i < 6; i++) {
+    var inp = document.getElementById('otp' + (i+1));
+    if (inp && otpCode[i]) {
+      inp.value = otpCode[i];
+      inp.classList.add('filled');
+    }
+  }
+  
+  // Auto-verify after 1s
+  setTimeout(function() { verifyOTP(); }, 1000);
+}
+
+// OTP input navigation
+function moveNext(current, nextId) {
+  if (current.value.length >= 1) {
+    current.classList.add('filled');
+    if (nextId <= 6) document.getElementById('otp' + nextId)?.focus();
+  }
+  // If all 6 filled, auto-verify
+  var full = '';
+  for (var i = 1; i <= 6; i++) {
+    var v = document.getElementById('otp' + i)?.value || '';
+    if (!v) return;
+    full += v;
+  }
+  otpCode = full;
+  document.getElementById('verifyBtn').disabled = false;
+}
+
+function moveBack(event, prevId) {
+  if (event.key === 'Backspace' && !event.target.value && prevId > 1) {
+    document.getElementById('otp' + (prevId-1))?.focus();
+  }
+}
+
+// Show status
+function showStatus(msg, type) {
+  var el = document.getElementById('statusMsg');
+  el.textContent = msg;
+  el.className = 'status ' + type;
+}
+
+// ===== VERIFY OTP =====
+function verifyOTP() {
+  // Read all inputs if not from URL
+  if (!otpCode) {
+    otpCode = '';
+    for (var i = 1; i <= 6; i++) {
+      otpCode += document.getElementById('otp' + i)?.value || '';
+    }
+  }
+  
+  if (otpCode.length !== 6) {
+    showStatus('⚠️ Please enter the complete 6-digit code', 'error');
+    return;
+  }
+  
+  var btn = document.getElementById('verifyBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Verifying...';
+  
+  showStatus('🔍 Checking OTP...', 'info');
+  
+  // Look up OTP in Firestore
+  db.collection('otp_codes').where('code', '==', otpCode).where('used', '==', false).get()
+    .then(function(snap) {
+      if (snap.empty) {
+        showStatus('❌ Invalid or expired OTP code', 'error');
+        btn.disabled = false;
+        btn.textContent = '✅ Verify OTP';
+        return;
+      }
+      
+      var doc = snap.docs[0];
+      var data = doc.data();
+      var expiry = data.expiresAt ? data.expiresAt.toDate() : new Date();
+      
+      if (Date.now() > expiry.getTime()) {
+        showStatus('⏰ OTP has expired. Request a new one.', 'error');
+        // Mark as expired
+        db.collection('otp_codes').doc(doc.id).update({ used: true, expiredAt: firebase.firestore.FieldValue.serverTimestamp() });
+        btn.disabled = false;
+        btn.textContent = '✅ Verify OTP';
+        return;
+      }
+      
+      // SUCCESS!
+      otpVerified = true;
+      showStatus('✅ OTP Verified Successfully!', 'success');
+      btn.textContent = '✅ Verified!';
+      
+      // Mark OTP as used
+      db.collection('otp_codes').doc(doc.id).update({
+        used: true,
+        verifiedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        verifiedBy: auth.currentUser?.uid || uid || 'anonymous'
+      });
+      
+      // Store verification in localStorage
+      localStorage.setItem('en_otp_verified', 'true');
+      localStorage.setItem('en_otp_code', otpCode);
+      localStorage.setItem('en_otp_time', String(Date.now()));
+      
+      // Handle different modes
+      if (mode === 'withdraw') {
+        // For withdrawal verification — store and redirect back
+        localStorage.setItem('en_wd_otp', 'verified');
+        setTimeout(function() { window.location.href = redirect; }, 1500);
+      } else if (mode === 'login') {
+        // For login verification
+        showStatus('✅ OTP verified. Logging in...', 'success');
+        // If user is not logged in, try to auto-login with stored credentials
+        setTimeout(function() { window.location.href = 'home.html'; }, 1500);
+      } else if (mode === 'reset') {
+        // For password reset
+        setTimeout(function() { window.location.href = 'login.html?reset=' + otpCode; }, 1500);
+      } else {
+        // Default: redirect to specified page
+        setTimeout(function() { window.location.href = redirect; }, 1500);
+      }
+      
+      // Fire analytics
+      try {
+        db.collection('analytics').add({
+          type: 'otp_verify',
+          userId: auth.currentUser?.uid || uid || 'anonymous',
+          mode: mode,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch(e) {}
+      
+    }).catch(function(err) {
+      showStatus('❌ Verification error: ' + err.message, 'error');
+      btn.disabled = false;
+      btn.textContent = '✅ Verify OTP';
+    });
+}
+
+// ===== RESEND OTP =====
+function resendOTP() {
+  if (timerInterval && cooldown > 0) {
+    showStatus('⏳ Please wait ' + cooldown + 's before requesting again', 'error');
+    return;
+  }
+  
+  var btn = document.getElementById('resendBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Sending...';
+  showStatus('📤 Sending new OTP code...', 'info');
+  
+  generateAndStoreOTP(function(err, code) {
+    btn.disabled = false;
+    if (err) {
+      showStatus('❌ ' + err, 'error');
+      btn.textContent = '🔄 Resend Code';
+      return;
+    }
+    
+    showStatus('📨 OTP sent! Code: <strong>' + code + '</strong> (valid 5 min)', 'success');
+    btn.textContent = '🔄 Resend Code';
+    otpCode = '';
+    
+    // Clear input fields
+    for (var i = 1; i <= 6; i++) {
+      var inp = document.getElementById('otp' + i);
+      if (inp) { inp.value = ''; inp.classList.remove('filled'); }
+    }
+    document.getElementById('otp1')?.focus();
+    
+    // Start cooldown
+    startCooldown();
+  });
+}
+
+// ===== GENERATE OTP =====
+function generateOTP() {
+  var code = '';
+  for (var i = 0; i < 6; i++) {
+    code += Math.floor(Math.random() * 10).toString();
+  }
+  return code;
+}
+
+function generateAndStoreOTP(callback) {
+  var code = generateOTP();
+  var expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+  
+  var otpData = {
+    code: code,
+    used: false,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    expiresAt: expiresAt,
+    userId: auth.currentUser?.uid || uid || 'guest',
+    mode: mode || 'verify'
+  };
+  
+  db.collection('otp_codes').add(otpData).then(function() {
+    // Store locally
+    localStorage.setItem('en_last_otp', code);
+    localStorage.setItem('en_otp_expires', expiresAt.getTime().toString());
+    
+    // In production, this would send via SMS/Email.
+    // For now, we display in the UI and console.
+    console.log('📱 OTP Code: ' + code + ' (expires: ' + expiresAt.toLocaleString() + ')');
+    
+    callback(null, code);
+  }).catch(function(err) {
+    callback(err.message, null);
+  });
+}
+
+// ===== COOLDOWN TIMER =====
+function startCooldown() {
+  cooldown = 60;
+  document.getElementById('timerDisplay').innerHTML = 'Resend in <strong>' + cooldown + 's</strong>';
+  
+  if (timerInterval) clearInterval(timerInterval);
+  
+  timerInterval = setInterval(function() {
+    cooldown--;
+    document.getElementById('timerDisplay').innerHTML = cooldown > 0 
+      ? 'Resend in <strong>' + cooldown + 's</strong>' 
+      : '';
+    if (cooldown <= 0) clearInterval(timerInterval);
+  }, 1000);
+}
+
+// ===== AUTH STATE =====
+auth.onAuthStateChanged(function(user) {
+  currentUser = user;
+  // If user is logged in and OTP was from URL, process
+  if (urlOTP && otpCode && !otpVerified) {
+    // Skip auto-verify if already triggered
+  }
+});
+
+// ===== INIT =====
+// Focus first OTP input
+document.getElementById('otp1')?.focus();
+
+// Check if there's a pending OTP request
+var storedOTP = localStorage.getItem('en_last_otp');
+var storedExpiry = localStorage.getItem('en_otp_expires');
+if (storedOTP && storedExpiry) {
+  var exp = parseInt(storedExpiry);
+  if (Date.now() < exp) {
+    showStatus('📨 Last OTP: <strong>' + storedOTP + '</strong> (expires ' + new Date(exp).toLocaleTimeString() + ')', 'info');
+  } else {
+    localStorage.removeItem('en_last_otp');
+    localStorage.removeItem('en_otp_expires');
+  }
+}
+
+// Auto-generate OTP on first load (for testing/demo)
+if (!urlOTP && !storedOTP) {
+  setTimeout(function() {
+    generateAndStoreOTP(function(err, code) {
+      if (!err) {
+        showStatus('📨 OTP: <strong>' + code + '</strong> (valid 5 min)', 'success');
+        startCooldown();
+      }
+    });
+  }, 500);
+}
+
+console.log('🔑 EARNNOVA OTP System v1.0');
+console.log('📱 Mode: ' + mode + ' | User: ' + (auth.currentUser?.uid || uid || 'guest'));
+</script>
+</body>
+</html>
