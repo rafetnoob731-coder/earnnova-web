@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>2048 | EARNNOVA</title>
+<style>
+:root{
+  --bg:#0F172A;--bg2:#0A0E1A;--card:rgba(255,255,255,0.03);--gold:#d4af37;--emerald:#10B981;--amber:#F59E0B;
+  --text:#F0F0F4;--text-muted:rgba(240,240,244,0.4);--radius:12px;--font:'Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+.header{
+  display:flex;align-items:center;padding:10px 14px;gap:10px;
+  background:rgba(15,23,42,0.9);backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,0.04);position:sticky;top:0;z-index:100;
+}
+.header .back{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:0.2s;flex-shrink:0;text-decoration:none;color:var(--text)}
+.header .back:hover{background:rgba(255,255,255,0.08)}
+.header .title{flex:1;font-size:15px;font-weight:700;color:var(--gold)}
+.header .balance{padding:6px 12px;border-radius:8px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.15);font-size:12px;font-weight:700;color:var(--emerald);white-space:nowrap}
+.header .ip-badge{padding:4px 10px;border-radius:6px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.1);font-size:10px;font-weight:600;color:var(--gold);white-space:nowrap}
+.game-container{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;position:relative}
+.game-container canvas{border-radius:var(--radius);background:var(--bg2);max-width:100%;height:auto !important}
+.game-controls{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;justify-content:center}
+.game-controls button{
+  padding:8px 16px;border-radius:8px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:0.2s;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:var(--text);
+}
+.game-controls button.primary{background:rgba(212,175,55,0.1);border-color:rgba(212,175,55,0.15);color:var(--gold)}
+.game-controls button.primary:hover{background:rgba(212,175,55,0.15)}
+.game-controls button.danger{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.12);color:#EF4444}
+.status{padding:8px 14px;margin-top:8px;border-radius:8px;background:var(--card);border:1px solid rgba(255,255,255,0.04);font-size:11px;color:var(--text-muted);text-align:center}
+.status .earned{color:var(--emerald);font-weight:700}
+.ip-info{
+  position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
+  padding:6px 14px;border-radius:100px;
+  background:rgba(15,23,42,0.85);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.04);
+  font-size:10px;color:var(--text-muted);white-space:nowrap;z-index:50;
+}
+.ip-info strong{color:var(--gold)}
+@media(max-width:400px){.header .ip-badge{display:none}}
+</style>
+</head>
+<body>
+<div class="header">
+  <a href="../earn.html" class="back">‹</a>
+  <span class="title">🧩 2048</span>
+  <span class="ip-badge" id="ipBadge">📍 IP...</span>
+  <span class="balance" id="balanceDisplay">$0.00</span>
+</div>
+<div class="game-container" id="gameContainer">
+  <canvas id="gameCanvas" width="320" height="480" style="width:320px;height:480px"></canvas>
+  <div class="game-controls" id="gameControls">
+    <button class="primary" id="startBtn">▶ Start Game</button>
+    <button id="restartBtn" style="display:none">🔄 Play Again</button>
+  </div>
+  <div class="status" id="gameStatus">Score: <span id="scoreDisplay">0</span> | Reward: <span class="earned" id="rewardDisplay">$0.000</span> | <span id="gamesPlayed">0</span> played</div>
+</div>
+<div class="ip-info" id="ipInfo">📍 <span id="userIP">Detecting IP...</span> | 🌎 <span id="ipLocation">US</span> - <span id="ipStatus">✅ Allowed</span></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script>
+// Firebase Config
+var firebaseConfig = {
+  apiKey: "AIzaSyAoo2-X5ILICXR2mFAyUhqJYpvScChlsOc",
+  authDomain: "earnnovabeta.firebaseapp.com",
+  projectId: "earnnovabeta",
+  storageBucket: "earnnovabeta.firebasestorage.app",
+  messagingSenderId: "379345093425",
+  appId: "1:379345093425:web:3b69314491b8db26b71aa3"
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+var auth = firebase.auth();
+
+// Auth state
+var currentUser = null;
+var currentUserData = null;
+auth.onAuthStateChanged(function(user) {
+  currentUser = user;
+  if (user) {
+    loadUserData(user.uid);
+  } else {
+    window.location.href = '../login.html';
+  }
+});
+
+function loadUserData(uid) {
+  db.collection('users').doc(uid).onSnapshot(function(doc) {
+    if (doc.exists) {
+      currentUserData = doc.data();
+      updateUI();
+    }
+  });
+}
+
+function updateUI() {
+  var bal = currentUserData?.balance || 0;
+  document.getElementById('balanceDisplay').textContent = '$' + bal.toFixed(2);
+  document.getElementById('gamesPlayed').textContent = currentUserData?.gamesPlayed || 0;
+}
+
+// IP Detection
+var userIPAddress = '';
+var userIPCountry = 'US';
+function detectIP() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://api.ipify.org?format=json', true);
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      userIPAddress = d.ip;
+      document.getElementById('userIP').textContent = d.ip;
+      // Get location info
+      getIPLocation(d.ip);
+    } catch(e) {}
+  };
+  xhr.onerror = function() {
+    // Fallback
+    document.getElementById('userIP').textContent = 'Unknown';
+    document.getElementById('ipStatus').textContent = '✅ Allowed';
+  };
+  xhr.send();
+}
+
+function getIPLocation(ip) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://ipapi.co/' + ip + '/json/', true);
+  xhr.onload = function() {
+    try {
+      var d = JSON.parse(xhr.responseText);
+      userIPCountry = d.country_name || 'US';
+      document.getElementById('ipLocation').textContent = d.country_code || 'US';
+      document.getElementById('ipBadge').textContent = '📍 ' + (d.country_code || 'US');
+      // Check if IP is allowed (all countries accepted)
+      var allowed = true;
+      document.getElementById('ipStatus').textContent = allowed ? '✅ Earning Allowed' : '❌ Blocked';
+      if (!allowed) {
+        document.getElementById('ipStatus').style.color = '#EF4444';
+        document.getElementById('ipInfo').style.borderColor = 'rgba(239,68,68,0.2)';
+      }
+    } catch(e) {}
+  };
+  xhr.onerror = function() {
+    document.getElementById('ipLocation').textContent = 'Unknown';
+    document.getElementById('ipStatus').textContent = '✅ Allowed';
+  };
+  xhr.send();
+}
+detectIP();
+
+// ===== GAME SPECIFIC =====
+var gameScore = 0;
+var gameRunning = false;
+var gameReward = 0.025;
+var totalEarned = 0;
+
+function startGame() {
+  document.getElementById('startBtn').style.display = 'none';
+  document.getElementById('restartBtn').style.display = 'none';
+  gameRunning = true;
+  gameScore = 0;
+  document.getElementById('scoreDisplay').textContent = '0';
+  
+var grid = Array(4).fill().map(function(){{return Array(4).fill(0)}});
+var score2048 = 0;
+var over2048 = false;
+
+var canvas = document.getElementById('gameCanvas');
+var ctx = canvas.getContext('2d');
+canvas.width = 320; canvas.height = 480;
+var cellSize = 70;
+var offsetX = (320 - cellSize * 4) / 2;
+var offsetY = 80;
+
+var tileColors = {{
+  0:'#1a1a2e', 2:'#2d2d44', 4:'#3a3a55', 8:'#F59E0B',
+  16:'#d4af37', 32:'#10B981', 64:'#059669', 128:'#3B82F6',
+  256:'#7C3AED', 512:'#EC4899', 1024:'#EF4444', 2048:'#FFD700'
+}};
+
+function addRandom() {{
+  var empty = [];
+  for (var r = 0; r < 4; r++) for (var c = 0; c < 4; c++) if (grid[r][c] === 0) empty.push({{r:r,c:c}});
+  if (empty.length === 0) return;
+  var pick = empty[Math.floor(Math.random() * empty.length)];
+  grid[pick.r][pick.c] = Math.random() < 0.9 ? 2 : 4;
+}}
+
+function drawGrid() {{
+  ctx.fillStyle = '#0A0E1A';
+  ctx.fillRect(0, 0, 320, 480);
+  
+  // Title
+  ctx.fillStyle = '#d4af37';
+  ctx.font = 'bold 22px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('2048', 160, 35);
+  
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.font = '14px sans-serif';
+  ctx.fillText('Score: ' + score2048, 160, 58);
+  
+  // Grid BG
+  ctx.fillStyle = 'rgba(255,255,255,0.02)';
+  ctx.fillRect(offsetX - 4, offsetY - 4, cellSize * 4 + 8, cellSize * 4 + 8);
+  
+  for (var r = 0; r < 4; r++) {{
+    for (var c = 0; c < 4; c++) {{
+      var val = grid[r][c];
+      var x = offsetX + c * cellSize;
+      var y = offsetY + r * cellSize;
+      ctx.fillStyle = tileColors[val] || '#1a1a2e';
+      ctx.fillRect(x + 2, y + 2, cellSize - 4, cellSize - 4);
+      if (val > 0) {{
+        ctx.fillStyle = val > 4 ? '#fff' : '#ccc';
+        ctx.font = val >= 1000 ? 'bold 18px sans-serif' : val >= 100 ? 'bold 22px sans-serif' : 'bold 28px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(val.toString(), x + cellSize/2, y + cellSize/2);
+      }}
+    }}
+  }}
+  
+  if (over2048) {{
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(0, 0, 320, 480);
+    ctx.fillStyle = '#d4af37';
+    ctx.font = 'bold 30px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Game Over!', 160, 200);
+    ctx.fillStyle = '#10B981';
+    ctx.font = '20px sans-serif';
+    ctx.fillText('Score: ' + score2048, 160, 240);
+  }}
+}}
+
+function move(dir) {{
+  if (over2048 || !gameRunning) return;
+  var moved = false;
+  var changed = true;
+  
+  function slide(row) {{
+    row = row.filter(function(v){{return v!==0}});
+    for (var i = 0; i < row.length - 1; i++) {{
+      if (row[i] === row[i+1]) {{ row[i] *= 2; score2048 += row[i]; row.splice(i+1,1); moved = true; }}
+    }}
+    while (row.length < 4) row.push(0);
+    return row;
+  }}
+  
+  if (dir === 'left' || dir === 'right') {{
+    for (var r = 0; r < 4; r++) {{
+      var row = grid[r];
+      if (dir === 'right') row.reverse();
+      var newRow = slide(row);
+      if (dir === 'right') newRow.reverse();
+      if (JSON.stringify(grid[r]) !== JSON.stringify(newRow)) moved = true;
+      grid[r] = newRow;
+    }}
+  }} else {{
+    for (var c = 0; c < 4; c++) {{
+      var col = [grid[0][c], grid[1][c], grid[2][c], grid[3][c]];
+      if (dir === 'down') col.reverse();
+      var newCol = slide(col);
+      if (dir === 'down') newCol.reverse();
+      for (var r = 0; r < 4; r++) {{
+        if (grid[r][c] !== newCol[r]) moved = true;
+        grid[r][c] = newCol[r];
+      }}
+    }}
+  }}
+  
+  if (moved) {{
+    addRandom();
+    // Check game over
+    over2048 = true;
+    for (var r = 0; r < 4; r++) {{
+      for (var c = 0; c < 4; c++) {{
+        if (grid[r][c] === 0) over2048 = false;
+        if (c < 3 && grid[r][c] === grid[r][c+1]) over2048 = false;
+        if (r < 3 && grid[r][c] === grid[r+1][c]) over2048 = false;
+      }}
+    }}
+    if (over2048) {{
+      gameRunning = false;
+      gameScore = score2048;
+      rewardGame(score2048);
+      drawGrid();
+      document.getElementById('startBtn').style.display = 'inline-block';
+      document.getElementById('startBtn').textContent = '▶ Play Again';
+      document.getElementById('restartBtn').style.display = 'inline-block';
+    }}
+  }}
+  drawGrid();
+}}
+
+addRandom();
+addRandom();
+drawGrid();
+
+// Swipe
+var tx=0,ty=0;
+canvas.addEventListener('touchstart',function(e){{tx=e.touches[0].clientX;ty=e.touches[0].clientY}});
+canvas.addEventListener('touchend',function(e){{
+  var dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dx)>Math.abs(dy)){{move(dx>0?'right':'left')}}else{{move(dy>0?'down':'up')}}
+}});
+document.addEventListener('keydown',function(e){{
+  switch(e.code){{case'ArrowUp':move('up');break;case'ArrowDown':move('down');break;case'ArrowLeft':move('left');break;case'ArrowRight':move('right');break;}}
+}});
+
+}
+
+function rewardGame(score) {
+  if (score < 1) {
+    document.getElementById('gameStatus').innerHTML = 'Score: <span id="scoreDisplay">0</span> | ❌ No reward (score too low)';
+    return;
+  }
+  var bonus = Math.min(score * 0.005, 0.050);
+  var total = 0.025 + bonus;
+  totalEarned += total;
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('rewardDisplay').textContent = '$' + total.toFixed(3);
+  
+  // Credit balance
+  var bal = parseFloat(localStorage.getItem('en_bal') || '0');
+  bal += total;
+  localStorage.setItem('en_bal', String(bal));
+  
+  // Update Firestore
+  if (currentUser) {
+    db.collection('users').doc(currentUser.uid).update({
+      balance: firebase.firestore.FieldValue.increment(total),
+      gamesPlayed: firebase.firestore.FieldValue.increment(1),
+      totalGamesEarned: firebase.firestore.FieldValue.increment(total)
+    }).catch(function(e) { console.warn(e); });
+  }
+  
+  document.getElementById('gamesPlayed').textContent = parseInt(document.getElementById('gamesPlayed').textContent || '0') + 1;
+  document.getElementById('gameStatus').innerHTML = 'Score: <span id="scoreDisplay">' + score + '</span> | 🎉 Earned: <span class="earned">$' + total.toFixed(3) + '</span> | Bonus: $' + bonus.toFixed(3);
+  document.getElementById('balanceDisplay').textContent = '$' + bal.toFixed(2);
+}
+
+function restartGame() {
+  gameRunning = false;
+  document.getElementById('startBtn').style.display = 'inline-block';
+  document.getElementById('restartBtn').style.display = 'none';
+  document.getElementById('gameStatus').innerHTML = 'Score: <span id="scoreDisplay">0</span> | Reward: <span class="earned" id="rewardDisplay">$0.000</span>';
+}
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('restartBtn').addEventListener('click', restartGame);
+</script>
+</body>
+</html>
