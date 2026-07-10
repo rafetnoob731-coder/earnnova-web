@@ -2386,31 +2386,29 @@ function openVPLink(type) {
   _vplinkType = type;
   
   // Step 1: Build the destination URL (the ad page)
+  // vplink=1 signals the ad page to reward $0.500
   var uid = currentUser ? currentUser.uid : 'guest';
   var token = generateAdToken(type);
-  var destUrl = window.location.origin + '/ads/' + type + '.html?token=' + token + '&uid=' + uid;
+  var destUrl = window.location.origin + '/ads/' + type + '.html?token=' + token + '&uid=' + uid + '&vplink=1&reward=0.500';
   
   // Step 2: Create VPLink shortlink for the destination
   var shortlink = createVPLink(destUrl, 'earn-' + type + '-' + uid.slice(-4));
   
-  // Step 3: Also wrap in Linkvertise for double gateway
+  // Step 3: Wrap in Linkvertise gateway for anti-bypass
   var gateUrl = 'https://link-to.net/1424242/' + Math.random()*1000 + '/?href=' + encodeURIComponent(shortlink);
   
-  console.log('🔗 VPLink → Linkvertise → ' + type);
+  console.log('🔗 VPLink → Linkvertise → ' + type + ' → $0.500');
   console.log('   Dest: ' + destUrl);
   console.log('   Short: ' + shortlink);
   console.log('   Gate: ' + gateUrl);
   
   // Step 4: Open the gateway (new tab)
-  var win = window.open(gateUrl, '_blank');
+  window.open(gateUrl, '_blank');
   
-  // Step 5: Track when user completes (they come back to this page)
+  // Step 5: Done
   _vplinkPending = false;
   
-  // Show toast
-  showToast('🔗', 'Opening VPLink → Complete ad to earn!', 'info');
-  
-  // The reward happens on the ad page itself (completeAdTask)
+  showToast('🔗', 'VPLink → Linkvertise → $0.500 reward!', 'success');
   return shortlink;
 }
 
