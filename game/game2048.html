@@ -41,7 +41,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   font-size:10px;color:var(--text-muted);white-space:nowrap;z-index:50;
 }
 .ip-info strong{color:var(--gold)}
-@media(max-width:400px){.header .ip-badge{display:none}}
+@media(max-width:400px){.header .ip-badge{display:none}
 </style>
 </head>
 <body>
@@ -167,7 +167,7 @@ function startGame() {
   gameScore = 0;
   document.getElementById('scoreDisplay').textContent = '0';
   
-var grid = Array(4).fill().map(function(){{return Array(4).fill(0)}});
+var grid = Array(4).fill().map(function(){return Array(4).fill(0)});
 var score2048 = 0;
 var over2048 = false;
 
@@ -178,21 +178,21 @@ var cellSize = 70;
 var offsetX = (320 - cellSize * 4) / 2;
 var offsetY = 80;
 
-var tileColors = {{
+var tileColors = {
   0:'#1a1a2e', 2:'#2d2d44', 4:'#3a3a55', 8:'#F59E0B',
   16:'#d4af37', 32:'#10B981', 64:'#059669', 128:'#3B82F6',
   256:'#7C3AED', 512:'#EC4899', 1024:'#EF4444', 2048:'#FFD700'
-}};
+};
 
-function addRandom() {{
+function addRandom() {
   var empty = [];
-  for (var r = 0; r < 4; r++) for (var c = 0; c < 4; c++) if (grid[r][c] === 0) empty.push({{r:r,c:c}});
+  for (var r = 0; r < 4; r++) for (var c = 0; c < 4; c++) if (grid[r][c] === 0) empty.push({r:r,c:c});
   if (empty.length === 0) return;
   var pick = empty[Math.floor(Math.random() * empty.length)];
   grid[pick.r][pick.c] = Math.random() < 0.9 ? 2 : 4;
-}}
+}
 
-function drawGrid() {{
+function drawGrid() {
   ctx.fillStyle = '#0A0E1A';
   ctx.fillRect(0, 0, 320, 480);
   
@@ -210,24 +210,24 @@ function drawGrid() {{
   ctx.fillStyle = 'rgba(255,255,255,0.02)';
   ctx.fillRect(offsetX - 4, offsetY - 4, cellSize * 4 + 8, cellSize * 4 + 8);
   
-  for (var r = 0; r < 4; r++) {{
-    for (var c = 0; c < 4; c++) {{
+  for (var r = 0; r < 4; r++) {
+    for (var c = 0; c < 4; c++) {
       var val = grid[r][c];
       var x = offsetX + c * cellSize;
       var y = offsetY + r * cellSize;
       ctx.fillStyle = tileColors[val] || '#1a1a2e';
       ctx.fillRect(x + 2, y + 2, cellSize - 4, cellSize - 4);
-      if (val > 0) {{
+      if (val > 0) {
         ctx.fillStyle = val > 4 ? '#fff' : '#ccc';
         ctx.font = val >= 1000 ? 'bold 18px sans-serif' : val >= 100 ? 'bold 22px sans-serif' : 'bold 28px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(val.toString(), x + cellSize/2, y + cellSize/2);
-      }}
-    }}
-  }}
+      }
+    }
+  }
   
-  if (over2048) {{
+  if (over2048) {
     ctx.fillStyle = 'rgba(0,0,0,0.6)';
     ctx.fillRect(0, 0, 320, 480);
     ctx.fillStyle = '#d4af37';
@@ -237,57 +237,57 @@ function drawGrid() {{
     ctx.fillStyle = '#10B981';
     ctx.font = '20px sans-serif';
     ctx.fillText('Score: ' + score2048, 160, 240);
-  }}
-}}
+  }
+}
 
-function move(dir) {{
+function move(dir) {
   if (over2048 || !gameRunning) return;
   var moved = false;
   var changed = true;
   
-  function slide(row) {{
-    row = row.filter(function(v){{return v!==0}});
-    for (var i = 0; i < row.length - 1; i++) {{
-      if (row[i] === row[i+1]) {{ row[i] *= 2; score2048 += row[i]; row.splice(i+1,1); moved = true; }}
-    }}
+  function slide(row) {
+    row = row.filter(function(v){return v!==0});
+    for (var i = 0; i < row.length - 1; i++) {
+      if (row[i] === row[i+1]) { row[i] *= 2; score2048 += row[i]; row.splice(i+1,1); moved = true; }
+    }
     while (row.length < 4) row.push(0);
     return row;
-  }}
+  }
   
-  if (dir === 'left' || dir === 'right') {{
-    for (var r = 0; r < 4; r++) {{
+  if (dir === 'left' || dir === 'right') {
+    for (var r = 0; r < 4; r++) {
       var row = grid[r];
       if (dir === 'right') row.reverse();
       var newRow = slide(row);
       if (dir === 'right') newRow.reverse();
       if (JSON.stringify(grid[r]) !== JSON.stringify(newRow)) moved = true;
       grid[r] = newRow;
-    }}
-  }} else {{
-    for (var c = 0; c < 4; c++) {{
+    }
+  } else {
+    for (var c = 0; c < 4; c++) {
       var col = [grid[0][c], grid[1][c], grid[2][c], grid[3][c]];
       if (dir === 'down') col.reverse();
       var newCol = slide(col);
       if (dir === 'down') newCol.reverse();
-      for (var r = 0; r < 4; r++) {{
+      for (var r = 0; r < 4; r++) {
         if (grid[r][c] !== newCol[r]) moved = true;
         grid[r][c] = newCol[r];
-      }}
-    }}
-  }}
+      }
+    }
+  }
   
-  if (moved) {{
+  if (moved) {
     addRandom();
     // Check game over
     over2048 = true;
-    for (var r = 0; r < 4; r++) {{
-      for (var c = 0; c < 4; c++) {{
+    for (var r = 0; r < 4; r++) {
+      for (var c = 0; c < 4; c++) {
         if (grid[r][c] === 0) over2048 = false;
         if (c < 3 && grid[r][c] === grid[r][c+1]) over2048 = false;
         if (r < 3 && grid[r][c] === grid[r+1][c]) over2048 = false;
-      }}
-    }}
-    if (over2048) {{
+      }
+    }
+    if (over2048) {
       gameRunning = false;
       gameScore = score2048;
       rewardGame(score2048);
@@ -295,10 +295,10 @@ function move(dir) {{
       document.getElementById('startBtn').style.display = 'inline-block';
       document.getElementById('startBtn').textContent = '▶ Play Again';
       document.getElementById('restartBtn').style.display = 'inline-block';
-    }}
-  }}
+    }
+  }
   drawGrid();
-}}
+}
 
 addRandom();
 addRandom();
@@ -306,14 +306,14 @@ drawGrid();
 
 // Swipe
 var tx=0,ty=0;
-canvas.addEventListener('touchstart',function(e){{tx=e.touches[0].clientX;ty=e.touches[0].clientY}});
-canvas.addEventListener('touchend',function(e){{
+canvas.addEventListener('touchstart',function(e){tx=e.touches[0].clientX;ty=e.touches[0].clientY});
+canvas.addEventListener('touchend',function(e){
   var dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
-  if(Math.abs(dx)>Math.abs(dy)){{move(dx>0?'right':'left')}}else{{move(dy>0?'down':'up')}}
-}});
-document.addEventListener('keydown',function(e){{
-  switch(e.code){{case'ArrowUp':move('up');break;case'ArrowDown':move('down');break;case'ArrowLeft':move('left');break;case'ArrowRight':move('right');break;}}
-}});
+  if(Math.abs(dx)>Math.abs(dy)){move(dx>0?'right':'left')}else{move(dy>0?'down':'up')}
+});
+document.addEventListener('keydown',function(e){
+  switch(e.code){case'ArrowUp':move('up');break;case'ArrowDown':move('down');break;case'ArrowLeft':move('left');break;case'ArrowRight':move('right');break;}
+});
 
 }
 
