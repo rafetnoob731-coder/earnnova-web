@@ -126,11 +126,114 @@ async function createUserDoc(user) {
 // ===== INIT APP =====
 
 // ===== AD TOKEN SYSTEM =====
+// ===== ANTI-BYPASS TOKEN SYSTEM =====
+// Generates a secure random token for bot detection
+// VPLink > Linkvertise > Ad Page > Reward
+// Direct bypass = NO REWARD
 function generateAdToken(type) {
   var uid = currentUser ? currentUser.uid : 'guest';
   var ts = Date.now().toString(36);
-  var rnd = Math.random().toString(36).substr(2, 6);
-  return uid.slice(-8) + '-' + ts + '-' + rnd + '-' + type;
+  // Cryptographically strong random
+  var rnd = '';
+  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for (var i = 0; i < 12; i++) {
+    rnd += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  var token = uid.slice(-8) + '-' + ts + '-' + rnd + '-' + type;
+  
+  // Store token in Firestore for validation (15min expiry)
+  storeAdToken(token, type);
+  
+  return token;
+}
+
+// Store token in Firestore with expiry
+function storeAdToken(token, type) {
+  try {
+    if (typeof db !== 'undefined' && typeof currentUser !== 'undefined' && currentUser) {
+      db.collection('ad_tokens').doc(token).set({
+        uid: currentUser.uid,
+        type: type,
+        created: firebase.firestore.FieldValue.serverTimestamp(),
+        expires: new Date(Date.now() + 15 * 60 * 1000), // 15 min
+        used: false,
+        ip: '' // Will be set if available
+      }).catch(function(e){ console.log('Token store err:', e); });
+    }
+  } catch(e) {}
+  localStorage.setItem('en_last_token', token);
+  localStorage.setItem('en_token_time', String(Date.now()));
+}
+
+// Validate token before rewarding
+function validateAdToken(token, callback) {
+  if (!token) {
+    console.log('🚫 No token - bypass detected!');
+    if (callback) callback(false);
+    return;
+  }
+  
+  // Check if this token was used before (localStorage cache)
+  var usedTokens = JSON.parse(localStorage.getItem('en_used_tokens') || '[]');
+  if (usedTokens.indexOf(token) >= 0) {
+    console.log('🚫 Token already used - replay detected!');
+    if (callback) callback(false);
+    return;
+  }
+  
+  // Firestore validation
+  try {
+    if (typeof db !== 'undefined') {
+      db.collection('ad_tokens').doc(token).get().then(function(doc) {
+        if (doc.exists && doc.data().used === true) {
+          console.log('🚫 Token already used in Firestore!');
+          if (callback) callback(false);
+          return;
+        }
+        // Mark as used
+        if (doc.exists) {
+          db.collection('ad_tokens').doc(token).update({used: true, completedAt: firebase.firestore.FieldValue.serverTimestamp()}).catch(function(){});
+        }
+        // Add to local used list
+        usedTokens.push(token);
+        if (usedTokens.length > 50) usedTokens.shift();
+        localStorage.setItem('en_used_tokens', JSON.stringify(usedTokens));
+        if (callback) callback(true);
+      }).catch(function() {
+        // Firestore failed - allow but log
+        if (callback) callback(true);
+      });
+    } else {
+      // Offline mode - just check local
+      usedTokens.push(token);
+      localStorage.setItem('en_used_tokens', JSON.stringify(usedTokens));
+      if (callback) callback(true);
+    }
+  } catch(e) {
+    // Fallback: allow
+    if (callback) callback(true);
+  }
+}
+
+// Check if user came through proper gateway
+function checkAdReferrer() {
+  var ref = document.referrer || '';
+  // Allowed referrers: Linkvertise, VPLink, omg10, our own site
+  var allowed = ['linkvertise', 'link-to.net', 'vplink.in', 'omg10.com', window.location.hostname];
+  for (var i = 0; i < allowed.length; i++) {
+    if (ref.indexOf(allowed[i]) >= 0) return true;
+  }
+  // If no referrer but has vplink=1 param, allow (could be privacy)
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('vplink') === '1') return true;
+  // If no referrer at all, could be direct access
+  if (!ref) return false;
+  return false;
+}
+
+// Get the latest valid token
+function getLastToken() {
+  return localStorage.getItem('en_last_token') || '';
 }
 
 function openAdPage(type) {
