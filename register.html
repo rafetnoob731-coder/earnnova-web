@@ -4,32 +4,270 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>EARN NOVA — Register</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+<style>
+body{margin:0;background:#080A12;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px;box-sizing:border-box}
+.auth-wrap{width:100%;max-width:400px}
+.auth-card{background:rgba(255,255,255,0.03);backdrop-filter:blur(24px) saturate(140%);border:1px solid rgba(255,255,255,0.06);border-radius:24px;padding:32px 24px;box-shadow:0 16px 80px rgba(0,0,0,0.3)}
+.auth-logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#10B981,#059669);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;margin:0 auto 16px;box-shadow:0 8px 32px rgba(16,185,129,0.2)}
+.auth-title{font-size:22px;font-weight:800;text-align:center;color:#fff}
+.auth-subtitle{font-size:13px;color:rgba(255,255,255,0.4);text-align:center;margin:4px 0 24px}
+.auth-input-group{margin-bottom:14px}
+.auth-input-group label{font-size:11px;color:rgba(255,255,255,0.4);display:block;margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:1px}
+.auth-input-wrap{display:flex;align-items:center;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);transition:all 0.2s}
+.auth-input-wrap:focus-within{border-color:#10B981;box-shadow:0 0 0 3px rgba(16,185,129,0.1)}
+.auth-input-wrap i{color:rgba(255,255,255,0.2);width:18px;font-size:14px}
+.auth-input-wrap input{background:none;border:none;outline:none;color:#fff;font-size:14px;width:100%;margin-left:10px}
+.auth-input-wrap input::placeholder{color:rgba(255,255,255,0.15)}
+.btn-auth{width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.25s;margin-top:8px}
+.btn-auth:active{transform:scale(0.98)}
+.btn-auth:disabled{opacity:0.5;cursor:not-allowed}
+.auth-footer{text-align:center;margin-top:20px;font-size:13px;color:rgba(255,255,255,0.3)}
+.auth-footer a{color:#10B981;text-decoration:none;font-weight:600}
+.auth-alert{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:16px;display:none}
+.auth-alert.error{display:block;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#FCA5A5}
+.auth-alert.success{display:block;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#6EE7B7}
+.terms-row{display:flex;align-items:flex-start;gap:8px;margin:16px 0;font-size:12px;color:rgba(255,255,255,0.3)}
+.terms-row input{accent-color:#10B981;margin-top:2px}
+.terms-row a{color:#10B981;text-decoration:none}
+.benefits{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+.benefit{padding:10px;border-radius:10px;background:rgba(255,255,255,0.03);text-align:center}
+.benefit-icon{font-size:18px}
+.benefit-text{font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px}
+</style>
+</head>
+<body>
 
-<!-- Nexus 728x90 -->
-
-
-<!-- In-article fluid -->
-
-
-<!-- Auto-relaxed -->
-
-
-<!-- EffectiveCPM -->
-
+<div class="auth-wrap">
+  <div class="auth-card" id="registerCard">
+    <div class="auth-logo">E</div>
+    
+    <!-- ===== STEP 1: Registration Form ===== -->
+    <div id="stepForm">
+      <div class="auth-title">Create Account</div>
+      <div class="auth-subtitle">Create your account • verify via email</div>
+      
+      <div id="regAlert" class="auth-alert"></div>
+      
+      <div class="auth-input-group">
+        <label><i class="fas fa-user"></i> Full Name</label>
+        <div class="auth-input-wrap">
+          <i class="fas fa-user"></i>
+          <input type="text" id="regName" placeholder="John Doe" autocomplete="name">
+        </div>
+      </div>
+      
+      <div class="auth-input-group">
+        <label><i class="fas fa-envelope"></i> Email</label>
+        <div class="auth-input-wrap">
+          <i class="fas fa-envelope"></i>
+          <input type="email" id="regEmail" placeholder="you@example.com" autocomplete="email">
+        </div>
+      </div>
+      
+      <div class="auth-input-group">
+        <label><i class="fas fa-lock"></i> Password</label>
+        <div class="auth-input-wrap">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="regPassword" placeholder="••••••••" autocomplete="new-password">
+        </div>
+      </div>
+      
+      <div class="auth-input-group">
+        <label><i class="fas fa-gift"></i> Referral Code (optional)</label>
+        <div class="auth-input-wrap">
+          <i class="fas fa-gift"></i>
+          <input type="text" id="regReferral" placeholder="Enter code" maxlength="10" style="text-transform:uppercase">
+        </div>
+      </div>
+      
+      <div class="terms-row">
+        <input type="checkbox" id="regTerms">
+        <label for="regTerms">I agree to the <a href="terms.html" target="_blank">Terms of Service</a> &amp; <a href="privacy.html" target="_blank">Privacy Policy</a></label>
+      </div>
+      
+      <button class="btn-auth" id="regBtn" onclick="handleRegister()">Create Account</button>
+    </div>
+    
+    <!-- ===== STEP 2: Verification Message ===== -->
+    <div id="stepVerify" style="display:none">
+      <div class="auth-title">Check Your Email</div>
+      <div class="auth-subtitle">We sent a verification code to <strong id="verifyEmail" style="color:#10B981"></strong></div>
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:48px;margin-bottom:12px">📧</div>
+        <div style="font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:16px">A 6-digit code was sent to your email</div>
+        <button class="btn-auth" onclick="goToVerifyPage()" style="background:linear-gradient(135deg,#d4af37,#b8960f)">Go to Verify Page</button>
+      </div>
+    </div>
+    
+    <div class="auth-footer">
+      Already have an account? <a href="login.html" id="loginLink">Sign In</a>
+    </div>
+  </div>
+</div>
 
 <script>
-  atOptions = {
-    'key' : '679c41f5cd1133dfcfb8ddd3254605d4',
-    'format' : 'iframe',
-    'height' : 300,
-    'width' : 160,
-    'params' : {}
-  };
+// ===== FIREBASE CONFIG =====
+var firebaseConfig = {
+  apiKey: "AIzaSyAoo2-X5ILICXR2mFAyUhqJYpvScChlsOc",
+  authDomain: "earnnovabeta.firebaseapp.com",
+  projectId: "earnnovabeta",
+  storageBucket: "earnnovabeta.appspot.com",
+  messagingSenderId: "1058802392633",
+  appId: "1:1058802392633:web:xxxxxxxxxxxx"
+};
+firebase.initializeApp(firebaseConfig);
+var auth = firebase.auth();
+var db = firebase.firestore();
+
+// ===== URL PARAMS =====
+var urlParams = new URLSearchParams(window.location.search);
+
+// ===== PRESERVE URL PARAMS =====
+(function() {
+  var loginLink = document.getElementById('loginLink');
+  if (loginLink) {
+    var params = ['auth','redirect','token'];
+    var qs = [];
+    for (var i = 0; i < params.length; i++) {
+      var v = urlParams.get(params[i]);
+      if (v) qs.push(params[i] + '=' + encodeURIComponent(v));
+    }
+    if (qs.length > 0) loginLink.href = 'login.html?' + qs.join('&');
+  }
+})();
+
+// ===== REFERRAL FROM URL =====
+(function() {
+  var refCode = urlParams.get('ref') || '';
+  var token = urlParams.get('token') || '';
+  if (refCode) {
+    var input = document.getElementById('regReferral');
+    if (input) {
+      input.value = refCode.toUpperCase();
+      input.style.borderColor = '#10B981';
+      input.style.boxShadow = '0 0 0 3px rgba(16,185,129,0.15)';
+    }
+  }
+  if (token && !refCode) {
+    try {
+      var decoded = atob(token);
+      var parts = decoded.split('|');
+      if (parts.length >= 2) {
+        document.getElementById('regEmail').value = parts[0] || '';
+        if (parts[1]) document.getElementById('regReferral').value = parts[1].toUpperCase();
+      }
+    } catch(e) {}
+  }
+})();
+
+// ===== REGISTER FUNCTION =====
+function handleRegister() {
+  var name = document.getElementById('regName').value.trim();
+  var email = document.getElementById('regEmail').value.trim();
+  var password = document.getElementById('regPassword').value;
+  var referral = document.getElementById('regReferral').value.trim().toUpperCase();
+  var terms = document.getElementById('regTerms').checked;
+  var alert = document.getElementById('regAlert');
+  var btn = document.getElementById('regBtn');
+  
+  // Validation
+  if (!name) { showAlert('Please enter your name', 'error'); return; }
+  if (!email) { showAlert('Please enter your email', 'error'); return; }
+  if (!password || password.length < 6) { showAlert('Password must be at least 6 characters', 'error'); return; }
+  if (!terms) { showAlert('Please agree to the Terms of Service', 'error'); return; }
+  
+  btn.disabled = true;
+  btn.textContent = 'Creating Account...';
+  
+  // Check IP (one account per IP)
+  fetch('https://api.ipify.org?format=json')
+    .then(function(r){return r.json()})
+    .then(function(data){
+      var ip = data.ip;
+      return db.collection('users').where('regIp','==',ip).get();
+    })
+    .then(function(snapshot){
+      if (!snapshot.empty) {
+        showAlert('An account already exists from this IP address', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+        return null;
+      }
+      return registerUser(name, email, password, referral);
+    })
+    .catch(function(err){
+      // IP check failed, proceed anyway
+      return registerUser(name, email, password, referral);
+    });
+}
+
+function registerUser(name, email, password, referral) {
+  return auth.createUserWithEmailAndPassword(email, password)
+    .then(function(cred){
+      var user = cred.user;
+      return user.updateProfile({displayName: name}).then(function(){
+        return {user: user};
+      });
+    })
+    .then(function(result){
+      var user = result.user;
+      var uid = user.uid;
+      
+      // Create OTP
+      var otp = String(Math.floor(100000 + Math.random() * 900000));
+      
+      // Store OTP in Firestore
+      return db.collection('otp_codes').doc(uid).set({
+        email: email,
+        otp: otp,
+        name: name,
+        referral: referral || '',
+        created: firebase.firestore.FieldValue.serverTimestamp(),
+        expires: new Date(Date.now() + 10 * 60 * 1000),
+        used: false
+      }).then(function(){
+        console.log('📧 OTP for ' + email + ': ' + otp);
+        console.log('EARN NOVA | OTP: ' + otp);
+        
+        // Show verification step
+        document.getElementById('stepForm').style.display = 'none';
+        document.getElementById('verifyEmail').textContent = email;
+        document.getElementById('stepVerify').style.display = 'block';
+        
+        // Redirect to verify page after short delay
+        setTimeout(function(){
+          window.location.href = 'verify.html?email=' + encodeURIComponent(email) + '&uid=' + uid + '&new=1';
+        }, 2000);
+      });
+    })
+    .catch(function(err){
+      var msg = err.message || 'Registration failed';
+      if (err.code === 'auth/email-already-in-use') msg = 'Email already registered';
+      else if (err.code === 'auth/weak-password') msg = 'Password too weak (min 6 chars)';
+      else if (err.code === 'auth/invalid-email') msg = 'Invalid email address';
+      showAlert(msg, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Create Account';
+    });
+}
+
+function goToVerifyPage() {
+  var email = document.getElementById('verifyEmail').textContent;
+  var uid = auth.currentUser ? auth.currentUser.uid : '';
+  window.location.href = 'verify.html?email=' + encodeURIComponent(email) + '&uid=' + uid + '&new=1';
+}
+
+function showAlert(msg, type) {
+  var el = document.getElementById('regAlert');
+  el.textContent = msg;
+  el.className = 'auth-alert ' + type;
+}
 </script>
-
-
-<!-- EffectiveCPM iframe -->
-
 
 </body>
 </html>
