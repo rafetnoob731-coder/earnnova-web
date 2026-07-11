@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>💰 ADS11 VPLink+Linkvertise | EARN NOVA</title>
+<title>💰 ADS11 💰 ADS11 • $0.500 | EARN NOVA</title>
 <style>
 :root{--bg:#0F172A;--bg2:#0A0E1A;--card:rgba(255,255,255,0.03);--gold:#d4af37;--emerald:#10B981;--text:#F0F0F4;--text-muted:rgba(240,240,244,0.4);--font:'Segoe UI',system-ui,sans-serif;--radius:12px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -112,8 +112,8 @@ function openMonetagAll() {
 <body>
 <div class="ad-header">
   <a href="../earn.html" class="back">✕</a>
-  <span class="title">💰 VPLink+Linkvertise</span>
-  <span class="reward-badge">+$0.1</span>
+  <span class="title">💰 💰 ADS11 • $0.500</span>
+  <span class="reward-badge">+$0.500</span>
 </div>
 <div class="ad-body">
   <div class="ad-content-wrap">
@@ -126,7 +126,7 @@ function openMonetagAll() {
     <div class="ad-progress"><div class="fill" id="progressFill"></div></div>
     <div class="ad-status" id="adStatus">⏳ Ready...</div>
     
-    <!-- AD CONTENT (VPLink+Linkvertise Gateway) -->
+    <!-- AD CONTENT (💰 ADS11 • $0.500 Gateway) -->
     <div id="adContent" style="width:100%;min-height:160px;border-radius:12px;background:rgba(16,185,129,0.03);border:1px solid rgba(16,185,129,0.08);padding:16px;margin:8px 0;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center">
       <div style="font-size:36px;margin-bottom:4px">🔗💰</div>
       <div style="font-size:16px;font-weight:800;color:var(--gold);margin-bottom:6px">VPLink → Linkvertise → $0.500</div>
@@ -268,7 +268,7 @@ function completeAdTask() {
       var xhr = new XMLHttpRequest();
       xhr.open('POST', 'https://earnnova-web.vercel.app/api/credit', true);
       xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.send(JSON.stringify({token: token, reward: adReward, type: 'ads2'}));
+      xhr.send(JSON.stringify({token: token, reward: adReward, type: 'ads11'}));
     } catch(e) {}
   }
   
@@ -293,7 +293,7 @@ document.getElementById('skipBtn').onclick = function() { window.location.href =
 document.getElementById('adStatus').textContent = '⏳ Loading...';
 setTimeout(startTimer, 1000);
 
-console.log('EARNNOVA Ad | Type: ads2 | Reward: $' + adReward + ' | Token: ' + token);
+console.log('EARNNOVA Ad | Type: ads11 | Reward: $' + adReward + ' | Token: ' + token);
 </script>
 </body>
 </html>
