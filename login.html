@@ -4,7 +4,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>EARNNOVA — Sign In</title>
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/style.css">
+<style>
+body{margin:0;background:#080A12;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
+.auth-wrap{width:100%;max-width:400px}
+.auth-card{background:rgba(255,255,255,0.03);backdrop-filter:blur(24px) saturate(140%);border:1px solid rgba(255,255,255,0.06);border-radius:24px;padding:32px 24px;box-shadow:0 16px 80px rgba(0,0,0,0.3)}
+.auth-logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#10B981,#059669);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;margin:0 auto 16px;box-shadow:0 8px 32px rgba(16,185,129,0.2)}
+.auth-title{font-size:22px;font-weight:800;text-align:center;color:#fff}
+.auth-subtitle{font-size:13px;color:rgba(255,255,255,0.4);text-align:center;margin:4px 0 24px}
+.auth-input-group{margin-bottom:14px}
+.auth-input-group label{font-size:11px;color:rgba(255,255,255,0.4);display:block;margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:1px}
+.auth-input-wrap{display:flex;align-items:center;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);transition:all 0.2s}
+.auth-input-wrap:focus-within{border-color:#10B981;box-shadow:0 0 0 3px rgba(16,185,129,0.1)}
+.auth-input-wrap i{color:rgba(255,255,255,0.2);width:18px;font-size:14px}
+.auth-input-wrap input{background:none;border:none;outline:none;color:#fff;font-size:14px;width:100%;margin-left:10px}
+.auth-input-wrap input::placeholder{color:rgba(255,255,255,0.15)}
+.btn-auth{width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.25s;margin-top:8px}
+.btn-auth:active{transform:scale(0.98)}
+.btn-auth:disabled{opacity:0.5;cursor:not-allowed}
+.auth-footer{text-align:center;margin-top:20px;font-size:13px;color:rgba(255,255,255,0.3)}
+.auth-footer a{color:#10B981;text-decoration:none;font-weight:600}
+.auth-alert{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:16px;display:none}
+.auth-alert.error{display:block;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#FCA5A5}
+.auth-alert.success{display:block;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#6EE7B7}
+.auth-divider{text-align:center;color:rgba(255,255,255,0.15);font-size:12px;margin:20px 0 16px;position:relative}
+.auth-divider::before,.auth-divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:rgba(255,255,255,0.06)}
+.auth-divider::before{left:0}.auth-divider::after{right:0}
+.btn-google{width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#fff;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s}
+.btn-google:active{transform:scale(0.98)}
+.auth-row{display:flex;justify-content:space-between;align-items:center;margin:12px 0;font-size:12px}
+.auth-check{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.4);cursor:pointer}
+.auth-check input{accent-color:#10B981}
+.auth-link{color:#10B981;text-decoration:none;font-weight:600}
+</style>
 </head>
 <body>
 
@@ -72,6 +105,15 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script>
+var firebaseConfig={apiKey:"AIzaSyAoo2-X5ILICXR2mFAyUhqJYpvScChlsOc",authDomain:"earnnovabeta.firebaseapp.com",projectId:"earnnovabeta",storageBucket:"earnnovabeta.appspot.com",messagingSenderId:"1058802392633",appId:"1:1058802392633:web:xxxxxxxxxxxx"};
+firebase.initializeApp(firebaseConfig);
+var auth=firebase.auth();
+var db=firebase.firestore();
+</script>
 <script src="js/supabase-config.js"></script>
 <script>
 // ===== DOM REFS =====
