@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>VPLink+Linkvertise | EARNNOVA</title>
+<title>💰 ADS11 VPLink+Linkvertise | EARN NOVA</title>
 <style>
 :root{--bg:#0F172A;--bg2:#0A0E1A;--card:rgba(255,255,255,0.03);--gold:#d4af37;--emerald:#10B981;--text:#F0F0F4;--text-muted:rgba(240,240,244,0.4);--font:'Segoe UI',system-ui,sans-serif;--radius:12px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -128,13 +128,19 @@ function openMonetagAll() {
     
     <!-- AD CONTENT (VPLink+Linkvertise Gateway) -->
     <div id="adContent" style="width:100%;min-height:160px;border-radius:12px;background:rgba(16,185,129,0.03);border:1px solid rgba(16,185,129,0.08);padding:16px;margin:8px 0;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center">
-      <div style="font-size:40px;margin-bottom:6px">🔗</div>
-      <div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:4px">VPLink → Linkvertise → $0.500</div>
-      <div style="font-size:10px;color:var(--text-muted);margin-bottom:10px;max-width:280px">You arrived via VPLink shortlink through Linkvertise gateway. Complete the timer to earn $0.500!</div>
-      <div style="width:100%;max-width:300px;padding:8px;border-radius:8px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.1);font-size:11px;color:var(--emerald)">
-        ✅ VPLink Gateway Active • $0.500 Reward
+      <div style="font-size:36px;margin-bottom:4px">🔗💰</div>
+      <div style="font-size:16px;font-weight:800;color:var(--gold);margin-bottom:6px">VPLink → Linkvertise → $0.500</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;max-width:300px">You arrived via <strong style="color:var(--gold)">VPLink shortlink</strong> through <strong style="color:var(--emerald)">Linkvertise gateway</strong>. Complete the timer to earn your reward!</div>
+      <div id="vplinkStatus" style="width:100%;max-width:300px;padding:10px;border-radius:10px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.1);font-size:12px;color:var(--emerald);font-weight:600">
+        🔗 VPLink Gateway Active • $0.500
       </div>
-      <div style="font-size:9px;color:var(--text-muted);margin-top:8px">Anti-bypass: Enabled • Token: Active</div>
+      <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px">
+        <span class="network-tag">🔗 VPLink</span>
+        <span class="network-tag">🔗 Linkvertise</span>
+        <span class="network-tag">💰 $0.500</span>
+        <span class="network-tag">🛡️ Anti-bypass</span>
+      </div>
+      <div style="font-size:9px;color:var(--text-muted);margin-top:6px">Token: <span id="tokenDisplay" style="color:var(--gold)">' + (token ? token.slice(0,16)+'...' : 'active') + '</span></div>
     </div>
   </div>
 </div>
@@ -148,7 +154,10 @@ function openMonetagAll() {
 
 <script>
 // ===== TOKEN & REWARD SYSTEM =====
-var adReward = 0.1;
+var // VPLink+Linkvertise Gateway = $0.500
+var vplinkMode = urlParams.get('vplink') === '1' || window.location.search.includes('vplink=1');
+var rewardFromUrl = parseFloat(urlParams.get('reward')) || 0.500;
+var adReward = vplinkMode ? rewardFromUrl : 0.500;
 var token = urlParams.get('token') || '';
 var userId = urlParams.get('uid') || '';
 var urlParams = new URLSearchParams(window.location.search);
