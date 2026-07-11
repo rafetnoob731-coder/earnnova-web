@@ -29,6 +29,54 @@ function showMonetagAd() {
   } catch(e) {}
 }
 </script>
+
+<!-- ===== MONETAG AD NETWORKS ===== -->
+<!-- Zone 11269724 (al5sm.com) -->
+<script>(function(s){s.dataset.zone='11269724',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
+<!-- Zone 11269758 - Vignette/Interstitial (n6wxm.com) -->
+<script>(function(s){s.dataset.zone='11269758',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
+<!-- Zone 255448 - Popunder (quge5.com) -->
+<script src="https://quge5.com/88/tag.min.js" data-zone="255448" async data-cfasync="false"></script>
+
+<!-- Zone 251380 - Popunder (quge5.com) -->
+<script src="https://quge5.com/88/tag.min.js" data-zone="251380" async data-cfasync="false"></script>
+
+<!-- Zone 11269783 (nap5k.com) -->
+<script>(function(s){s.dataset.zone='11269783',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
+<!-- Direct Links -->
+<script>
+// ===== MONETAG DIRECT LINKS =====
+var MONETAG_LINKS = [
+  'https://omg10.com/4/11269732',
+  'https://omg10.com/4/11269764',
+  'https://omg10.com/4/9619899',
+  'https://omg10.com/4/11269766',
+  'https://omg10.com/4/11269772',
+  'https://omg10.com/4/11269774'
+];
+
+function openMonetagRandom() {
+  var url = MONETAG_LINKS[Math.floor(Math.random() * MONETAG_LINKS.length)];
+  var win = window.open(url, '_blank');
+  if (win) win.focus();
+  console.log('📢 Monetag direct link: ' + url);
+  return false;
+}
+
+function openMonetagAll() {
+  // Open 2-3 random Monetag links
+  var count = 2 + Math.floor(Math.random() * 2);
+  var shuffled = MONETAG_LINKS.slice().sort(function(){return 0.5-Math.random()});
+  for (var i = 0; i < count && i < shuffled.length; i++) {
+    setTimeout(function(url) {
+      return function() { window.open(url, '_blank'); };
+    }(shuffled[i]), i * 300);
+  }
+}
+</script>
 </head>
 <body class="dark-mode">
 
