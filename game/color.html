@@ -155,6 +155,7 @@ function openMonetagAll() {
   <div class="game-controls" id="gameControls">
     <button class="primary" id="startBtn">▶ Start Game</button>
     <button id="restartBtn" style="display:none">🔄 Play Again</button>
+    <button class="secondary" id="homeBtn" onclick="goHome()" style="display:inline-block;padding:8px 14px;border-radius:8px;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.08);color:var(--gold);font-size:11px;font-weight:600;cursor:pointer">🏠 Home</button>
   </div>
   <div class="status" id="gameStatus">Score: <span id="scoreDisplay">0</span> | Reward: <span class="earned" id="rewardDisplay">$0.000</span> | <span id="gamesPlayed">0</span> played</div>
 </div>
@@ -412,6 +413,7 @@ function rewardGame(score) {
   // Update display
   document.getElementById('scoreDisplay').textContent = score;
   document.getElementById('rewardDisplay').textContent = '$' + total.toFixed(3);
+  document.getElementById('homeBtn').style.display = 'inline-block';
   document.getElementById('gamePlayStatus').textContent = '🎉 +$' + total.toFixed(3) + ' earned!';
   document.getElementById('gamePlayStatus').style.color = '#10B981';
   
