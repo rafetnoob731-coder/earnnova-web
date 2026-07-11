@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>📋 All Ads | EARN NOVA</title>
+<meta name="theme-color" content="#0A0E1A">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0A0E1A;--card:rgba(15,23,42,0.7);--gold:#d4af37;--emerald:#10B981;--amber:#F59E0B;--text:#e2e8f0;--text-muted:#64748b}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(ellipse at 20% 50%,rgba(212,175,55,0.03) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(16,185,129,0.02) 0%,transparent 60%);pointer-events:none;z-index:0}
+.container{max-width:480px;margin:0 auto;padding:12px;position:relative;z-index:1}
+
+/* Header */
+.header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(15,23,42,0.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:14px;border:1px solid rgba(212,175,55,0.08);margin-bottom:12px}
+.header .logo{font-size:18px;font-weight:800;background:linear-gradient(135deg,var(--gold),var(--emerald));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header .badge{font-size:10px;padding:3px 8px;border-radius:20px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.15);color:var(--emerald)}
+
+/* Balance bar */
+.balance-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(16,185,129,0.03);border:1px solid rgba(16,185,129,0.06);border-radius:10px;margin-bottom:10px}
+.balance-bar .label{font-size:11px;color:var(--text-muted)}
+.balance-bar .amount{font-size:18px;font-weight:800;color:var(--gold)}
+
+/* Ad Grid */
+.ads-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ad-card{display:flex;flex-direction:column;align-items:center;padding:14px 10px;border-radius:12px;background:rgba(15,23,42,0.4);border:1px solid rgba(212,175,55,0.06);cursor:pointer;transition:all 0.25s cubic-bezier(0.4,0,0.2,1);position:relative;overflow:hidden;text-decoration:none;color:var(--text)}
+.ad-card:hover{transform:translateY(-2px);border-color:rgba(212,175,55,0.15);background:rgba(15,23,42,0.6)}
+.ad-card:active{transform:scale(0.97)}
+.ad-card .icon{font-size:28px;margin-bottom:4px}
+.ad-card .name{font-size:12px;font-weight:700;color:var(--gold);margin-bottom:2px}
+.ad-card .desc{font-size:9px;color:var(--text-muted);text-align:center;margin-bottom:4px}
+.ad-card .reward{font-size:14px;font-weight:800;color:var(--emerald)}
+.ad-card .tag{position:absolute;top:6px;right:6px;font-size:8px;padding:2px 5px;border-radius:4px;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.08);color:var(--gold)}
+
+/* Section title */
+.section-title{font-size:13px;font-weight:700;color:var(--text-muted);margin:12px 0 6px 6px;text-transform:uppercase;letter-spacing:0.05em}
+
+/* Bottom nav */
+.bottom-nav{display:flex;gap:6px;margin-top:12px;padding:10px 12px;background:rgba(15,23,42,0.5);backdrop-filter:blur(12px);border-radius:14px;border:1px solid rgba(212,175,55,0.06)}
+.bottom-nav a{flex:1;text-align:center;padding:8px 6px;border-radius:8px;font-size:10px;font-weight:600;color:var(--text-muted);text-decoration:none;transition:all 0.2s}
+.bottom-nav a:hover,.bottom-nav a.active{color:var(--gold);background:rgba(212,175,55,0.06)}
+
+/* Monetag Banner */
+.monetag-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;background:rgba(212,175,55,0.03);border:1px solid rgba(212,175,55,0.06);margin-bottom:8px;cursor:pointer}
+.monetag-bar span{font-size:10px;color:var(--text-muted)}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:10px;background:rgba(15,23,42,0.9);backdrop-filter:blur(12px);border:1px solid rgba(212,175,55,0.1);color:var(--text);font-size:12px;font-weight:500;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;text-align:center}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">📋 All Ads</div>
+    <div class="badge">🔥 Watch & Earn</div>
+  </div>
+
+  <!-- Balance -->
+  <div class="balance-bar">
+    <span class="label">💰 Balance</span>
+    <span class="amount" id="balDisplay">$0.00</span>
+  </div>
+
+  <!-- Monetag Gateway Banner -->
+  <div class="monetag-bar" onclick="openMonetagRandom()">
+    <span>📢 <strong style="color:var(--gold)">Monetag</strong> — 6 direct links</span>
+    <span style="color:var(--emerald)">Click to earn →</span>
+  </div>
+
+  <!-- All Ads Grid -->
+  <div class="section-title">🔥 All Ad Types</div>
+  <div class="ads-grid" id="adsGrid"></div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <a href="/earn.html">💰 Earn</a>
+    <a href="/dashboard.html">📊 Dashboard</a>
+    <a href="/ads/index.html">📢 Ad Hub</a>
+    <a href="/games/index.html">🎮 Games</a>
+  </div>
+
+</div>
+
+<div class="toast" id="toastMsg"></div>
+
+<script>
+// ===== AD LIST DATA =====
+var ALL_ADS = [
+  {id:'ads1', name:'ADS1 Quiz', icon:'❓', desc:'Quick quiz questions', reward:0.020, time:'15s'},
+  {id:'ads2', name:'ADS2 Smart Ad', icon:'🧠', desc:'Click-to-earn smart ad', reward:0.100, time:'15s'},
+  {id:'ads3', name:'ADS3 Quiz', icon:'📝', desc:'Trivia questions', reward:0.030, time:'20s'},
+  {id:'ads4', name:'ADS4 Timer', icon:'⏱️', desc:'Watch & earn', reward:0.035, time:'20s'},
+  {id:'ads5', name:'ADS5 Catch Coins', icon:'🪙', desc:'Catch falling coins', reward:0.040, time:'30s'},
+  {id:'ads6', name:'ADS6 Spin Wheel', icon:'🎡', desc:'Spin & win random', reward:0.050, time:'15s'},
+  {id:'ads7', name:'ADS7 Memory', icon:'🧠', desc:'Match the pairs', reward:0.060, time:'30s'},
+  {id:'ads8', name:'ADS8 Trivia', icon:'🏆', desc:'Answer trivia', reward:0.070, time:'20s'},
+  {id:'ads9', name:'ADS9 Timer+', icon:'⏳', desc:'Extended timer', reward:0.080, time:'30s'},
+  {id:'ads10', name:'ADS10 Mega Quiz', icon:'🎯', desc:'50 quiz questions', reward:0.250, time:'50q'},
+  {id:'ads11', name:'ADS11 VPLink', icon:'💰', desc:'VPLink+Linkvertise $0.500', reward:0.500, time:'10s'}
+];
+
+// ===== MONETAG DIRECT LINKS =====
+var MONETAG_LINKS = [
+  'https://omg10.com/4/11269732',
+  'https://omg10.com/4/11269764',
+  'https://omg10.com/4/9619899',
+  'https://omg10.com/4/11269766',
+  'https://omg10.com/4/11269772',
+  'https://omg10.com/4/11269774'
+];
+
+function openMonetagRandom() {
+  var url = MONETAG_LINKS[Math.floor(Math.random() * MONETAG_LINKS.length)];
+  window.open(url, '_blank');
+  showToast('📢', 'Monetag direct link opened!', 'info');
+}
+
+// ===== TOKEN SYSTEM =====
+function generateToken(type) {
+  var uid = localStorage.getItem('en_uid') || 'guest';
+  var ts = Date.now().toString(36);
+  var rnd = '';
+  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for (var i = 0; i < 12; i++) rnd += chars.charAt(Math.floor(Math.random() * chars.length));
+  return uid.slice(-8) + '-' + ts + '-' + rnd + '-' + type;
+}
+
+// ===== OPEN AD WITH FULL FLOW =====
+function openAd(ad) {
+  var token = generateToken(ad.id);
+  var uid = localStorage.getItem('en_uid') || 'guest';
+  var url = window.location.origin + '/ads/' + ad.id + '.html?token=' + token + '&uid=' + uid + '&vplink=1&reward=' + ad.reward;
+  
+  // Create VPLink shortlink (if available)
+  var finalUrl = url;
+  if (typeof createVPLink === 'function') {
+    var short = createVPLink(url, ad.id + '-' + uid.slice(-4));
+    if (short && short !== url) finalUrl = short;
+  }
+  
+  // Wrap in Linkvertise
+  var gateUrl = 'https://link-to.net/1424242/' + Math.random()*1000 + '/?href=' + encodeURIComponent(finalUrl);
+  
+  window.open(gateUrl, '_blank');
+  showToast('🔗', ad.name + ' opened via Linkvertise → $' + ad.reward.toFixed(3), 'money');
+}
+
+// ===== RENDER ADS =====
+function renderAds() {
+  var grid = document.getElementById('adsGrid');
+  if (!grid) return;
+  var html = '';
+  for (var i = 0; i < ALL_ADS.length; i++) {
+    var a = ALL_ADS[i];
+    html += '<div class="ad-card" onclick="openAd(ALL_ADS[' + i + '])">' +
+      '<span class="tag">' + a.time + '</span>' +
+      '<span class="icon">' + a.icon + '</span>' +
+      '<div class="name">' + a.name + '</div>' +
+      '<div class="desc">' + a.desc + '</div>' +
+      '<div class="reward">+$' + a.reward.toFixed(3) + '</div>' +
+      '</div>';
+  }
+  grid.innerHTML = html;
+}
+
+// ===== UPDATE BALANCE =====
+function updateBalance() {
+  var bal = parseFloat(localStorage.getItem('en_bal') || '0');
+  document.getElementById('balDisplay').textContent = '$' + bal.toFixed(2);
+}
+
+// ===== TOAST =====
+function showToast(icon, msg, type) {
+  var el = document.getElementById('toastMsg');
+  if (!el) return;
+  el.innerHTML = (icon ? icon + ' ' : '') + msg;
+  el.className = 'toast show';
+  el.style.borderColor = type === 'money' ? 'rgba(16,185,129,0.2)' : 'rgba(212,175,55,0.1)';
+  setTimeout(function() { el.classList.remove('show'); }, 2500);
+}
+
+// ===== INIT =====
+renderAds();
+updateBalance();
+setInterval(updateBalance, 5000);
+
+// Update from parent if available
+if (window.opener && window.opener.updateUI) {
+  try { window.opener.updateUI(); } catch(e) {}
+}
+
+console.log('📋 All Ads page loaded — 11 ad types');
+console.log('📢 Monetag: ' + MONETAG_LINKS.length + ' direct links');
+</script>
+
+</body>
+</html>
