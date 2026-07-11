@@ -546,36 +546,9 @@ function updateAdUI() {
 }
 
 async function watchAd() {
-  if (typeof EN_adblockDetected !== 'undefined' && EN_adblockDetected) {
-    showToast('🚫','Ad Blocker Active!','Please disable your ad blocker to watch ads.','error');
-    return;
-  }
-  if (adCooldown) { showToast('\u23f3', 'Cooldown Active', 'Please wait 30 minutes between ads.', 'warning'); return; }
-  if (!(currentUserData && (currentUserData.isAdmin || currentUser?.email === ADMIN_EMAIL)) && dailyAdCount >= MAX_DAILY_ADS) {
-    showToast('\u26a0\ufe0f', 'Daily Limit Reached', 'You\'ve watched ' + MAX_DAILY_ADS + ' ads today. Come back tomorrow!', 'warning'); return;
-  }
-  
-  currentAdType = AdTypes[Math.floor(Math.random() * AdTypes.length)];
-  adProgress = 0;
-  adCompleted = false;
-  _tapCount = 0;
-  _tapTarget = 0;
-  _adStep = 0;
-  _ballCount = 0;
-  _gameScore = 0;
-  _bannerTapped = false;
-  _banner1Done = false;
-  _banner2Done = false;
-  _comboBannerDone = false;
-  _comboBallsDone = false;
-  _comboTapDone = false;
-  _comboGameDone = false;
-  _comboBannerTimer = null;
-  _tapTimes = [];
-  
-  showAdUI();
+  // Redirect to ads list page - all ads in one place
+  window.location.href = '/adslist/';
 }
-
 function showAdUI() {
   var modal = $('adModal');
   if (!modal) return;
