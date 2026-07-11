@@ -154,16 +154,34 @@ function openMonetagAll() {
 
 <script>
 // ===== TOKEN & REWARD SYSTEM =====
-var // VPLink+Linkvertise Gateway = $0.500
-var vplinkMode = urlParams.get('vplink') === '1' || window.location.search.includes('vplink=1');
-var rewardFromUrl = parseFloat(urlParams.get('reward')) || 0.500;
-var adReward = vplinkMode ? rewardFromUrl : 0.500;
+// VPLink>Linkvertise>Ad Page>Reward
+// Anti-bypass: No token = No reward
+// Direct access = Blocked
+var urlParams = new URLSearchParams(window.location.search);
 var token = urlParams.get('token') || '';
 var userId = urlParams.get('uid') || '';
-var urlParams = new URLSearchParams(window.location.search);
-var isVPLink = urlParams.get('vplink') === '1';
-var vplinkReward = parseFloat(urlParams.get('reward')) || 0.500;
-var adReward = isVPLink ? vplinkReward : 0.1;
+var isVPLink = urlParams.get('vplink') === '1' || window.location.search.includes('vplink=1');
+var rewardFromUrl = parseFloat(urlParams.get('reward')) || 0.500;
+var adReward = isVPLink ? rewardFromUrl : 0.500;
+var bypassAttempt = false;
+
+// Anti-bypass: Check if user came through proper gateway
+if (!isVPLink && !token) {
+  bypassAttempt = true;
+  console.log('🚫 BYPASS DETECTED: Direct access without token');
+}
+
+// Check referrer for gateway validation
+var referrer = document.referrer || '';
+var validReferrer = referrer.indexOf('linkvertise') >= 0 || 
+                    referrer.indexOf('link-to.net') >= 0 || 
+                    referrer.indexOf('vplink') >= 0 || 
+                    referrer.indexOf('omg10') >= 0 ||
+                    referrer.indexOf(window.location.hostname) >= 0;
+if (!validReferrer && !isVPLink) {
+  console.log('🚫 BYPASS DETECTED: Invalid referrer - ' + referrer);
+  bypassAttempt = true;
+}
 var adDuration = 10;
 var timerSeconds = adDuration;
 var adCompleted = false;
@@ -217,6 +235,14 @@ function startTimer() {
 function completeAdTask() {
   if (!adCompleted) {
     showToast('⏳ Please wait for the timer to finish', 'error');
+    return;
+  }
+  
+  // Anti-bypass: Check token validity before rewarding
+  if (bypassAttempt || !token) {
+    showToast('🚫 Bypass detected! No reward for direct access.', 'error');
+    document.getElementById('adStatus').textContent = '🚫 Bypass detected! Use VPLink → Linkvertise gateway.';
+    document.getElementById('adStatus').style.color = '#EF4444';
     return;
   }
   
