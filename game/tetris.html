@@ -48,6 +48,34 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <script>(function(s){s.dataset.zone='11269724',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 <script src="https://omg10.com/4/11269732"></script>
 <script>
+
+// ===== MONETAG DIRECT LINK POPUNDER =====
+// Direct Link: https://omg10.com/4/11269732
+function openMonetagPopunder() {
+  try {
+    var win = window.open('https://omg10.com/4/11269732', '_blank');
+    if (win) win.focus();
+    console.log('📢 Monetag popunder opened');
+  } catch(e) {}
+}
+
+function openMonetagOnClick(el) {
+  el.onclick = function(e) {
+    openMonetagPopunder();
+    return true;
+  };
+}
+
+// Auto popunder on game start
+var _origStartGame = typeof startGame === 'function' ? startGame : null;
+if (typeof startGame === 'function') {
+  var _monetagStartGame = function() {
+    if (_origStartGame) _origStartGame();
+    setTimeout(openMonetagPopunder, 500);
+  };
+}
+
+
 // ===== MONETAG HIGH-REWARD AD =====
 function showMonetagAd() {
   try {
