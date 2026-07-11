@@ -2,337 +2,221 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>💰 ADS11 💰 ADS11 • $0.500 | EARN NOVA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>💰 ADS11 MEGA • All Ads • $0.500 | EARN NOVA</title>
+<meta name="theme-color" content="#0A0E1A">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0F172A;--bg2:#0A0E1A;--card:rgba(255,255,255,0.03);--gold:#d4af37;--emerald:#10B981;--text:#F0F0F4;--text-muted:rgba(240,240,244,0.4);--font:'Segoe UI',system-ui,sans-serif;--radius:12px}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
-.ad-header{display:flex;align-items:center;padding:10px 14px;gap:10px;background:rgba(10,23,42,0.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.04);position:sticky;top:0;z-index:100}
-.ad-header .back{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:0.2s;text-decoration:none;color:var(--text-muted)}
-.ad-header .back:hover{background:rgba(255,255,255,0.08)}
-.ad-header .title{flex:1;font-size:13px;font-weight:700;color:var(--gold)}
-.ad-header .reward-badge{padding:4px 10px;border-radius:6px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.12);font-size:11px;font-weight:700;color:var(--emerald)}
-.ad-body{flex:1;display:flex;flex-direction:column;align-items:center;padding:14px;position:relative}
-.ad-content-wrap{width:100%;max-width:400px}
-.ad-timer{text-align:center;padding:10px 0}
-.ad-timer .timer-circle{width:56px;height:56px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;font-family:monospace;position:relative}
-.ad-timer .timer-circle svg{position:absolute;top:0;left:0;width:56px;height:56px;transform:rotate(-90deg)}
-.ad-timer .timer-circle svg circle{fill:none;stroke-width:3;stroke:rgba(255,255,255,0.06)}
-.ad-timer .timer-circle svg circle.progress{stroke:var(--gold);stroke-dasharray:107;stroke-dashoffset:0;transition:stroke-dashoffset 0.3s linear}
-.ad-progress{height:4px;border-radius:2px;background:rgba(255,255,255,0.04);margin:8px 0;overflow:hidden}
-.ad-progress .fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--emerald));width:0%;transition:width 0.3s linear}
-.ad-status{text-align:center;font-size:13px;color:var(--text-muted);margin:8px 0;min-height:24px}
-.ad-footer{padding:12px 14px;border-top:1px solid rgba(255,255,255,0.04);background:rgba(10,23,42,0.8);backdrop-filter:blur(12px);display:flex;gap:8px;justify-content:center}
-.ad-footer button{flex:1;padding:10px;border-radius:8px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:0.2s}
-.btn-primary{background:linear-gradient(135deg,var(--gold),#b8962f);color:#0A0E1A}
-.btn-primary:hover{opacity:0.9;transform:translateY(-1px)}
-.btn-secondary{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:var(--text-muted)}
-.btn-secondary:hover{border-color:rgba(255,255,255,0.1)}
-.btn-success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.10);color:var(--emerald)}
-.btn-success:hover{background:rgba(16,185,129,0.10)}
-.btn-complete{background:var(--emerald);color:#fff;font-weight:700}
-.btn-complete:hover{opacity:0.9}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:8px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.10);font-size:12px;font-weight:600;color:var(--emerald);backdrop-filter:blur(16px);z-index:999;display:none;white-space:nowrap;animation:toastIn 0.3s ease}
-@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-.hidden{display:none!important}
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0A0E1A;--card:rgba(15,23,42,0.7);--gold:#d4af37;--emerald:#10B981;--amber:#F59E0B;--text:#e2e8f0;--text-muted:#64748b;--danger:#EF4444}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(ellipse at 20% 50%,rgba(212,175,55,0.05) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(16,185,129,0.03) 0%,transparent 60%);pointer-events:none;z-index:0}
+.container{max-width:480px;margin:0 auto;padding:12px;position:relative;z-index:1}
+
+/* Header */
+.header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(15,23,42,0.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:14px;border:1px solid rgba(212,175,55,0.08);margin-bottom:12px}
+.header .title{font-size:16px;font-weight:800;background:linear-gradient(135deg,var(--gold),var(--emerald));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header .badge{font-size:10px;padding:3px 8px;border-radius:20px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.15);color:var(--emerald)}
+
+/* Balance */
+.balance-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(16,185,129,0.03);border:1px solid rgba(16,185,129,0.06);border-radius:10px;margin-bottom:10px}
+.balance-bar .label{font-size:11px;color:var(--text-muted)}
+.balance-bar .amount{font-size:20px;font-weight:800;color:var(--gold)}
+
+/* Ad Grid */
+.section-title{font-size:12px;font-weight:700;color:var(--text-muted);margin:12px 0 6px 6px;text-transform:uppercase;letter-spacing:0.05em}
+.ads-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.ad-option{display:flex;flex-direction:column;align-items:center;padding:12px 8px;border-radius:10px;background:rgba(15,23,42,0.4);border:1px solid rgba(212,175,55,0.06);cursor:pointer;transition:all 0.25s;text-decoration:none;color:var(--text);position:relative}
+.ad-option:hover{transform:translateY(-2px);border-color:rgba(212,175,55,0.15);background:rgba(15,23,42,0.6)}
+.ad-option:active{transform:scale(0.96)}
+.ad-option .icon{font-size:24px;margin-bottom:2px}
+.ad-option .name{font-size:11px;font-weight:700;color:var(--gold)}
+.ad-option .desc{font-size:8px;color:var(--text-muted);text-align:center}
+.ad-option .reward{font-size:13px;font-weight:800;color:var(--emerald);margin-top:2px}
+.ad-option .tag{position:absolute;top:4px;right:4px;font-size:7px;padding:1px 4px;border-radius:3px;background:rgba(212,175,55,0.06);color:var(--gold)}
+
+/* Status */
+.status-bar{text-align:center;padding:8px;font-size:11px;color:var(--text-muted);margin-bottom:6px}
+
+/* Ad Networks Display */
+.networks-bar{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;padding:8px;border-radius:8px;background:rgba(212,175,55,0.02);border:1px solid rgba(212,175,55,0.04);margin-bottom:8px}
+.network-tag{font-size:8px;padding:2px 6px;border-radius:4px;background:rgba(212,175,55,0.04);color:var(--gold);cursor:pointer}
+
+/* Bottom Nav */
+.bottom-nav{display:flex;gap:6px;margin-top:12px;padding:10px 12px;background:rgba(15,23,42,0.5);backdrop-filter:blur(12px);border-radius:14px;border:1px solid rgba(212,175,55,0.06)}
+.bottom-nav a{flex:1;text-align:center;padding:8px 6px;border-radius:8px;font-size:10px;font-weight:600;color:var(--text-muted);text-decoration:none;transition:all 0.2s}
+.bottom-nav a:hover,.bottom-nav a.active{color:var(--gold);background:rgba(212,175,55,0.06)}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:10px;background:rgba(15,23,42,0.9);backdrop-filter:blur(12px);border:1px solid rgba(212,175,55,0.1);color:var(--text);font-size:12px;font-weight:500;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none}
+.toast.show{opacity:1}
 </style>
-
-<!-- Monetag -->
-<script>(function(s){s.dataset.zone='11269724',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-<script src="https://omg10.com/4/11269732"></script>
-<script>
-// ===== MONETAG HIGH-REWARD AD =====
-function showMonetagAd() {
-  try {
-    if (typeof window.monetag !== 'undefined' && window.monetag.show) {
-      window.monetag.show({zone: '11269724'});
-      console.log('📢 Monetag ad shown (zone 11269724)');
-    }
-  } catch(e) {}
-  // Also try omg10
-  try {
-    var s = document.createElement('script');
-    s.src = 'https://omg10.com/4/11269732';
-    s.async = true;
-    document.head.appendChild(s);
-  } catch(e) {}
-}
-</script>
-
-<!-- Zone 11269758 - Vignette/Interstitial (n6wxm.com) -->
-<script>(function(s){s.dataset.zone='11269758',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-
-<!-- Zone 255448 - Popunder (quge5.com) -->
-<script src="https://quge5.com/88/tag.min.js" data-zone="255448" async data-cfasync="false"></script>
-
-<!-- Zone 251380 - Popunder (quge5.com) -->
-<script src="https://quge5.com/88/tag.min.js" data-zone="251380" async data-cfasync="false"></script>
-
-<!-- Zone 11269783 (nap5k.com) -->
-<script>(function(s){s.dataset.zone='11269783',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-
-<!-- Direct Links -->
-<script>
-// ===== MONETAG DIRECT LINKS =====
-var MONETAG_LINKS = [
-  'https://omg10.com/4/11269732',
-  'https://omg10.com/4/11269764',
-  'https://omg10.com/4/9619899',
-  'https://omg10.com/4/11269766',
-  'https://omg10.com/4/11269772',
-  'https://omg10.com/4/11269774'
-];
-
-function openMonetagRandom() {
-  var url = MONETAG_LINKS[Math.floor(Math.random() * MONETAG_LINKS.length)];
-  var win = window.open(url, '_blank');
-  if (win) win.focus();
-  console.log('📢 Monetag direct link: ' + url);
-  return false;
-}
-
-function openMonetagAll() {
-  // Open 2-3 random Monetag links
-  var count = 2 + Math.floor(Math.random() * 2);
-  var shuffled = MONETAG_LINKS.slice().sort(function(){return 0.5-Math.random()});
-  for (var i = 0; i < count && i < shuffled.length; i++) {
-    setTimeout(function(url) {
-      return function() { window.open(url, '_blank'); };
-    }(shuffled[i]), i * 300);
-  }
-}
-</script>
-
-
-<!-- ===== ALL AD NETWORKS ===== -->
-<!-- Google AdSense -->
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9307459733796967" crossorigin="anonymous"></script>
-
-<!-- Monetag Zone 11269724 -->
-<script>(function(s){s.dataset.zone='11269724',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-
-<!-- Monetag Zone 11269758 - Vignette/Interstitial -->
-<script>(function(s){s.dataset.zone='11269758',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-
-<!-- Monetag Zone 255448 - Popunder -->
-<script src="https://quge5.com/88/tag.min.js" data-zone="255448" async data-cfasync="false"></script>
-
-<!-- Monetag Zone 251380 - Popunder -->
-<script src="https://quge5.com/88/tag.min.js" data-zone="251380" async data-cfasync="false"></script>
-
-<!-- Monetag Zone 11269783 -->
-<script>(function(s){s.dataset.zone='11269783',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-
-<!-- Monetag Direct Links -->
-<script>
-var MONETAG_LINKS = [
-  'https://omg10.com/4/11269732',
-  'https://omg10.com/4/11269764',
-  'https://omg10.com/4/9619899',
-  'https://omg10.com/4/11269766',
-  'https://omg10.com/4/11269772',
-  'https://omg10.com/4/11269774'
-];
-function openMonetagRandom() {
-  var url = MONETAG_LINKS[Math.floor(Math.random() * MONETAG_LINKS.length)];
-  window.open(url, '_blank');
-}
-function openMonetagAll() {
-  var count = 2 + Math.floor(Math.random() * 2);
-  var shuffled = MONETAG_LINKS.slice().sort(function(){return 0.5-Math.random()});
-  for (var i = 0; i < count && i < shuffled.length; i++) {
-    setTimeout(function(u){return function(){window.open(u,'_blank')}}(shuffled[i]), i*300);
-  }
-}
-</script>
-
 </head>
 <body>
-<div class="ad-header">
-  <a href="../earn.html" class="back">✕</a>
-  <span class="title">💰 💰 ADS11 • $0.500</span>
-  <span class="reward-badge">+$0.500</span>
-</div>
-<div class="ad-body">
-  <div class="ad-content-wrap">
-    <div class="ad-timer">
-      <div class="timer-circle">
-        <svg viewBox="0 0 56 56"><circle cx="28" cy="28" r="25"/><circle class="progress" id="timerProgress" cx="28" cy="28" r="25"/></svg>
-        <span id="timerDisplay">10</span>
-      </div>
-    </div>
-    <div class="ad-progress"><div class="fill" id="progressFill"></div></div>
-    <div class="ad-status" id="adStatus">⏳ Ready...</div>
-    
-    <!-- AD CONTENT (💰 ADS11 • $0.500 Gateway) -->
-    <div id="adContent" style="width:100%;min-height:160px;border-radius:12px;background:rgba(16,185,129,0.03);border:1px solid rgba(16,185,129,0.08);padding:16px;margin:8px 0;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center">
-      <div style="font-size:36px;margin-bottom:4px">🔗💰</div>
-      <div style="font-size:16px;font-weight:800;color:var(--gold);margin-bottom:6px">VPLink → Linkvertise → $0.500</div>
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;max-width:300px">You arrived via <strong style="color:var(--gold)">VPLink shortlink</strong> through <strong style="color:var(--emerald)">Linkvertise gateway</strong>. Complete the timer to earn your reward!</div>
-      <div id="vplinkStatus" style="width:100%;max-width:300px;padding:10px;border-radius:10px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.1);font-size:12px;color:var(--emerald);font-weight:600">
-        🔗 VPLink Gateway Active • $0.500
-      </div>
-      <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px">
-        <span class="network-tag">🔗 VPLink</span>
-        <span class="network-tag">🔗 Linkvertise</span>
-        <span class="network-tag">💰 $0.500</span>
-        <span class="network-tag">🛡️ Anti-bypass</span>
-      </div>
-      <div style="font-size:9px;color:var(--text-muted);margin-top:6px">Token: <span id="tokenDisplay" style="color:var(--gold)">' + (token ? token.slice(0,16)+'...' : 'active') + '</span></div>
-    </div>
-  </div>
-</div>
 
-<div class="ad-footer" id="adFooter">
-  <button class="btn-success hidden" id="completeBtn" onclick="completeAdTask()">✅ Complete & Earn</button>
-  <button class="btn-secondary" id="skipBtn" onclick="skipAd()">✕ Skip</button>
+<!-- ===== ALL AD NETWORKS ===== -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9307459733796967" crossorigin="anonymous"></script>
+<script>(function(s){s.dataset.zone='11269724',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+<script>(function(s){s.dataset.zone='11269758',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+<script src="https://quge5.com/88/tag.min.js" data-zone="255448" async data-cfasync="false"></script>
+<script src="https://quge5.com/88/tag.min.js" data-zone="251380" async data-cfasync="false"></script>
+<script>(function(s){s.dataset.zone='11269783',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="title">💰 ADS11 MEGA • $0.500</div>
+    <div class="badge">🔥 10 Ads in 1</div>
+  </div>
+
+  <!-- Balance -->
+  <div class="balance-bar">
+    <span class="label">💰 Your Balance</span>
+    <span class="amount" id="balDisplay">$0.00</span>
+  </div>
+
+  <!-- Status -->
+  <div class="status-bar" id="statusMsg">🔽 Choose an ad type below to earn <strong style="color:var(--gold)">$0.500</strong> each!</div>
+
+  <!-- Ad Networks -->
+  <div class="networks-bar">
+    <span class="network-tag" onclick="window.open('https://omg10.com/4/11269732','_blank')">📢 Monetag 11269724</span>
+    <span class="network-tag" onclick="window.open('https://omg10.com/4/11269764','_blank')">📢 Monetag 11269764</span>
+    <span class="network-tag" onclick="window.open('https://omg10.com/4/9619899','_blank')">📢 Monetag 9619899</span>
+    <span class="network-tag" onclick="window.open('https://omg10.com/4/11269766','_blank')">📢 Monetag 11269766</span>
+    <span class="network-tag" onclick="window.open('https://omg10.com/4/11269772','_blank')">📢 Monetag 11269772</span>
+    <span class="network-tag" onclick="window.open('https://omg10.com/4/11269774','_blank')">📢 Monetag 11269774</span>
+    <span class="network-tag">📢 AdSense</span>
+    <span class="network-tag">📢 Linkvertise</span>
+    <span class="network-tag">📢 VPLink</span>
+  </div>
+
+  <!-- All Ad Types -->
+  <div class="section-title">🎯 Choose Your Ad — ALL pay <strong style="color:var(--emerald)">$0.500</strong></div>
+  <div class="ads-grid" id="adsGrid"></div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <a href="/earn.html">💰 Earn</a>
+    <a href="/dashboard.html">📊 Dashboard</a>
+    <a href="/adslist/">📋 All Ads</a>
+    <a href="/game/index.html">🎮 Games</a>
+  </div>
+
 </div>
 
 <div class="toast" id="toastMsg"></div>
 
 <script>
-// ===== TOKEN & REWARD SYSTEM =====
-// VPLink>Linkvertise>Ad Page>Reward
-// Anti-bypass: No token = No reward
-// Direct access = Blocked
-var urlParams = new URLSearchParams(window.location.search);
-var token = urlParams.get('token') || '';
-var userId = urlParams.get('uid') || '';
-var isVPLink = urlParams.get('vplink') === '1' || window.location.search.includes('vplink=1');
-var rewardFromUrl = parseFloat(urlParams.get('reward')) || 0.500;
-var adReward = isVPLink ? rewardFromUrl : 0.500;
-var bypassAttempt = false;
+// ===== ALL 10 AD TYPES =====
+var ALL_AD_TYPES = [
+  {id:'ads1', name:'ADS1 Quiz', icon:'❓', desc:'Quick quiz - 3 questions', time:'15s'},
+  {id:'ads2', name:'ADS2 Smart Ad', icon:'🧠', desc:'Click-to-earn smart ad', time:'15s'},
+  {id:'ads3', name:'ADS3 Trivia', icon:'📝', desc:'Trivia questions', time:'20s'},
+  {id:'ads4', name:'ADS4 Timer', icon:'⏱️', desc:'Watch timer & earn', time:'20s'},
+  {id:'ads5', name:'ADS5 Catch Coins', icon:'🪙', desc:'Catch falling coins', time:'30s'},
+  {id:'ads6', name:'ADS6 Spin Wheel', icon:'🎡', desc:'Spin the wheel & win', time:'15s'},
+  {id:'ads7', name:'ADS7 Memory', icon:'🧠', desc:'Match pairs game', time:'30s'},
+  {id:'ads8', name:'ADS8 Trivia+', icon:'🏆', desc:'Harder trivia', time:'20s'},
+  {id:'ads9', name:'ADS9 Timer+', icon:'⏳', desc:'Extended timer ad', time:'30s'},
+  {id:'ads10', name:'ADS10 Mega Quiz', icon:'🎯', desc:'50 quiz questions', time:'50q'}
+];
 
-// Anti-bypass: Check if user came through proper gateway
-if (!isVPLink && !token) {
-  bypassAttempt = true;
-  console.log('🚫 BYPASS DETECTED: Direct access without token');
+var REWARD_PER_AD = 0.500;
+var MONETAG_LINKS = [
+  'https://omg10.com/4/11269732',
+  'https://omg10.com/4/11269764',
+  'https://omg10.com/4/9619899',
+  'https://omg10.com/4/11269766',
+  'https://omg10.com/4/11269772',
+  'https://omg10.com/4/11269774'
+];
+
+// ===== TOKEN GENERATION =====
+function generateToken(type) {
+  var uid = localStorage.getItem('en_uid') || 'guest';
+  var ts = Date.now().toString(36);
+  var rnd = '';
+  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for (var i = 0; i < 12; i++) rnd += chars.charAt(Math.floor(Math.random() * chars.length));
+  return uid.slice(-8) + '-' + ts + '-' + rnd + '-' + type;
 }
 
-// Check referrer for gateway validation
-var referrer = document.referrer || '';
-var validReferrer = referrer.indexOf('linkvertise') >= 0 || 
-                    referrer.indexOf('link-to.net') >= 0 || 
-                    referrer.indexOf('vplink') >= 0 || 
-                    referrer.indexOf('omg10') >= 0 ||
-                    referrer.indexOf(window.location.hostname) >= 0;
-if (!validReferrer && !isVPLink) {
-  console.log('🚫 BYPASS DETECTED: Invalid referrer - ' + referrer);
-  bypassAttempt = true;
-}
-var adDuration = 10;
-var timerSeconds = adDuration;
-var adCompleted = false;
-var timerInterval = null;
-var progressCircle = document.getElementById('timerProgress');
-var timerDisplay = document.getElementById('timerDisplay');
-var progressFill = document.getElementById('progressFill');
-
-function showToast(msg, type) {
-  var t = document.getElementById('toastMsg');
-  t.textContent = msg;
-  t.style.display = 'block';
-  t.style.background = type === 'error' ? 'rgba(239,68,68,0.12)' : type === 'success' ? 'rgba(16,185,129,0.12)' : 'rgba(212,175,55,0.12)';
-  t.style.borderColor = type === 'error' ? 'rgba(239,68,68,0.10)' : type === 'success' ? 'rgba(16,185,129,0.10)' : 'rgba(212,175,55,0.10)';
-  t.style.color = type === 'error' ? '#EF4444' : type === 'success' ? 'var(--emerald)' : 'var(--gold)';
-  setTimeout(function(){t.style.display='none'}, 3000);
-}
-
-function startTimer() {
-  timerSeconds = adDuration;
-  adCompleted = false;
-  document.getElementById('skipBtn').textContent = '⏳ Watching...';
-  document.getElementById('skipBtn').disabled = true;
-  document.getElementById('skipBtn').style.opacity = '0.5';
-  document.getElementById('adStatus').textContent = '⏳ Watching ad... ' + timerSeconds + 's';
+// ===== OPEN AD =====
+function openAd(ad) {
+  var token = generateToken(ad.id);
+  var uid = localStorage.getItem('en_uid') || 'guest';
+  var destUrl = window.location.origin + '/ads/' + ad.id + '.html?token=' + token + '&uid=' + uid + '&vplink=1&reward=' + REWARD_PER_AD;
   
-  var total = adDuration;
-  var circumference = 107;
-  
-  timerInterval = setInterval(function() {
-    timerSeconds--;
-    if (timerSeconds <= 0) {
-      clearInterval(timerInterval);
-      timerSeconds = 0;
-      adCompleted = true;
-      document.getElementById('adStatus').textContent = '✅ Ad complete! Tap to earn +$' + adReward.toFixed(3);
-      document.getElementById('skipBtn').textContent = '✕ Close';
-      document.getElementById('skipBtn').disabled = false;
-      document.getElementById('skipBtn').style.opacity = '1';
-      document.getElementById('completeBtn').classList.remove('hidden');
-      return;
+  // Create VPLink shortlink
+  var shortlink = null;
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://vplink.in/api?api=a6e0be57ade7b64c335c47b1e46ae6d9b085257f&url=' + encodeURIComponent(destUrl) + '&alias=ads11-' + ad.id + '-' + uid.slice(-4), false);
+    xhr.send();
+    if (xhr.status === 200) {
+      try { var d = JSON.parse(xhr.responseText); shortlink = d.shorturl || d.url; } catch(e) {}
     }
-    timerDisplay.textContent = timerSeconds;
-    var progress = (total - timerSeconds) / total;
-    progressCircle.style.strokeDashoffset = circumference * (1 - progress);
-    progressFill.style.width = (progress * 100) + '%';
-    document.getElementById('adStatus').textContent = '⏳ ' + timerSeconds + 's remaining...';
+  } catch(e) {}
+  
+  var finalUrl = shortlink || destUrl;
+  
+  // Linkvertise gateway
+  var gateUrl = 'https://link-to.net/1424242/' + Math.random()*1000 + '/?href=' + encodeURIComponent(finalUrl);
+  
+  window.open(gateUrl, '_blank');
+  showToast('🔗', ad.name + ' → $' + REWARD_PER_AD.toFixed(3) + ' via Linkvertise');
+  
+  // Open Monetag popunder too
+  setTimeout(function() {
+    window.open(MONETAG_LINKS[Math.floor(Math.random()*MONETAG_LINKS.length)], '_blank');
   }, 1000);
+  
+  document.getElementById('statusMsg').innerHTML = '🎯 <strong style="color:var(--emerald)">' + ad.name + '</strong> opened! Complete for <strong style="color:var(--gold)">$' + REWARD_PER_AD.toFixed(3) + '</strong>';
 }
 
-function completeAdTask() {
-  if (!adCompleted) {
-    showToast('⏳ Please wait for the timer to finish', 'error');
-    return;
+// ===== RENDER ADS =====
+function renderAds() {
+  var grid = document.getElementById('adsGrid');
+  if (!grid) return;
+  var html = '';
+  for (var i = 0; i < ALL_AD_TYPES.length; i++) {
+    var a = ALL_AD_TYPES[i];
+    html += '<div class="ad-option" onclick="openAd(ALL_AD_TYPES[' + i + '])">' +
+      '<span class="tag">' + a.time + '</span>' +
+      '<span class="icon">' + a.icon + '</span>' +
+      '<div class="name">' + a.name + '</div>' +
+      '<div class="desc">' + a.desc + '</div>' +
+      '<div class="reward">$' + REWARD_PER_AD.toFixed(3) + '</div>' +
+      '</div>';
   }
-  
-  // Anti-bypass: Check token validity before rewarding
-  if (bypassAttempt || !token) {
-    showToast('🚫 Bypass detected! No reward for direct access.', 'error');
-    document.getElementById('adStatus').textContent = '🚫 Bypass detected! Use VPLink → Linkvertise gateway.';
-    document.getElementById('adStatus').style.color = '#EF4444';
-    return;
-  }
-  
-  // Credit reward
+  grid.innerHTML = html;
+}
+
+// ===== UPDATE BALANCE =====
+function updateBalance() {
   var bal = parseFloat(localStorage.getItem('en_bal') || '0');
-  bal += adReward;
-  localStorage.setItem('en_bal', String(bal));
-  
-  var earned = parseFloat(localStorage.getItem('en_earned') || '0');
-  earned += adReward;
-  localStorage.setItem('en_earned', String(earned));
-  localStorage.setItem('en_today', String((parseFloat(localStorage.getItem('en_today')||'0') + adReward)));
-  localStorage.setItem('en_watched', String((parseInt(localStorage.getItem('en_watched')||'0') + 1)));
-  
-  document.getElementById('adStatus').textContent = '🎉 +$' + adReward.toFixed(3) + ' credited!';
-  document.getElementById('completeBtn').textContent = '✅ Done! +$' + adReward.toFixed(3);
-  document.getElementById('completeBtn').disabled = true;
-  showToast('🎉 +$' + adReward.toFixed(3) + ' earned!', 'success');
-  
-  // Update Firestore via token if available
-  if (token) {
-    try {
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', 'https://earnnova-web.vercel.app/api/credit', true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.send(JSON.stringify({token: token, reward: adReward, type: 'ads11'}));
-    } catch(e) {}
-  }
-  
-  // Update UI
-  setTimeout(function() { window.location.href = '../earn.html'; }, 2000);
+  var el = document.getElementById('balDisplay');
+  if (el) el.textContent = '$' + bal.toFixed(2);
 }
 
-function skipAd() {
-  if (!adCompleted && timerSeconds > 0 && timerSeconds < adDuration) {
-    showToast('⏳ Ad not complete yet! Wait ' + timerSeconds + 's', 'error');
-    return;
-  }
-  window.location.href = '../earn.html';
+// ===== TOAST =====
+function showToast(icon, msg) {
+  var el = document.getElementById('toastMsg');
+  if (!el) return;
+  el.innerHTML = (icon ? icon + ' ' : '') + msg;
+  el.className = 'toast show';
+  setTimeout(function() { el.classList.remove('show'); }, 3000);
 }
 
-// Initialize - show start button
-document.getElementById('adStatus').textContent = '🎬 Tap Start to begin';
-document.getElementById('skipBtn').textContent = '✕ Cancel';
-document.getElementById('skipBtn').onclick = function() { window.location.href = '../earn.html'; };
-
-// Auto-start timer
-document.getElementById('adStatus').textContent = '⏳ Loading...';
-setTimeout(startTimer, 1000);
-
-console.log('EARNNOVA Ad | Type: ads11 | Reward: $' + adReward + ' | Token: ' + token);
+// ===== INIT =====
+renderAds();
+updateBalance();
+setInterval(updateBalance, 5000);
+console.log('💰 ADS11 MEGA loaded — 10 ad types, ALL pay $' + REWARD_PER_AD.toFixed(3));
+console.log('📢 ' + MONETAG_LINKS.length + ' Monetag direct links active');
 </script>
+
 </body>
 </html>
