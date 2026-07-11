@@ -44,7 +44,7 @@ body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;backg
 </style>
 
 <!-- ===== HIGH AD NETWORKS ===== -->
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9307459733796967" crossorigin="anonymous"></script>
+
 <script type="text/javascript" src="https://effectivecpm.com/display/network.js?pub=effectivecpm_pub_id"></script>
 <script type="text/javascript" src="https://highperformance.com/display/network.js?pub=highperformance_pub_id"></script>
 <script type="text/javascript" src="https://adsterra.com/display/network.js?pub=adsterra_pub_id"></script>
@@ -191,10 +191,6 @@ function showMonetagAd() {
 }
 </script>
 
-<!-- ===== MONETAG AD NETWORKS ===== -->
-<!-- Zone 11269724 (al5sm.com) -->
-<script>(function(s){s.dataset.zone='11269724',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-
 <!-- Zone 11269758 - Vignette/Interstitial (n6wxm.com) -->
 <script>(function(s){s.dataset.zone='11269758',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
 
@@ -238,6 +234,49 @@ function openMonetagAll() {
   }
 }
 </script>
+
+<!-- ===== ALL AD NETWORKS ===== -->
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9307459733796967" crossorigin="anonymous"></script>
+
+<!-- Monetag Zone 11269724 -->
+<script>(function(s){s.dataset.zone='11269724',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
+<!-- Monetag Zone 11269758 - Vignette/Interstitial -->
+<script>(function(s){s.dataset.zone='11269758',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
+<!-- Monetag Zone 255448 - Popunder -->
+<script src="https://quge5.com/88/tag.min.js" data-zone="255448" async data-cfasync="false"></script>
+
+<!-- Monetag Zone 251380 - Popunder -->
+<script src="https://quge5.com/88/tag.min.js" data-zone="251380" async data-cfasync="false"></script>
+
+<!-- Monetag Zone 11269783 -->
+<script>(function(s){s.dataset.zone='11269783',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
+<!-- Monetag Direct Links -->
+<script>
+var MONETAG_LINKS = [
+  'https://omg10.com/4/11269732',
+  'https://omg10.com/4/11269764',
+  'https://omg10.com/4/9619899',
+  'https://omg10.com/4/11269766',
+  'https://omg10.com/4/11269772',
+  'https://omg10.com/4/11269774'
+];
+function openMonetagRandom() {
+  var url = MONETAG_LINKS[Math.floor(Math.random() * MONETAG_LINKS.length)];
+  window.open(url, '_blank');
+}
+function openMonetagAll() {
+  var count = 2 + Math.floor(Math.random() * 2);
+  var shuffled = MONETAG_LINKS.slice().sort(function(){return 0.5-Math.random()});
+  for (var i = 0; i < count && i < shuffled.length; i++) {
+    setTimeout(function(u){return function(){window.open(u,'_blank')}}(shuffled[i]), i*300);
+  }
+}
+</script>
+
 </head>
 <body>
 <div class="ad-header">
